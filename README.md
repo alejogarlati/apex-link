@@ -1,4 +1,4 @@
-# 🏁 Telemetría SimRacing para Assetto Corsa (FAPPE 2026)
+# 🏎️ ApexLink — Telemetría SimRacing en Tiempo Real y Análisis de Rendimiento (FAPPE 2026)
 
 > **Proyecto Final de Grado / Presentación FAPPE 2026**  
 > **Plazo de Ejecución:** 3 Semanas (Sprint Urgente)  

@@ -1,6 +1,6 @@
 # 🏛️ Visión Integral, Concepto y Arquitectura del Sistema (Overview)
 
-> **Proyecto:** Sistema Integral de Telemetría y Análisis de Rendimiento en Pista para SimRacing  
+> **Proyecto:** ApexLink — Sistema Integral de Telemetría y Análisis de Rendimiento en Pista para SimRacing  
 > **Ámbito:** Proyecto Final / Presentación FAPPE 2026  
 > **Audiencia:** Jurado Evaluador de FAPPE, Docentes Universitarios, Ingenieros de Software y Usuarios de SimRacing
 
