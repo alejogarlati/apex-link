@@ -1,0 +1,16 @@
+{
+  "name": "apex-link-track-3d-comparison",
+  "version": "1.0.0",
+  "description": "MVP Comparison between Canvas 2D Isometric Projection vs Three.js 3D WebGL for ApexLink",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "vite": "^5.1.0"
+  }
+}

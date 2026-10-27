@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ApexLink // 3D Track Visualizer Lab (Assetto Corsa Real Data)</title>
+  <link rel="stylesheet" href="./src/style.css">
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="top-bar">
+    <div class="brand">
+      <span class="brand-badge">APEXLINK LABS</span>
+      <div>
+        <div class="brand-title">Visualización de Telemetría 2D / 3D</div>
+        <div class="brand-subtitle">Benchmark con Datos Reales de Assetto Corsa (Imola, Red Bull Ring, Monza)</div>
+      </div>
+    </div>
+
+    <!-- Active Track Selector -->
+    <div class="top-controls">
+      <select class="select-input" id="trackSelect" style="font-weight: 700; color: var(--accent-cyan);">
+        <option value="imola" selected>🏎️ Imola F1 2025 (Autodromo Enzo e Dino Ferrari)</option>
+        <option value="rbr">🐂 Red Bull Ring (Layout GP)</option>
+        <option value="monza">⚡ Monza F1 2025 (Autodromo Nazionale Monza)</option>
+        <option value="synthetic">🏔️ Pista Sintética (Gran Desnivel +58m)</option>
+      </select>
+
+      <div class="segmented-control">
+        <button class="segmented-btn active" data-view="split">🔀 Dividida</button>
+        <button class="segmented-btn" data-view="canvas">📐 Canvas 2D</button>
+        <button class="segmented-btn" data-view="three">🧊 Three.js 3D</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Viewports Split Container -->
+  <main class="viewports-wrapper">
+    
+    <!-- Option A: Canvas 2D Viewer -->
+    <section class="viewport-panel" id="canvasPanel">
+      <div class="panel-header">
+        <span class="panel-tag" id="canvasPanelTag">OPCIÓN A: MAPA 2D OFICIAL (map.png + map.ini)</span>
+        <span class="panel-desc" id="canvasPanelDesc">Calibración matemática oficial de Assetto Corsa con trazada en vivo</span>
+      </div>
+
+      <div class="panel-tools">
+        <button class="tool-btn" id="toggleCanvasMode">🔄 Alternar Modo Mapa / 3D</button>
+        <button class="tool-btn" id="resetCanvasView" title="Restablecer posición">🎯 Centrar</button>
+      </div>
+
+      <div class="fps-counter" id="fpsCanvas">-- FPS (Canvas)</div>
+      <canvas id="canvas2d"></canvas>
+    </section>
+
+    <!-- Option B: Three.js WebGL Viewer -->
+    <section class="viewport-panel" id="threePanel">
+      <div class="panel-header">
+        <span class="panel-tag">OPCIÓN B: THREE.JS 3D WEBGL</span>
+        <span class="panel-desc">Spline 3D real de fast_lane.ai, tubo extruido, peraltes y shaders</span>
+      </div>
+
+      <div class="panel-tools">
+        <button class="tool-btn" data-three-preset="isometric">📐 Isométrica 45°</button>
+        <button class="tool-btn" data-three-preset="topdown">⬇️ Cenital</button>
+        <button class="tool-btn" data-three-preset="side">⛰️ Perfil Altimetría</button>
+        <button class="tool-btn" id="toggleThreeCam">📷 Isométrica</button>
+      </div>
+
+      <div class="fps-counter" id="fpsThree">-- FPS (Three.js WebGL)</div>
+      <div class="three-container" id="threeContainer"></div>
+    </section>
+
+    <!-- Floating Cockpit Telemetry HUD -->
+    <div class="cockpit-hud">
+      
+      <!-- Sector & Turn Banner -->
+      <div class="hud-group" style="min-width: 170px; align-items: flex-start;">
+        <span class="hud-label">SECTOR / CURVA</span>
+        <div id="hudSection" style="font-size: 13px; font-weight: 800; color: #fff; text-shadow: 0 0 10px rgba(0,225,255,0.4);">
+          Rettilineo Partenza
+        </div>
+        <div style="display: flex; gap: 6px; margin-top: 4px;">
+          <span class="drs-pill" id="hudDrs">DRS CLOSED</span>
+        </div>
+      </div>
+
+      <!-- Speed -->
+      <div class="hud-group">
+        <span class="hud-label">VELOCIDAD</span>
+        <div style="display: flex; align-items: baseline;">
+          <span class="hud-val-large" id="hudSpeed">0</span>
+          <span class="hud-unit">KM/H</span>
+        </div>
+      </div>
+
+      <!-- Gear -->
+      <div class="hud-group">
+        <span class="hud-label">MARCHA</span>
+        <div class="gear-badge" id="hudGear">N</div>
+      </div>
+
+      <!-- RPM Bar -->
+      <div class="hud-group rpm-bar-container">
+        <div class="rpm-text">
+          <span>RPM</span>
+          <span id="hudRpmVal">0</span>
+        </div>
+        <div class="rpm-bar-bg">
+          <div class="rpm-bar-fill" id="hudRpmFill"></div>
+        </div>
+      </div>
+
+      <!-- Pedals -->
+      <div class="hud-group">
+        <span class="hud-label">PEDALES</span>
+        <div class="pedals-wrapper">
+          <div class="pedal-col">
+            <div class="pedal-bar-bg">
+              <div class="pedal-bar-fill-throttle" id="hudThrottleFill" style="height: 0%;"></div>
+            </div>
+            <span class="pedal-text" style="color: var(--accent-green);">GAS</span>
+          </div>
+          <div class="pedal-col">
+            <div class="pedal-bar-bg">
+              <div class="pedal-bar-fill-brake" id="hudBrakeFill" style="height: 0%;"></div>
+            </div>
+            <span class="pedal-text" style="color: var(--accent-red);">FRN</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Elevation -->
+      <div class="hud-group">
+        <span class="hud-label">ELEVACIÓN REAL (Y)</span>
+        <div style="display: flex; align-items: baseline;">
+          <span class="hud-val-large" id="hudElevation" style="font-size: 19px; color: var(--accent-cyan);">+0.0 m</span>
+        </div>
+        <span class="hud-unit" id="hudSlope" style="color: var(--text-muted); font-size: 10px; margin-top: 2px;">+0.0%</span>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Bottom Playback & Scrubber Controls -->
+  <footer class="bottom-bar">
+    <button class="play-btn" id="playPauseBtn" title="Reproducir / Pausar (Espacio)">❚❚</button>
+
+    <div class="scrubber-wrapper">
+      <input type="range" class="scrubber-slider" id="scrubber" min="0" max="1000" value="0">
+      <div class="scrubber-info">
+        <span id="lapTimeDisplay">00:00.000</span>
+        <span id="hudTrackName">Autodromo Enzo e Dino Ferrari • Vuelta Simulada F1 2025</span>
+        <span id="distanceDisplay">0 m / 4909 m</span>
+      </div>
+    </div>
+
+    <div class="bottom-options">
+      <select class="select-input" id="heatmapSelect" title="Modo de mapa de calor">
+        <option value="throttle_brake">🔥 Heatmap: Freno / Gas</option>
+        <option value="speed">⚡ Heatmap: Velocidad</option>
+      </select>
+
+      <select class="select-input" id="speedSelect" title="Velocidad de reproducción">
+        <option value="0.5">0.5x</option>
+        <option value="1.0" selected>1.0x (Real)</option>
+        <option value="2.0">2.0x</option>
+        <option value="4.0">4.0x</option>
+      </select>
+    </div>
+  </footer>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
