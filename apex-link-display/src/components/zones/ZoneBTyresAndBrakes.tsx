@@ -17,38 +17,33 @@ const TyreGraphicItem: React.FC<TyreGraphicItemProps> = ({
   compound,
   onCycleCompound,
 }) => {
-  // Official Formula 1 tyre compound color palette
+  // Official Formula 1 tyre compound solid filled color palette
   const getCompoundColors = (c: TyreCompound) => {
     switch (c) {
       case 'SOFT':
         return {
-          border: 'border-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.35)]',
+          fill: 'bg-rose-600 shadow-[0_0_18px_rgba(225,29,72,0.6)] border-rose-400',
           text: 'text-rose-500',
-          accent: 'bg-rose-500',
         };
       case 'MEDIUM':
         return {
-          border: 'border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.35)]',
+          fill: 'bg-amber-400 shadow-[0_0_18px_rgba(251,191,36,0.6)] border-amber-300',
           text: 'text-amber-400',
-          accent: 'bg-amber-400',
         };
       case 'HARD':
         return {
-          border: 'border-white shadow-[0_0_12px_rgba(255,255,255,0.35)]',
+          fill: 'bg-white shadow-[0_0_18px_rgba(255,255,255,0.6)] border-zinc-200',
           text: 'text-white',
-          accent: 'bg-white',
         };
       case 'INTER':
         return {
-          border: 'border-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.35)]',
+          fill: 'bg-emerald-500 shadow-[0_0_18px_rgba(16,185,129,0.6)] border-emerald-300',
           text: 'text-emerald-400',
-          accent: 'bg-emerald-500',
         };
       case 'WET':
         return {
-          border: 'border-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.35)]',
+          fill: 'bg-blue-600 shadow-[0_0_18px_rgba(37,99,235,0.6)] border-blue-400',
           text: 'text-blue-400',
-          accent: 'bg-blue-500',
         };
     }
   };
@@ -61,13 +56,13 @@ const TyreGraphicItem: React.FC<TyreGraphicItemProps> = ({
       title="Toca para cambiar compuesto F1"
       className="flex items-center gap-4 cursor-pointer select-none group"
     >
-      {/* 1. Base: Forma de neumático (rectángulo redondeado en esquinas) */}
+      {/* 1. Base: Forma de neumático (rectángulo redondeado en esquinas, 100% RELLENO) */}
       <div
-        className={`w-[44px] h-[94px] rounded-[10px] border-2 bg-zinc-950 flex flex-col justify-between items-center py-2 transition-all duration-150 ${style.border}`}
+        className={`w-[46px] h-[96px] rounded-[10px] border-2 flex flex-col justify-between items-center py-2.5 transition-all duration-150 ${style.fill}`}
       >
-        <span className={`w-3.5 h-1 rounded-full ${style.accent}`} />
-        <span className={`w-3.5 h-1 rounded-full ${style.accent}`} />
-        <span className={`w-3.5 h-1 rounded-full ${style.accent}`} />
+        <span className="w-4 h-1 rounded-full bg-black/40" />
+        <span className="w-4 h-1 rounded-full bg-black/40" />
+        <span className="w-4 h-1 rounded-full bg-black/40" />
       </div>
 
       {/* 2. Información en orden estricto: FL/FR/RL/RR -> TEMP -> WEAR -> COMPUESTO */}
