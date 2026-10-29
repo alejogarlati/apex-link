@@ -1,6 +1,5 @@
 import React from 'react';
 import { useTelemetryStore } from '../../store/useTelemetryStore';
-import { Sliders, Activity, Disc, Cpu } from 'lucide-react';
 
 export const ZoneEChassisControls: React.FC = () => {
   const chassis = useTelemetryStore((s) => s.chassis);
@@ -21,11 +20,12 @@ export const ZoneEChassisControls: React.FC = () => {
     setChassisValue('abs', next);
   };
 
-  const adjustBias = (delta: number) => {
-    const next = Math.round((chassis.brakeBias + delta) * 10) / 10;
-    if (next >= 50.0 && next <= 68.0) {
-      setChassisValue('brakeBias', next);
-    }
+  const cycleBias = (e: React.MouseEvent) => {
+    const delta = e.shiftKey ? -0.5 : 0.5;
+    let next = Math.round((chassis.brakeBias + delta) * 10) / 10;
+    if (next > 68.0) next = 50.0;
+    if (next < 50.0) next = 68.0;
+    setChassisValue('brakeBias', next);
   };
 
   const cycleMap = () => {
@@ -36,101 +36,76 @@ export const ZoneEChassisControls: React.FC = () => {
   };
 
   return (
-    <div className="w-[1080px] h-full p-3 px-5 flex flex-col justify-between border-t border-r border-zinc-800/80 bg-zinc-950/60 font-mono">
-      <div className="flex items-center justify-between text-[11px] font-black tracking-widest text-zinc-500">
-        <span className="flex items-center gap-1.5">
-          <Sliders className="w-3.5 h-3.5 text-cyan-400" />
-          CHASSIS ELECTRONICS & CONTROL MATRIX
+    <div className="w-[1920px] h-full grid grid-cols-5 border-t border-zinc-800 font-mono select-none">
+      {/* 1. TC */}
+      <button
+        onClick={cycleTC}
+        title="Toca para ajustar TC"
+        className="flex flex-col items-center justify-center border-r border-zinc-800/80 hover:bg-zinc-950/40 transition-colors cursor-pointer"
+      >
+        <span className="text-[16px] font-bold tracking-[0.2em] text-zinc-400 uppercase">
+          TC
         </span>
-        <span className="text-zinc-600">STEERING WHEEL DIALS ACTIVE</span>
-      </div>
+        <span className="text-[48px] font-black text-cyan-400 leading-none mt-2">
+          {chassis.tc}
+        </span>
+      </button>
 
-      <div className="grid grid-cols-5 gap-3.5">
-        {/* TC 1 */}
-        <button
-          onClick={cycleTC}
-          className="p-2.5 rounded-lg bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700/60 flex flex-col items-center justify-between transition-all cursor-pointer group active:scale-95"
-        >
-          <span className="text-[10px] font-bold text-zinc-400 flex items-center gap-1">
-            <Activity className="w-3 h-3 text-cyan-400" />
-            TC (TRAC)
-          </span>
-          <span className="text-[28px] font-black text-cyan-400 group-hover:text-cyan-300 leading-none my-0.5">
-            {chassis.tc}
-          </span>
-          <span className="text-[9px] text-zinc-500 font-semibold">1..8 LEVELS</span>
-        </button>
+      {/* 2. TC CUT */}
+      <button
+        onClick={cycleTCCut}
+        title="Toca para ajustar TC CUT"
+        className="flex flex-col items-center justify-center border-r border-zinc-800/80 hover:bg-zinc-950/40 transition-colors cursor-pointer"
+      >
+        <span className="text-[16px] font-bold tracking-[0.2em] text-zinc-400 uppercase">
+          TC CUT
+        </span>
+        <span className="text-[48px] font-black text-amber-400 leading-none mt-2">
+          {chassis.tcCut}
+        </span>
+      </button>
 
-        {/* TC CUT */}
-        <button
-          onClick={cycleTCCut}
-          className="p-2.5 rounded-lg bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700/60 flex flex-col items-center justify-between transition-all cursor-pointer group active:scale-95"
-        >
-          <span className="text-[10px] font-bold text-zinc-400 flex items-center gap-1">
-            <Activity className="w-3 h-3 text-amber-400" />
-            TC CUT
-          </span>
-          <span className="text-[28px] font-black text-amber-400 group-hover:text-amber-300 leading-none my-0.5">
-            {chassis.tcCut}
-          </span>
-          <span className="text-[9px] text-zinc-500 font-semibold">RATE SLIP</span>
-        </button>
+      {/* 3. ABS */}
+      <button
+        onClick={cycleABS}
+        title="Toca para ajustar ABS"
+        className="flex flex-col items-center justify-center border-r border-zinc-800/80 hover:bg-zinc-950/40 transition-colors cursor-pointer"
+      >
+        <span className="text-[16px] font-bold tracking-[0.2em] text-zinc-400 uppercase">
+          ABS
+        </span>
+        <span className="text-[48px] font-black text-rose-400 leading-none mt-2">
+          {chassis.abs}
+        </span>
+      </button>
 
-        {/* ABS */}
-        <button
-          onClick={cycleABS}
-          className="p-2.5 rounded-lg bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700/60 flex flex-col items-center justify-between transition-all cursor-pointer group active:scale-95"
-        >
-          <span className="text-[10px] font-bold text-zinc-400 flex items-center gap-1">
-            <Disc className="w-3 h-3 text-rose-500" />
-            ABS
-          </span>
-          <span className="text-[28px] font-black text-rose-400 group-hover:text-rose-300 leading-none my-0.5">
-            {chassis.abs}
-          </span>
-          <span className="text-[9px] text-zinc-500 font-semibold">1..10 ANTI-LOCK</span>
-        </button>
+      {/* 4. BIAS */}
+      <button
+        onClick={cycleBias}
+        title="Toca para ajustar BIAS (+0.5%, Shift para -0.5%)"
+        className="flex flex-col items-center justify-center border-r border-zinc-800/80 hover:bg-zinc-950/40 transition-colors cursor-pointer"
+      >
+        <span className="text-[16px] font-bold tracking-[0.2em] text-zinc-400 uppercase">
+          BIAS
+        </span>
+        <span className="text-[48px] font-black text-white leading-none mt-2 tabular-nums">
+          {chassis.brakeBias.toFixed(1)}%
+        </span>
+      </button>
 
-        {/* BRAKE BIAS */}
-        <div className="p-2.5 rounded-lg bg-zinc-900/80 border border-zinc-700/60 flex flex-col items-center justify-between">
-          <div className="flex items-center justify-between w-full text-[10px] font-bold text-zinc-400">
-            <span>BRAKE BIAS</span>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => adjustBias(-0.5)}
-                className="w-4 h-4 rounded bg-zinc-800 hover:bg-zinc-700 text-white flex items-center justify-center font-bold text-[10px] cursor-pointer"
-              >
-                -
-              </button>
-              <button
-                onClick={() => adjustBias(0.5)}
-                className="w-4 h-4 rounded bg-zinc-800 hover:bg-zinc-700 text-white flex items-center justify-center font-bold text-[10px] cursor-pointer"
-              >
-                +
-              </button>
-            </div>
-          </div>
-          <span className="text-[26px] font-black text-white tabular-nums leading-none my-0.5">
-            {chassis.brakeBias.toFixed(1)}%
-          </span>
-          <span className="text-[9px] text-zinc-500 font-semibold">FRONT AXLE</span>
-        </div>
-
-        {/* ENGINE MAP */}
-        <button
-          onClick={cycleMap}
-          className="p-2.5 rounded-lg bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700/60 flex flex-col items-center justify-between transition-all cursor-pointer group active:scale-95"
-        >
-          <span className="text-[10px] font-bold text-zinc-400 flex items-center gap-1">
-            <Cpu className="w-3 h-3 text-purple-400" />
-            MAP MOTOR
-          </span>
-          <span className="text-[20px] font-black text-purple-400 group-hover:text-purple-300 leading-none my-1 tracking-tight">
-            {chassis.engineMap}
-          </span>
-          <span className="text-[9px] text-zinc-500 font-semibold">ECU PROFILE</span>
-        </button>
-      </div>
+      {/* 5. MAP */}
+      <button
+        onClick={cycleMap}
+        title="Toca para alternar Mapa Motor"
+        className="flex flex-col items-center justify-center hover:bg-zinc-950/40 transition-colors cursor-pointer"
+      >
+        <span className="text-[16px] font-bold tracking-[0.2em] text-zinc-400 uppercase">
+          MAP
+        </span>
+        <span className="text-[40px] font-black text-purple-400 leading-none mt-2 tracking-tight">
+          {chassis.engineMap}
+        </span>
+      </button>
     </div>
   );
 };
