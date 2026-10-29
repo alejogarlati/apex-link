@@ -21,6 +21,7 @@ export interface CarTelemetry {
   gear: number; // -1 = R, 0 = N, 1..8 = 1st to 8th
   throttle: number; // 0.0 .. 1.0
   brake: number; // 0.0 .. 1.0
+  clutch?: number; // 0.0 .. 1.0 (clutch pedal)
   steer: number; // -1.0 .. 1.0
   drsAvailable: boolean;
   drsEnabled: boolean;

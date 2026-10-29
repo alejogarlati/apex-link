@@ -19,6 +19,7 @@ const INITIAL_TELEMETRY: TelemetryFrame = {
     gear: 7,
     throttle: 1.0,
     brake: 0.0,
+    clutch: 0.0,
     steer: 0.02,
     drsAvailable: true,
     drsEnabled: true,
