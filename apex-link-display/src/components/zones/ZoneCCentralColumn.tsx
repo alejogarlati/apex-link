@@ -79,24 +79,30 @@ export const ZoneCCentralColumn: React.FC = () => {
             {formattedGear}
           </div>
 
-          {/* DRS ZONE: Directly underneath gear */}
-          <div className="h-6 flex items-center justify-center my-1">
+          {/* DRS: Directly underneath gear with prominent box */}
+          <div className="h-10 flex items-center justify-center my-1">
             {car.drsEnabled ? (
-              <span className="text-[20px] font-black tracking-[0.25em] text-emerald-400 drop-shadow-[0_0_12px_#00E676] animate-pulse">
-                DRS ZONE
-              </span>
+              <div className="px-6 py-1 rounded bg-emerald-500 text-black border border-emerald-400 shadow-[0_0_22px_#00E676] animate-pulse">
+                <span className="text-[20px] font-black tracking-[0.25em]">
+                  DRS
+                </span>
+              </div>
             ) : car.drsAvailable ? (
-              <span className="text-[18px] font-bold tracking-[0.25em] text-amber-400">
-                DRS ZONE
-              </span>
+              <div className="px-6 py-1 rounded bg-amber-500/20 text-amber-400 border border-amber-400 shadow-[0_0_16px_rgba(251,191,36,0.35)] animate-pulse">
+                <span className="text-[18px] font-black tracking-[0.25em]">
+                  DRS
+                </span>
+              </div>
             ) : (
-              <span className="text-[18px] font-bold tracking-[0.25em] text-zinc-800">
-                DRS ZONE
-              </span>
+              <div className="px-6 py-1 rounded bg-zinc-950 border border-zinc-800 text-zinc-700">
+                <span className="text-[16px] font-bold tracking-[0.25em]">
+                  DRS
+                </span>
+              </div>
             )}
           </div>
 
-          {/* Speed: Directly underneath DRS ZONE */}
+          {/* Speed: Directly underneath DRS */}
           <button
             onClick={toggleSpeedUnit}
             title="Toca para alternar KM/H y MPH"
@@ -112,17 +118,17 @@ export const ZoneCCentralColumn: React.FC = () => {
           </button>
         </div>
 
-        {/* 3 Vertical Pedals Bar (Sin texto: Azul embrague, Rojo freno, Verde acelerador) */}
+        {/* 3 Vertical Pedals Bar (Orden estricto izq -> der: ACEL / FREN / EMBR, sin texto) */}
         <div className="absolute right-12 flex items-end gap-3 h-[180px]">
-          {/* Embrague: Azul */}
+          {/* 1. Acelerador: Verde */}
           <div className="w-3.5 h-[180px] bg-zinc-900 rounded-[2px] overflow-hidden flex flex-col justify-end border border-zinc-800">
             <div
-              style={{ height: `${clutchPct}%` }}
-              className="w-full bg-blue-500 shadow-[0_0_10px_#3B82F6] transition-all duration-75"
+              style={{ height: `${throttlePct}%` }}
+              className="w-full bg-emerald-500 shadow-[0_0_10px_#00E676] transition-all duration-75"
             />
           </div>
 
-          {/* Freno: Rojo */}
+          {/* 2. Freno: Rojo */}
           <div className="w-3.5 h-[180px] bg-zinc-900 rounded-[2px] overflow-hidden flex flex-col justify-end border border-zinc-800">
             <div
               style={{ height: `${brakePct}%` }}
@@ -130,11 +136,11 @@ export const ZoneCCentralColumn: React.FC = () => {
             />
           </div>
 
-          {/* Acelerador: Verde */}
+          {/* 3. Embrague: Azul */}
           <div className="w-3.5 h-[180px] bg-zinc-900 rounded-[2px] overflow-hidden flex flex-col justify-end border border-zinc-800">
             <div
-              style={{ height: `${throttlePct}%` }}
-              className="w-full bg-emerald-500 shadow-[0_0_10px_#00E676] transition-all duration-75"
+              style={{ height: `${clutchPct}%` }}
+              className="w-full bg-blue-500 shadow-[0_0_10px_#3B82F6] transition-all duration-75"
             />
           </div>
         </div>

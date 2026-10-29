@@ -1,54 +1,98 @@
 import React from 'react';
 import { useTelemetryStore } from '../../store/useTelemetryStore';
+import { MicrosectorStatus, TyreCompound } from '../../types/ddu';
 
-interface TyreItemProps {
-  label: string;
-  pressurePsi: number;
+interface TyreGraphicItemProps {
+  label: 'FL' | 'FR' | 'RL' | 'RR';
   tempC: number;
-  brakeTempC: number;
+  wearPct: number;
+  compound: TyreCompound;
+  onCycleCompound: () => void;
 }
 
-const MinimalTyreItem: React.FC<TyreItemProps> = ({
+const TyreGraphicItem: React.FC<TyreGraphicItemProps> = ({
   label,
-  pressurePsi,
   tempC,
-  brakeTempC,
+  wearPct,
+  compound,
+  onCycleCompound,
 }) => {
-  const getTempColor = (t: number) => {
-    if (t < 75) return 'text-blue-400';
-    if (t <= 100) return 'text-emerald-400';
-    return 'text-rose-500 drop-shadow-[0_0_10px_rgba(255,23,68,0.4)]';
+  // Official Formula 1 tyre compound color palette
+  const getCompoundColors = (c: TyreCompound) => {
+    switch (c) {
+      case 'SOFT':
+        return {
+          border: 'border-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.35)]',
+          text: 'text-rose-500',
+          accent: 'bg-rose-500',
+        };
+      case 'MEDIUM':
+        return {
+          border: 'border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.35)]',
+          text: 'text-amber-400',
+          accent: 'bg-amber-400',
+        };
+      case 'HARD':
+        return {
+          border: 'border-white shadow-[0_0_12px_rgba(255,255,255,0.35)]',
+          text: 'text-white',
+          accent: 'bg-white',
+        };
+      case 'INTER':
+        return {
+          border: 'border-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.35)]',
+          text: 'text-emerald-400',
+          accent: 'bg-emerald-500',
+        };
+      case 'WET':
+        return {
+          border: 'border-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.35)]',
+          text: 'text-blue-400',
+          accent: 'bg-blue-500',
+        };
+    }
   };
 
-  const isBrakeHot = brakeTempC > 650;
+  const style = getCompoundColors(compound);
 
   return (
-    <div className="w-[180px] flex flex-col gap-1 font-mono tabular-nums select-none">
-      {/* Wheel identifier */}
-      <span className="text-[12px] font-black tracking-widest text-zinc-500">
-        {label}
-      </span>
-
-      {/* Temp (Large) & Pressure (Medium Cyan) side by side */}
-      <div className="flex items-baseline justify-between">
-        <span className={`text-[36px] font-black leading-none ${getTempColor(tempC)}`}>
-          {tempC.toFixed(0)}°
-        </span>
-        <span className="text-[24px] font-bold text-cyan-400 leading-none">
-          {pressurePsi.toFixed(1)}
-        </span>
+    <div
+      onClick={onCycleCompound}
+      title="Toca para cambiar compuesto F1"
+      className="flex items-center gap-4 cursor-pointer select-none group"
+    >
+      {/* 1. Base: Forma de neumático (rectángulo redondeado en esquinas) */}
+      <div
+        className={`w-[44px] h-[94px] rounded-[10px] border-2 bg-zinc-950 flex flex-col justify-between items-center py-2 transition-all duration-150 ${style.border}`}
+      >
+        <span className={`w-3.5 h-1 rounded-full ${style.accent}`} />
+        <span className={`w-3.5 h-1 rounded-full ${style.accent}`} />
+        <span className={`w-3.5 h-1 rounded-full ${style.accent}`} />
       </div>
 
-      {/* Brake Disc Minimal Heat Bar */}
-      <div className="w-full h-1 bg-zinc-900 rounded-full overflow-hidden mt-1">
-        <div
-          style={{ width: `${Math.min(100, (brakeTempC / 1000) * 100)}%` }}
-          className={`h-full transition-all duration-150 ${
-            isBrakeHot
-              ? 'bg-gradient-to-r from-amber-500 to-rose-500 shadow-[0_0_6px_#FF1744]'
-              : 'bg-zinc-700'
-          }`}
-        />
+      {/* 2. Información en orden estricto: FL/FR/RL/RR -> TEMP -> WEAR -> COMPUESTO */}
+      <div className="flex flex-col gap-1 font-mono tabular-nums">
+        {/* 1. Posición */}
+        <span className="text-[15px] font-black tracking-widest text-zinc-400 leading-none">
+          {label}
+        </span>
+
+        {/* 2. TEMP (en grados centígrados) */}
+        <span className="text-[26px] font-black text-white leading-none mt-0.5">
+          {tempC.toFixed(0)}°C
+        </span>
+
+        {/* 3. WEAR (Desgaste) */}
+        <span className="text-[15px] font-bold text-zinc-400 leading-none mt-0.5">
+          {wearPct.toFixed(0)}%
+        </span>
+
+        {/* 4. Compuesto F1 oficial */}
+        <span
+          className={`text-[13px] font-black tracking-wider leading-none mt-0.5 ${style.text}`}
+        >
+          {compound}
+        </span>
       </div>
     </div>
   );
@@ -56,40 +100,93 @@ const MinimalTyreItem: React.FC<TyreItemProps> = ({
 
 export const ZoneBTyresAndBrakes: React.FC = () => {
   const tyres = useTelemetryStore((s) => s.telemetry.tyres);
-  const brakes = useTelemetryStore((s) => s.brakes);
+  const compound = useTelemetryStore((s) => s.tyreCompound);
+  const setTyreCompound = useTelemetryStore((s) => s.setTyreCompound);
+  const macroSectors = useTelemetryStore((s) => s.macroSectors);
+
+  const cycleCompound = () => {
+    const list: TyreCompound[] = ['SOFT', 'MEDIUM', 'HARD', 'INTER', 'WET'];
+    const idx = list.indexOf(compound);
+    setTyreCompound(list[(idx + 1) % list.length]);
+  };
+
+  const getSectorStyle = (status: MicrosectorStatus) => {
+    switch (status) {
+      case 'purple': // Récord de sector: morado
+        return 'bg-purple-600 text-purple-100 shadow-[0_0_10px_rgba(147,51,234,0.7)] border-purple-400/60 font-black';
+      case 'green': // Mejora: verde
+        return 'bg-emerald-500 text-emerald-950 shadow-[0_0_8px_rgba(16,185,129,0.7)] border-emerald-400/60 font-black';
+      case 'yellow': // No mejora: gris oscuro
+        return 'bg-zinc-700 text-zinc-300 border-zinc-600 font-bold';
+      case 'active': // Actual: gris claro
+        return 'bg-zinc-200 text-black shadow-[0_0_12px_rgba(255,255,255,0.8)] border-white animate-pulse font-black';
+      case 'upcoming': // No transitado: negro
+      default:
+        return 'bg-black text-zinc-600 border border-zinc-900 font-bold';
+    }
+  };
 
   return (
-    <div className="w-[480px] h-full p-8 flex flex-col justify-around border-r border-zinc-800 select-none">
+    <div className="w-[480px] h-full p-8 flex flex-col justify-between border-r border-zinc-800 select-none font-mono">
       {/* Front Axle (FL, FR) */}
-      <div className="flex items-center justify-between px-4">
-        <MinimalTyreItem
+      <div className="flex items-center justify-between px-2">
+        <TyreGraphicItem
           label="FL"
-          pressurePsi={tyres.pressurePsi[0]}
           tempC={tyres.tempCoreC[0]}
-          brakeTempC={brakes.tempDiscsC[0]}
+          wearPct={tyres.wear[0]}
+          compound={compound}
+          onCycleCompound={cycleCompound}
         />
-        <MinimalTyreItem
+        <TyreGraphicItem
           label="FR"
-          pressurePsi={tyres.pressurePsi[1]}
           tempC={tyres.tempCoreC[1]}
-          brakeTempC={brakes.tempDiscsC[1]}
+          wearPct={tyres.wear[1]}
+          compound={compound}
+          onCycleCompound={cycleCompound}
         />
       </div>
 
       {/* Rear Axle (RL, RR) */}
-      <div className="flex items-center justify-between px-4">
-        <MinimalTyreItem
+      <div className="flex items-center justify-between px-2">
+        <TyreGraphicItem
           label="RL"
-          pressurePsi={tyres.pressurePsi[2]}
           tempC={tyres.tempCoreC[2]}
-          brakeTempC={brakes.tempDiscsC[2]}
+          wearPct={tyres.wear[2]}
+          compound={compound}
+          onCycleCompound={cycleCompound}
         />
-        <MinimalTyreItem
+        <TyreGraphicItem
           label="RR"
-          pressurePsi={tyres.pressurePsi[3]}
           tempC={tyres.tempCoreC[3]}
-          brakeTempC={brakes.tempDiscsC[3]}
+          wearPct={tyres.wear[3]}
+          compound={compound}
+          onCycleCompound={cycleCompound}
         />
+      </div>
+
+      {/* Debajo de las cubiertas: Estado de los 3 sectores (S1, S2, S3) con la misma regla de colores */}
+      <div className="w-full flex items-center justify-between gap-3 pt-4 border-t border-zinc-900">
+        <div
+          className={`flex-1 h-9 rounded flex items-center justify-center text-[14px] border transition-all duration-150 ${getSectorStyle(
+            macroSectors[0]
+          )}`}
+        >
+          S1
+        </div>
+        <div
+          className={`flex-1 h-9 rounded flex items-center justify-center text-[14px] border transition-all duration-150 ${getSectorStyle(
+            macroSectors[1]
+          )}`}
+        >
+          S2
+        </div>
+        <div
+          className={`flex-1 h-9 rounded flex items-center justify-center text-[14px] border transition-all duration-150 ${getSectorStyle(
+            macroSectors[2]
+          )}`}
+        >
+          S3
+        </div>
       </div>
     </div>
   );
