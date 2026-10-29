@@ -21,6 +21,7 @@ export interface BrakesThermalTelemetry {
 export type SpeedUnit = 'KMH' | 'MPH';
 export type TempUnit = 'C' | 'F';
 export type DDULayoutMode = 'F1' | 'GT3';
+export type TyreCompound = 'SOFT' | 'MEDIUM' | 'HARD' | 'INTER' | 'WET';
 
 export type MockScenario = 
   | 'RACE_STINT' // Dynamic lap around Monza with accelerations & braking
@@ -73,8 +74,15 @@ export interface DDUState {
   tempUnit: TempUnit;
   layoutMode: DDULayoutMode;
   
-  // Pit Limiter state (Fullscreen overlay when active)
+  // Pit State & Limiter (Fullscreen overlay when in pit lane)
+  isInPitLane: boolean;
   pitLimiterActive: boolean;
+  
+  // Tyre Compound (Pirelli F1 official palette)
+  tyreCompound: TyreCompound;
+
+  // Macro-sectors (S1, S2, S3 under tyres, using microsector color rules)
+  macroSectors: [MicrosectorStatus, MicrosectorStatus, MicrosectorStatus];
   
   // Timed Fullscreen Overlays (1 second duration, interruptible)
   timedOverlay: TimedFullscreenOverlay;
@@ -101,6 +109,9 @@ export interface DDUState {
   setLayoutMode: (mode: DDULayoutMode) => void;
   setChassisValue: <K extends keyof ChassisSettings>(key: K, value: ChassisSettings[K]) => void;
   setPitLimiter: (active: boolean) => void;
+  setIsInPitLane: (inPit: boolean) => void;
+  setTyreCompound: (compound: TyreCompound) => void;
+  setMacroSector: (index: 0 | 1 | 2, status: MicrosectorStatus) => void;
   setMockActive: (active: boolean) => void;
   setMockScenario: (scenario: MockScenario) => void;
   showTimedOverlay: (overlay: TimedFullscreenOverlay, durationMs?: number) => void;

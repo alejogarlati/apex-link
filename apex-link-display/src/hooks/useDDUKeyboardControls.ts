@@ -23,10 +23,37 @@ export const useDDUKeyboardControls = (options?: KeyboardControlOptions) => {
 
       switch (e.key.toLowerCase()) {
         case 'p': {
-          // Toggle Pit Limiter
+          // Toggle Pit Lane / Limiter state
           e.preventDefault();
-          const next = !store.pitLimiterActive;
-          store.setPitLimiter(next);
+          if (!store.isInPitLane) {
+            store.setIsInPitLane(true);
+            store.setPitLimiter(true);
+          } else {
+            store.setPitLimiter(!store.pitLimiterActive);
+          }
+          break;
+        }
+
+        case 'o': {
+          // Exit pit lane immediately
+          e.preventDefault();
+          store.setIsInPitLane(false);
+          store.setPitLimiter(false);
+          break;
+        }
+
+        case 'c': {
+          // Cycle Tyre Compound F1
+          e.preventDefault();
+          const list: ('SOFT' | 'MEDIUM' | 'HARD' | 'INTER' | 'WET')[] = [
+            'SOFT',
+            'MEDIUM',
+            'HARD',
+            'INTER',
+            'WET',
+          ];
+          const idx = list.indexOf(store.tyreCompound);
+          store.setTyreCompound(list[(idx + 1) % list.length]);
           break;
         }
 

@@ -19,7 +19,9 @@ export const QuickControlsBar: React.FC<Props> = ({
   const setMockScenario = useTelemetryStore((s) => s.setMockScenario);
   const setMockActive = useTelemetryStore((s) => s.setMockActive);
   const pitLimiterActive = useTelemetryStore((s) => s.pitLimiterActive);
+  const isInPitLane = useTelemetryStore((s) => s.isInPitLane || s.mockScenario === 'PIT_LANE');
   const setPitLimiter = useTelemetryStore((s) => s.setPitLimiter);
+  const setIsInPitLane = useTelemetryStore((s) => s.setIsInPitLane);
   const triggerLapCompleted = useTelemetryStore((s) => s.triggerLapCompleted);
   const currentLap = useTelemetryStore((s) => s.telemetry.timing.currentLap);
 
@@ -57,18 +59,40 @@ export const QuickControlsBar: React.FC<Props> = ({
 
       <div className="w-[1px] h-4 bg-zinc-800 mx-1" />
 
-      {/* Quick Pit Limiter & Lap triggers */}
+      {/* Quick Pit Lane entry, Limiter toggle & Lap triggers */}
       <button
-        onClick={() => setPitLimiter(!pitLimiterActive)}
-        title="Alternar Pit Limiter Overlay (Tecla P)"
+        onClick={() => {
+          if (!isInPitLane) {
+            setIsInPitLane(true);
+            setPitLimiter(true);
+          } else {
+            setIsInPitLane(false);
+            setPitLimiter(false);
+          }
+        }}
+        title="Entrar o Salir de Boxes (Tecla P / O)"
         className={`px-2 py-0.5 rounded font-black transition-all cursor-pointer ${
-          pitLimiterActive
-            ? 'bg-cyan-400 text-black shadow-[0_0_8px_#00E5FF]'
+          isInPitLane
+            ? 'bg-amber-400 text-black shadow-[0_0_8px_#F59E0B]'
             : 'bg-zinc-900/90 text-zinc-400 hover:text-white hover:bg-zinc-800'
         }`}
       >
-        🅿️ PIT [P]
+        🅿️ {isInPitLane ? 'BOXES [ON]' : 'BOXES [OFF]'}
       </button>
+
+      {isInPitLane && (
+        <button
+          onClick={() => setPitLimiter(!pitLimiterActive)}
+          title="Alternar Limitador de Boxes ON/OFF (Tecla P en boxes)"
+          className={`px-2 py-0.5 rounded font-black transition-all cursor-pointer ${
+            pitLimiterActive
+              ? 'bg-cyan-400 text-black shadow-[0_0_8px_#00E5FF]'
+              : 'bg-rose-600 text-white shadow-[0_0_8px_#EF4444] animate-pulse'
+          }`}
+        >
+          {pitLimiterActive ? 'LIMITER ON' : 'LIMITER OFF'}
+        </button>
+      )}
 
       <button
         onClick={() => {

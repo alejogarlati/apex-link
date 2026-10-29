@@ -64,11 +64,12 @@ export const useMockTelemetry = () => {
 
       // Step telemetry based on scenario
       if (mockScenario === 'PIT_LANE') {
-        state.speedKmh = 78.5 + Math.sin(now * 0.005) * 1.5;
+        state.speedKmh = 79.0 + Math.sin(now * 0.003) * 2.5; // 76.5 to 81.5 km/h (crosses 80 km/h limit to test red alert)
         state.gear = 1;
         state.rpm = 5400;
         state.throttle = 0.45;
         state.brake = 0.0;
+        state.clutch = 0.0;
         state.drsAvailable = false;
         state.drsEnabled = false;
         state.gLat = 0.02;
@@ -259,6 +260,32 @@ export const useMockTelemetry = () => {
 
       // Determine sector
       const sector = state.progress < 0.35 ? 1 : state.progress < 0.70 ? 2 : 3;
+
+      // Update 3 macro-sectors state under tyres
+      const s1Status: MicrosectorStatus =
+        sector === 1
+          ? 'active'
+          : currentDeltaMs < -150
+          ? 'purple'
+          : currentDeltaMs <= 0
+          ? 'green'
+          : 'yellow';
+      const s2Status: MicrosectorStatus =
+        sector === 1
+          ? 'upcoming'
+          : sector === 2
+          ? 'active'
+          : currentDeltaMs < -100
+          ? 'purple'
+          : currentDeltaMs <= 0
+          ? 'green'
+          : 'yellow';
+      const s3Status: MicrosectorStatus =
+        sector === 3
+          ? 'active'
+          : 'upcoming';
+
+      useTelemetryStore.setState({ macroSectors: [s1Status, s2Status, s3Status] });
 
       const frame: TelemetryFrame = {
         type: 'FRAME',

@@ -4,6 +4,7 @@ import {
   DDUState,
   FuelTelemetry,
   Microsector,
+  MicrosectorStatus,
   MockScenario,
   TimedFullscreenOverlay,
 } from '../types/ddu';
@@ -102,7 +103,10 @@ export const useTelemetryStore = create<DDUState>((set, get) => ({
   tempUnit: 'C',
   layoutMode: 'F1',
 
+  isInPitLane: false,
   pitLimiterActive: false,
+  tyreCompound: 'SOFT',
+  macroSectors: ['purple', 'active', 'upcoming'],
   timedOverlay: null,
   microsectors: createInitialMicrosectors(),
 
@@ -224,14 +228,36 @@ export const useTelemetryStore = create<DDUState>((set, get) => ({
     set({ pitLimiterActive: active });
   },
 
+  setIsInPitLane: (inPit: boolean) => {
+    set({
+      isInPitLane: inPit,
+      // If entering pit lane, default pit limiter to true if needed
+      pitLimiterActive: inPit,
+    });
+  },
+
+  setTyreCompound: (compound) => {
+    set({ tyreCompound: compound });
+  },
+
+  setMacroSector: (index, status) => {
+    set((state) => {
+      const copy = [...state.macroSectors] as [MicrosectorStatus, MicrosectorStatus, MicrosectorStatus];
+      copy[index] = status;
+      return { macroSectors: copy };
+    });
+  },
+
   setMockActive: (active: boolean) => {
     set({ isMockActive: active });
   },
 
   setMockScenario: (scenario: MockScenario) => {
+    const inPit = scenario === 'PIT_LANE';
     set({
       mockScenario: scenario,
-      pitLimiterActive: scenario === 'PIT_LANE',
+      isInPitLane: inPit,
+      pitLimiterActive: inPit,
     });
   },
 
