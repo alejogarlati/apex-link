@@ -1,9 +1,9 @@
 import { LapCompletedEvent, TelemetryFrame } from './telemetry';
 
 export interface ChassisSettings {
-  tc: number; // Traction Control level 1..8
+  tc: number; // Traction Control level 1..12
   tcCut: number; // TC Cut rate 1..8
-  abs: number; // Anti-lock braking 1..10
+  abs: number; // Anti-lock braking 1..12
   brakeBias: number; // Front brake bias percentage, e.g. 58.5
   engineMap: string; // e.g. "RACE 1", "QUAL 1", "WET", "MIX 2"
 }
@@ -29,6 +29,30 @@ export type MockScenario =
   | 'PIT_LANE' // In pit lane with pit limiter 4Hz active
   | 'DRS_ZONE'; // Full throttle 7th gear with DRS open
 
+export type MicrosectorStatus = 'upcoming' | 'active' | 'purple' | 'green' | 'yellow';
+
+export interface Microsector {
+  id: number; // 0..19
+  status: MicrosectorStatus;
+  deltaMs?: number;
+  macroSector: 1 | 2 | 3;
+}
+
+export type TimedFullscreenOverlay =
+  | {
+      type: 'CHASSIS_CHANGE';
+      parameter: 'BRAKE BIAS' | 'TRACTION CONTROL' | 'ABS';
+      value: string;
+      color: string;
+      subtext?: string;
+    }
+  | {
+      type: 'FASTEST_LAP';
+      lapTimeStr: string;
+      lapNumber: number;
+    }
+  | null;
+
 export interface DDUState {
   // Telemetry frame
   telemetry: TelemetryFrame;
@@ -49,12 +73,19 @@ export interface DDUState {
   tempUnit: TempUnit;
   layoutMode: DDULayoutMode;
   
-  // Pit Limiter state
+  // Pit Limiter state (Fullscreen overlay when active)
   pitLimiterActive: boolean;
+  
+  // Timed Fullscreen Overlays (1 second duration, interruptible)
+  timedOverlay: TimedFullscreenOverlay;
+  
+  // Microsectors bar (20 segments, 5% of height)
+  microsectors: Microsector[];
   
   // Event & Notification state
   lastCompletedLap: LapCompletedEvent | null;
   showLapBanner: boolean;
+  dismissLapBanner: () => void;
   
   // Mock Engine Controls
   isMockActive: boolean;
@@ -72,5 +103,8 @@ export interface DDUState {
   setPitLimiter: (active: boolean) => void;
   setMockActive: (active: boolean) => void;
   setMockScenario: (scenario: MockScenario) => void;
-  dismissLapBanner: () => void;
+  showTimedOverlay: (overlay: TimedFullscreenOverlay, durationMs?: number) => void;
+  dismissTimedOverlay: () => void;
+  updateMicrosector: (index: number, status: MicrosectorStatus, deltaMs?: number) => void;
+  resetMicrosectors: () => void;
 }

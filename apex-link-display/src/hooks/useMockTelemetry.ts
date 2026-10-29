@@ -1,12 +1,15 @@
 import { useEffect, useRef } from 'react';
 import { useTelemetryStore } from '../store/useTelemetryStore';
 import { LapCompletedEvent, TelemetryFrame } from '../types/telemetry';
+import { MicrosectorStatus } from '../types/ddu';
 
 export const useMockTelemetry = () => {
   const isMockActive = useTelemetryStore((s) => s.isMockActive);
   const mockScenario = useTelemetryStore((s) => s.mockScenario);
   const updateTelemetry = useTelemetryStore((s) => s.updateTelemetry);
   const triggerLapCompleted = useTelemetryStore((s) => s.triggerLapCompleted);
+  const updateMicrosector = useTelemetryStore((s) => s.updateMicrosector);
+  const resetMicrosectors = useTelemetryStore((s) => s.resetMicrosectors);
   const setFps = useTelemetryStore((s) => s.setFps);
 
   const stateRef = useRef({
@@ -27,6 +30,7 @@ export const useMockTelemetry = () => {
     gLon: 0.85,
     drsAvailable: true,
     drsEnabled: false,
+    lastMicrosectorIdx: 10,
     lastFrameTime: performance.now(),
     frameCount: 0,
     fpsTimer: performance.now(),
@@ -141,6 +145,11 @@ export const useMockTelemetry = () => {
           };
           triggerLapCompleted(event);
           state.lapTimeMs = 0;
+
+          // Reset microsectors for new lap
+          resetMicrosectors();
+          state.lastMicrosectorIdx = 0;
+          updateMicrosector(0, 'active');
         }
 
         const p = state.progress;
@@ -234,6 +243,19 @@ export const useMockTelemetry = () => {
       const deltaOsc = Math.sin((state.progress + state.lap * 0.35) * Math.PI * 2) * 380;
       const currentDeltaMs = Math.round(deltaOsc);
 
+      // Microsectors live progression
+      if (mockScenario === 'RACE_STINT') {
+        const currentMicroIdx = Math.min(19, Math.max(0, Math.floor(state.progress * 20)));
+        if (currentMicroIdx !== state.lastMicrosectorIdx) {
+          const prevIdx = state.lastMicrosectorIdx;
+          const status: MicrosectorStatus =
+            currentDeltaMs < -150 ? 'purple' : currentDeltaMs <= 0 ? 'green' : 'yellow';
+          updateMicrosector(prevIdx, status, currentDeltaMs);
+          updateMicrosector(currentMicroIdx, 'active');
+          state.lastMicrosectorIdx = currentMicroIdx;
+        }
+      }
+
       // Determine sector
       const sector = state.progress < 0.35 ? 1 : state.progress < 0.70 ? 2 : 3;
 
@@ -323,5 +345,13 @@ export const useMockTelemetry = () => {
     return () => {
       cancelAnimationFrame(animId);
     };
-  }, [isMockActive, mockScenario, updateTelemetry, triggerLapCompleted, setFps]);
+  }, [
+    isMockActive,
+    mockScenario,
+    updateTelemetry,
+    triggerLapCompleted,
+    updateMicrosector,
+    resetMicrosectors,
+    setFps,
+  ]);
 };
