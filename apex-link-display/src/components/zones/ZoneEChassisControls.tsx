@@ -36,7 +36,7 @@ export const ZoneEChassisControls: React.FC = () => {
   };
 
   return (
-    <div className="w-[1080px] h-[152px] p-5 flex flex-col justify-between border-t border-r border-zinc-800/80 bg-zinc-950/60 font-mono">
+    <div className="w-[1080px] h-full p-3 px-5 flex flex-col justify-between border-t border-r border-zinc-800/80 bg-zinc-950/60 font-mono">
       <div className="flex items-center justify-between text-[11px] font-black tracking-widest text-zinc-500">
         <span className="flex items-center gap-1.5">
           <Sliders className="w-3.5 h-3.5 text-cyan-400" />

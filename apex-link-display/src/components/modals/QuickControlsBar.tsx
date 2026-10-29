@@ -18,6 +18,10 @@ export const QuickControlsBar: React.FC<Props> = ({
   const mockScenario = useTelemetryStore((s) => s.mockScenario);
   const setMockScenario = useTelemetryStore((s) => s.setMockScenario);
   const setMockActive = useTelemetryStore((s) => s.setMockActive);
+  const pitLimiterActive = useTelemetryStore((s) => s.pitLimiterActive);
+  const setPitLimiter = useTelemetryStore((s) => s.setPitLimiter);
+  const triggerLapCompleted = useTelemetryStore((s) => s.triggerLapCompleted);
+  const currentLap = useTelemetryStore((s) => s.telemetry.timing.currentLap);
 
   const pills: { key: MockScenario; label: string }[] = [
     { key: 'RACE_STINT', label: '🏁 Monza Vuelta' },
@@ -50,6 +54,41 @@ export const QuickControlsBar: React.FC<Props> = ({
           </button>
         );
       })}
+
+      <div className="w-[1px] h-4 bg-zinc-800 mx-1" />
+
+      {/* Quick Pit Limiter & Lap triggers */}
+      <button
+        onClick={() => setPitLimiter(!pitLimiterActive)}
+        title="Alternar Pit Limiter Overlay (Tecla P)"
+        className={`px-2 py-0.5 rounded font-black transition-all cursor-pointer ${
+          pitLimiterActive
+            ? 'bg-cyan-400 text-black shadow-[0_0_8px_#00E5FF]'
+            : 'bg-zinc-900/90 text-zinc-400 hover:text-white hover:bg-zinc-800'
+        }`}
+      >
+        🅿️ PIT [P]
+      </button>
+
+      <button
+        onClick={() => {
+          triggerLapCompleted({
+            type: 'LAP_COMPLETED',
+            lapNumber: currentLap,
+            lapTimeMs: 80890,
+            lapTimeStr: '01:20.890',
+            isPersonalBest: true,
+            isValidLap: true,
+            sectors: [27800, 27150, 25940],
+            telemetrySamplesCount: 5120,
+            sessionLapId: `lap-fastest-${Date.now()}`,
+          });
+        }}
+        title="Disparar Overlay Vuelta Rápida (Tecla L)"
+        className="px-2 py-0.5 rounded font-black bg-zinc-900/90 text-purple-400 hover:text-purple-300 hover:bg-zinc-800 transition-all cursor-pointer"
+      >
+        ⚡ PB [L]
+      </button>
 
       <div className="w-[1px] h-4 bg-zinc-800 mx-1" />
 

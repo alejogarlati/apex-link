@@ -9,7 +9,7 @@ export const ZoneFFuelManagement: React.FC = () => {
   const tankPercent = Math.min(100, (fuel.remainingLiters / 105.0) * 100); // 105L max capacity
 
   return (
-    <div className="w-[840px] h-[152px] p-5 flex flex-col justify-between border-t border-zinc-800/80 bg-zinc-950/60 font-mono tabular-nums">
+    <div className="w-[840px] h-full p-3 px-5 flex flex-col justify-between border-t border-zinc-800/80 bg-zinc-950/60 font-mono tabular-nums">
       <div className="flex items-center justify-between text-[11px] font-black tracking-widest text-zinc-500">
         <span className="flex items-center gap-1.5">
           <Fuel className="w-3.5 h-3.5 text-cyan-400" />

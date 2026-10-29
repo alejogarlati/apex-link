@@ -56,7 +56,7 @@ export const ZoneCCentralColumn: React.FC = () => {
   });
 
   return (
-    <div className="w-[960px] h-[640px] px-8 py-5 flex flex-col items-center justify-between bg-black/60 relative">
+    <div className="w-[960px] h-full px-8 py-3.5 flex flex-col items-center justify-between bg-black/60 relative">
       {/* 1. Shift Lights Bar (15 LEDs) */}
       <div className="w-full flex items-center justify-center gap-1.5 p-2 rounded-lg bg-zinc-950 border border-zinc-800/80 shadow-inner">
         {leds}

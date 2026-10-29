@@ -86,7 +86,7 @@ export const ZoneBTyresAndBrakes: React.FC = () => {
   const brakes = useTelemetryStore((s) => s.brakes);
 
   return (
-    <div className="w-[480px] h-[640px] p-6 flex flex-col justify-between border-r border-zinc-800/80 bg-zinc-950/20">
+    <div className="w-[480px] h-full p-5 flex flex-col justify-between border-r border-zinc-800/80 bg-zinc-950/20">
       <div className="text-[11px] font-mono font-black tracking-widest text-zinc-500 flex items-center justify-between">
         <span>TYRE DYNAMICS & BRAKES</span>
         <span className="text-cyan-400">PIR-F1 SPEC</span>

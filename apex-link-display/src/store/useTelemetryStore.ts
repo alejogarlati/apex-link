@@ -1,5 +1,12 @@
 import { create } from 'zustand';
-import { ChassisSettings, DDUState, FuelTelemetry, MockScenario, SpeedUnit, TempUnit } from '../types/ddu';
+import {
+  ChassisSettings,
+  DDUState,
+  FuelTelemetry,
+  Microsector,
+  MockScenario,
+  TimedFullscreenOverlay,
+} from '../types/ddu';
 import { LapCompletedEvent, TelemetryFrame } from '../types/telemetry';
 
 const INITIAL_TELEMETRY: TelemetryFrame = {
@@ -65,7 +72,17 @@ const INITIAL_FUEL: FuelTelemetry = {
   lapsAutonomy: 18,
 };
 
-let lapBannerTimeout: number | null = null;
+// Generate 20 microsectors across track (S1: 0..6, S2: 7..13, S3: 14..19)
+const createInitialMicrosectors = (): Microsector[] => {
+  return Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    status: (i < 9 ? (i % 3 === 0 ? 'purple' : i % 2 === 0 ? 'green' : 'yellow') : i === 9 ? 'active' : 'upcoming') as any,
+    macroSector: i < 7 ? 1 : i < 14 ? 2 : 3,
+    deltaMs: i < 9 ? (i % 3 === 0 ? -240 : i % 2 === 0 ? -80 : 120) : undefined,
+  }));
+};
+
+let timedOverlayTimer: number | null = null;
 
 export const useTelemetryStore = create<DDUState>((set, get) => ({
   telemetry: INITIAL_TELEMETRY,
@@ -74,69 +91,97 @@ export const useTelemetryStore = create<DDUState>((set, get) => ({
   brakes: {
     tempDiscsC: [623, 648, 634, 701],
   },
-  
+
   isConnected: true,
   isUsbConnected: true,
   latencyMs: 1,
   fps: 60,
-  
+
   speedUnit: 'KMH',
   tempUnit: 'C',
   layoutMode: 'F1',
-  
+
   pitLimiterActive: false,
-  
+  timedOverlay: null,
+  microsectors: createInitialMicrosectors(),
+
   lastCompletedLap: null,
   showLapBanner: false,
-  
+  dismissLapBanner: () => set({ showLapBanner: false }),
+
   isMockActive: true, // Default to mock for standalone testing
   mockScenario: 'RACE_STINT',
-  
+
   updateTelemetry: (frame: TelemetryFrame) => {
     set({ telemetry: frame });
   },
-  
-  triggerLapCompleted: (event: LapCompletedEvent) => {
-    if (lapBannerTimeout) {
-      clearTimeout(lapBannerTimeout);
+
+  showTimedOverlay: (overlay: TimedFullscreenOverlay, durationMs = 1000) => {
+    // If a timer was already running, clear it immediately (interrupt and reset clock)
+    if (timedOverlayTimer) {
+      clearTimeout(timedOverlayTimer);
+      timedOverlayTimer = null;
     }
-    
-    set({
-      lastCompletedLap: event,
-      showLapBanner: true,
-    });
-    
-    // Auto-dismiss lap completed overlay after 4 seconds as specified in requirements
-    lapBannerTimeout = window.setTimeout(() => {
-      set({ showLapBanner: false });
-      lapBannerTimeout = null;
-    }, 4000);
+
+    set({ timedOverlay: overlay });
+
+    // Set new timer for exactly durationMs (1.0s by default)
+    timedOverlayTimer = window.setTimeout(() => {
+      set({ timedOverlay: null });
+      timedOverlayTimer = null;
+    }, durationMs);
   },
-  
+
+  dismissTimedOverlay: () => {
+    if (timedOverlayTimer) {
+      clearTimeout(timedOverlayTimer);
+      timedOverlayTimer = null;
+    }
+    set({ timedOverlay: null });
+  },
+
+  triggerLapCompleted: (event: LapCompletedEvent) => {
+    set({ lastCompletedLap: event });
+
+    if (event.isPersonalBest) {
+      // Show fastest lap overlay for 1.0 second
+      get().showTimedOverlay({
+        type: 'FASTEST_LAP',
+        lapTimeStr: event.lapTimeStr,
+        lapNumber: event.lapNumber,
+      }, 1000);
+    } else {
+      set({ showLapBanner: true });
+      window.setTimeout(() => {
+        set({ showLapBanner: false });
+      }, 3000);
+    }
+  },
+
   setConnectionStatus: (connected: boolean, latencyMs = 1) => {
     set({ isConnected: connected, latencyMs });
   },
-  
+
   setFps: (fps: number) => {
     set({ fps });
   },
-  
+
   toggleSpeedUnit: () => {
     set((state) => ({
       speedUnit: state.speedUnit === 'KMH' ? 'MPH' : 'KMH',
     }));
   },
-  
+
   toggleTempUnit: () => {
     set((state) => ({
       tempUnit: state.tempUnit === 'C' ? 'F' : 'C',
     }));
   },
-  
+
   setLayoutMode: (mode) => {
     set({ layoutMode: mode });
   },
-  
+
   setChassisValue: (key, value) => {
     set((state) => ({
       chassis: {
@@ -144,25 +189,68 @@ export const useTelemetryStore = create<DDUState>((set, get) => ({
         [key]: value,
       },
     }));
+
+    // Trigger full screen 1-second overlay for BBIAS, TC, or ABS
+    if (key === 'brakeBias') {
+      const val = value as number;
+      get().showTimedOverlay({
+        type: 'CHASSIS_CHANGE',
+        parameter: 'BRAKE BIAS',
+        value: `${val.toFixed(1)}%`,
+        color: 'text-white',
+        subtext: 'FRONT AXLE BALANCE',
+      }, 1000);
+    } else if (key === 'tc') {
+      get().showTimedOverlay({
+        type: 'CHASSIS_CHANGE',
+        parameter: 'TRACTION CONTROL',
+        value: `${value}`,
+        color: 'text-cyan-400',
+        subtext: 'SLIP RATIO 1..12',
+      }, 1000);
+    } else if (key === 'abs') {
+      get().showTimedOverlay({
+        type: 'CHASSIS_CHANGE',
+        parameter: 'ABS',
+        value: `${value}`,
+        color: 'text-rose-400',
+        subtext: 'ANTI-LOCK THRESHOLD 1..12',
+      }, 1000);
+    }
   },
-  
+
   setPitLimiter: (active: boolean) => {
     set({ pitLimiterActive: active });
   },
-  
+
   setMockActive: (active: boolean) => {
     set({ isMockActive: active });
   },
-  
+
   setMockScenario: (scenario: MockScenario) => {
-    set({ mockScenario: scenario });
+    set({
+      mockScenario: scenario,
+      pitLimiterActive: scenario === 'PIT_LANE',
+    });
   },
-  
-  dismissLapBanner: () => {
-    if (lapBannerTimeout) {
-      clearTimeout(lapBannerTimeout);
-      lapBannerTimeout = null;
-    }
-    set({ showLapBanner: false });
+
+  updateMicrosector: (index: number, status, deltaMs) => {
+    set((state) => {
+      const copy = [...state.microsectors];
+      if (copy[index]) {
+        copy[index] = { ...copy[index], status, deltaMs };
+      }
+      return { microsectors: copy };
+    });
+  },
+
+  resetMicrosectors: () => {
+    set({
+      microsectors: Array.from({ length: 20 }, (_, i) => ({
+        id: i,
+        status: i === 0 ? 'active' : 'upcoming',
+        macroSector: i < 7 ? 1 : i < 14 ? 2 : 3,
+      })),
+    });
   },
 }));

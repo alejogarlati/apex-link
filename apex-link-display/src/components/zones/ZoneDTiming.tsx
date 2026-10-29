@@ -6,7 +6,7 @@ export const ZoneDTiming: React.FC = () => {
   const timing = useTelemetryStore((s) => s.telemetry.timing);
 
   return (
-    <div className="w-[480px] h-[640px] p-6 flex flex-col justify-between border-l border-zinc-800/80 bg-zinc-950/20 font-mono tabular-nums">
+    <div className="w-[480px] h-full p-4 flex flex-col justify-between border-l border-zinc-800/80 bg-zinc-950/20 font-mono tabular-nums">
       {/* Header */}
       <div className="text-[11px] font-black tracking-widest text-zinc-500 flex items-center justify-between">
         <span className="flex items-center gap-1.5">
