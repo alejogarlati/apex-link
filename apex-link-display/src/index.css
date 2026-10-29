@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  body {
+    background-color: #000000;
+    color: #ffffff;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    overflow: hidden;
+  }
+}
+
+/* Tabular numbers for anti-jitter digits */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Animations for shift lights strobe and alerts */
+@keyframes shift-strobe {
+  0%, 100% {
+    opacity: 1;
+    filter: brightness(2) drop-shadow(0 0 12px #ffffff);
+  }
+  50% {
+    opacity: 0.1;
+    filter: brightness(0.5);
+  }
+}
+
+.animate-strobe-fast {
+  animation: shift-strobe 0.066s infinite; /* ~15 Hz strobe */
+}
+
+@keyframes pit-limiter-blink {
+  0%, 100% {
+    opacity: 1;
+    background-color: #00E5FF;
+    color: #000000;
+    box-shadow: 0 0 16px #00E5FF;
+  }
+  50% {
+    opacity: 0.2;
+    background-color: transparent;
+    color: #00E5FF;
+    box-shadow: none;
+  }
+}
+
+.animate-pit-limiter {
+  animation: pit-limiter-blink 0.25s infinite; /* 4 Hz blink */
+}
+
+@keyframes pb-pulse {
+  0%, 100% {
+    box-shadow: 0 0 35px rgba(224, 64, 251, 0.8), inset 0 0 25px rgba(224, 64, 251, 0.6);
+    border-color: #E040FB;
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(224, 64, 251, 0.3), inset 0 0 10px rgba(224, 64, 251, 0.2);
+    border-color: #9C27B0;
+  }
+}
+
+.animate-pb-glow {
+  animation: pb-pulse 1.2s infinite ease-in-out;
+}
