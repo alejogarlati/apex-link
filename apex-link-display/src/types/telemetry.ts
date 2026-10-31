@@ -25,17 +25,25 @@ export interface CarTelemetry {
   steer: number; // -1.0 .. 1.0
   drsAvailable: boolean;
   drsEnabled: boolean;
+  tc?: number; // Traction Control level (0..12)
+  abs?: number; // Anti-lock braking system level (0..12)
+  brakeBias?: number; // Front brake bias percentage (e.g. 58.5)
+  pitLimiterOn?: boolean; // Pit limiter switch active
+  isInPitLane?: boolean; // Car is inside pit lane / boxes
 }
 
 export interface TyresTelemetry {
   pressurePsi: [number, number, number, number]; // [FL, FR, RL, RR]
   tempCoreC: [number, number, number, number]; // [FL, FR, RL, RR]
   wear: [number, number, number, number]; // [FL, FR, RL, RR] percentage 0..100%
+  tempBrakesC?: [number, number, number, number]; // [FL, FR, RL, RR] brake disc temperatures
 }
 
 export interface TimingTelemetry {
   lapTimeMs: number;
   lapTimeStr: string; // "mm:ss.fff"
+  lastLapTimeMs?: number;
+  lastLapTimeStr?: string; // "mm:ss.fff" or "--:--.---"
   bestTimeMs: number;
   bestTimeStr: string; // "mm:ss.fff" or "--:--.---"
   deltaMs: number; // negative = faster (green), positive = slower (red)
@@ -54,6 +62,9 @@ export interface SessionTelemetry {
   position: number;
   track: string;
   carModel: string;
+  fuel?: number; // Current fuel in liters
+  maxFuel?: number; // Tank capacity in liters
+  tyreCompound?: string; // Tyre compound name (e.g. "SOFT", "MEDIUM")
 }
 
 export interface TelemetryFrame {

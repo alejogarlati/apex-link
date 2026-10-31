@@ -89,6 +89,8 @@ export interface DDUState {
   
   // Microsectors bar (20 segments, 5% of height)
   microsectors: Microsector[];
+  bestLapTimeMs: number;
+  bestLapTimeStr: string;
   
   // Event & Notification state
   lastCompletedLap: LapCompletedEvent | null;

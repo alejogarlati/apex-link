@@ -9,7 +9,10 @@ export const PitLimiterFullscreenOverlay: React.FC = () => {
   const car = useTelemetryStore((s) => s.telemetry.car);
   const speedUnit = useTelemetryStore((s) => s.speedUnit);
 
-  if (!isInPitLane) return null;
+  // El overlay solo debe activarse si el limitador está activo o si el coche está circulando físicamente en pit lane a velocidad de marcha
+  const shouldShow = pitLimiterActive || (isInPitLane && car.speedKmh > 2.0);
+
+  if (!shouldShow) return null;
 
   const displaySpeed =
     speedUnit === 'MPH'
@@ -58,27 +61,36 @@ export const PitLimiterFullscreenOverlay: React.FC = () => {
                 : 'bg-zinc-950 border-2 border-cyan-500/60 shadow-[0_0_50px_rgba(0,229,255,0.25)]'
             }`}
           >
-            <div className="flex items-baseline gap-4">
+            <span className="text-[14px] font-bold text-zinc-400 uppercase tracking-widest mb-1">
+              PIT SPEED ({speedUnit})
+            </span>
+            <div className="flex items-baseline gap-2">
               <span
                 className={`text-[170px] font-black leading-none tabular-nums tracking-tighter ${
-                  isOverSpeed ? 'text-rose-500 drop-shadow-[0_0_30px_#FF1744]' : 'text-white'
+                  isOverSpeed ? 'text-rose-400' : 'text-white'
                 }`}
               >
                 {displaySpeed}
               </span>
-              <span
-                className={`text-[36px] font-black tracking-wider ${
-                  isOverSpeed ? 'text-rose-400' : 'text-cyan-400'
-                }`}
-              >
-                {speedUnit}
+              <span className="text-[28px] font-bold text-zinc-500">
+                / {speedUnit === 'MPH' ? '50' : '80'}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Marginal empty space to keep vertical balance */}
-        <div className="h-4" />
+        {/* 3. Footer: Warning notice or status */}
+        <div className="flex items-center gap-4 text-[18px] font-bold tracking-widest uppercase">
+          {isOverSpeed ? (
+            <span className="text-rose-400 bg-rose-950/60 px-6 py-2 rounded-full border border-rose-500 animate-bounce">
+              ⚠️ SPEED LIMIT EXCEEDED - REDUCE SPEED
+            </span>
+          ) : (
+            <span className="text-zinc-500 bg-zinc-900/80 px-6 py-2 rounded-full border border-zinc-800">
+              PIT LANE REGULATION ACTIVE
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

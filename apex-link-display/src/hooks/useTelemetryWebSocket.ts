@@ -2,7 +2,13 @@ import { useEffect, useRef } from 'react';
 import { useTelemetryStore } from '../store/useTelemetryStore';
 import { LapCompletedEvent, TelemetryFrame, TelemetrySocketMessage } from '../types/telemetry';
 
-const WS_URL = 'ws://localhost:8080/ws/telemetry';
+const getWsUrl = (): string => {
+  if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+    const host = window.location.hostname;
+    return `ws://${host}:8080/ws/telemetry`;
+  }
+  return 'ws://localhost:8080/ws/telemetry';
+};
 
 export const useTelemetryWebSocket = () => {
   const updateTelemetry = useTelemetryStore((s) => s.updateTelemetry);
@@ -26,7 +32,8 @@ export const useTelemetryWebSocket = () => {
       if (isUnmounted) return;
 
       try {
-        const ws = new WebSocket(WS_URL);
+        const url = getWsUrl();
+        const ws = new WebSocket(url);
         socketRef.current = ws;
 
         ws.onopen = () => {
