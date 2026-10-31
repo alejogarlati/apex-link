@@ -157,7 +157,7 @@ flowchart TB
 ```
 
 ### 4.1. Capa de Adquisición y Persistencia (Backend Relay)
-- **Tecnología:** Node.js v22 (con bibliotecas de lectura Win32 MMF) o daemon en Python.
+- **Tecnología:** C# .NET 8 / ASP.NET Core Kestrel (Clean Architecture), SQLite (Modo WAL) e interoperabilidad nativa Win32 MMF (unsafe fixed Pack = 4).
 - **Principio de Diseño:** Lectura no bloqueante. Se lee la memoria compartida mediante punteros nativos de Windows, garantizando que el consumo de procesador sea inferior al 1.5% del CPU para no quitarle recursos al cálculo de físicas ni a la GPU del simulador.
 - **Motor Mock de Telemetría:** Un generador incorporado capaz de reproducir con precisión milimétrica una vuelta sintética pregrabada en un circuito (como Monza o Spa). Permite a los desarrolladores de frontend y móvil trabajar sin necesidad de tener el simulador abierto.
 

@@ -49,3 +49,6 @@ Thumbs.db
 
 # Turborepo / Cache
 .turbo
+
+# Assetto Corsa SDK & proprietary binaries
+sdk/
