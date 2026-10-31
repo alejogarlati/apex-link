@@ -3,16 +3,12 @@ import { useTelemetryStore } from '../../store/useTelemetryStore';
 
 export const ZoneEChassisControls: React.FC = () => {
   const chassis = useTelemetryStore((s) => s.chassis);
+  const fuel = useTelemetryStore((s) => s.fuel);
   const setChassisValue = useTelemetryStore((s) => s.setChassisValue);
 
   const cycleTC = () => {
     const next = chassis.tc >= 8 ? 1 : chassis.tc + 1;
     setChassisValue('tc', next);
-  };
-
-  const cycleTCCut = () => {
-    const next = chassis.tcCut >= 8 ? 1 : chassis.tcCut + 1;
-    setChassisValue('tcCut', next);
   };
 
   const cycleABS = () => {
@@ -28,42 +24,34 @@ export const ZoneEChassisControls: React.FC = () => {
     setChassisValue('brakeBias', next);
   };
 
-  const cycleMap = () => {
-    const maps = ['RACE 1', 'QUAL 1', 'MIX 2', 'DEFENSE', 'WET'];
-    const currentIndex = maps.indexOf(chassis.engineMap);
-    const next = maps[(currentIndex + 1) % maps.length];
-    setChassisValue('engineMap', next);
-  };
+  const tcDisplay = chassis.tc === 0 ? 'OFF' : chassis.tc === 1 ? 'ON' : String(chassis.tc);
+  const absDisplay = chassis.abs === 0 ? 'OFF' : chassis.abs === 1 ? 'ON' : String(chassis.abs);
 
   return (
-    <div className="w-[1920px] h-full grid grid-cols-5 border-t border-zinc-800 font-mono select-none">
+    <div className="w-[1920px] h-full grid grid-cols-4 border-t border-zinc-800 font-mono select-none">
       {/* 1. TC */}
       <button
         onClick={cycleTC}
         title="Toca para ajustar TC"
         className="flex flex-col items-center justify-center border-r border-zinc-800/80 hover:bg-zinc-950/40 transition-colors cursor-pointer"
       >
-        <span className="text-[16px] font-bold tracking-[0.2em] text-zinc-400 uppercase">
+        <span className="text-[22px] font-bold tracking-[0.25em] text-zinc-400 uppercase">
           TC
         </span>
-        <span className="text-[48px] font-black text-cyan-400 leading-none mt-2">
-          {chassis.tc}
+        <span className="text-[65px] font-black text-cyan-400 leading-none mt-1">
+          {tcDisplay}
         </span>
       </button>
 
-      {/* 2. TC CUT */}
-      <button
-        onClick={cycleTCCut}
-        title="Toca para ajustar TC CUT"
-        className="flex flex-col items-center justify-center border-r border-zinc-800/80 hover:bg-zinc-950/40 transition-colors cursor-pointer"
-      >
-        <span className="text-[16px] font-bold tracking-[0.2em] text-zinc-400 uppercase">
-          TC CUT
+      {/* 2. FUEL RESTANTE (Litros con 1 decimal) */}
+      <div className="flex flex-col items-center justify-center border-r border-zinc-800/80">
+        <span className="text-[22px] font-bold tracking-[0.25em] text-zinc-400 uppercase">
+          FUEL
         </span>
-        <span className="text-[48px] font-black text-amber-400 leading-none mt-2">
-          {chassis.tcCut}
+        <span className="text-[65px] font-black text-amber-400 leading-none mt-1 tabular-nums">
+          {fuel.remainingLiters.toFixed(1)} L
         </span>
-      </button>
+      </div>
 
       {/* 3. ABS */}
       <button
@@ -71,11 +59,11 @@ export const ZoneEChassisControls: React.FC = () => {
         title="Toca para ajustar ABS"
         className="flex flex-col items-center justify-center border-r border-zinc-800/80 hover:bg-zinc-950/40 transition-colors cursor-pointer"
       >
-        <span className="text-[16px] font-bold tracking-[0.2em] text-zinc-400 uppercase">
+        <span className="text-[22px] font-bold tracking-[0.25em] text-zinc-400 uppercase">
           ABS
         </span>
-        <span className="text-[48px] font-black text-rose-400 leading-none mt-2">
-          {chassis.abs}
+        <span className="text-[65px] font-black text-rose-400 leading-none mt-1">
+          {absDisplay}
         </span>
       </button>
 
@@ -83,27 +71,13 @@ export const ZoneEChassisControls: React.FC = () => {
       <button
         onClick={cycleBias}
         title="Toca para ajustar BIAS (+0.5%, Shift para -0.5%)"
-        className="flex flex-col items-center justify-center border-r border-zinc-800/80 hover:bg-zinc-950/40 transition-colors cursor-pointer"
-      >
-        <span className="text-[16px] font-bold tracking-[0.2em] text-zinc-400 uppercase">
-          BIAS
-        </span>
-        <span className="text-[48px] font-black text-white leading-none mt-2 tabular-nums">
-          {chassis.brakeBias.toFixed(1)}%
-        </span>
-      </button>
-
-      {/* 5. MAP */}
-      <button
-        onClick={cycleMap}
-        title="Toca para alternar Mapa Motor"
         className="flex flex-col items-center justify-center hover:bg-zinc-950/40 transition-colors cursor-pointer"
       >
-        <span className="text-[16px] font-bold tracking-[0.2em] text-zinc-400 uppercase">
-          MAP
+        <span className="text-[22px] font-bold tracking-[0.25em] text-zinc-400 uppercase">
+          BIAS
         </span>
-        <span className="text-[40px] font-black text-purple-400 leading-none mt-2 tracking-tight">
-          {chassis.engineMap}
+        <span className="text-[65px] font-black text-white leading-none mt-1 tabular-nums">
+          {chassis.brakeBias.toFixed(1)}%
         </span>
       </button>
     </div>

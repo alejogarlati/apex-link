@@ -5,7 +5,7 @@ import { ZoneBTyresAndBrakes } from './components/zones/ZoneBTyresAndBrakes';
 import { ZoneCCentralColumn } from './components/zones/ZoneCCentralColumn';
 import { ZoneDTiming } from './components/zones/ZoneDTiming';
 import { ZoneEChassisControls } from './components/zones/ZoneEChassisControls';
-import { MicrosectorsBar } from './components/zones/MicrosectorsBar';
+import { SectorsBar } from './components/zones/SectorsBar';
 import { FullscreenOverlayHost } from './components/overlays/FullscreenOverlayHost';
 import { DiagnosticsModal } from './components/modals/DiagnosticsModal';
 import { QuickControlsBar } from './components/modals/QuickControlsBar';
@@ -49,13 +49,13 @@ export function App() {
         <ZoneDTiming />
       </div>
 
-      {/* 3. Bottom Row: Chassis Electronics (139px) - Fuel Management Eliminated */}
-      <div className="w-[1920px] h-[139px] shrink-0">
+      {/* 3. Bottom Row: Chassis Electronics & Fuel (134px) */}
+      <div className="w-[1920px] h-[134px] shrink-0">
         <ZoneEChassisControls />
       </div>
 
-      {/* 4. Bottom Microsectors Bar (5% of 864px = 43px, no texts, only segmented colors) */}
-      <MicrosectorsBar />
+      {/* 4. Official 3 Sectors Bar (S1, S2, S3) (48px) */}
+      <SectorsBar />
 
       {/* 5. 100% Fullscreen Overlays (Pit Limiter, Chassis Change, Fastest Lap) */}
       <FullscreenOverlayHost />

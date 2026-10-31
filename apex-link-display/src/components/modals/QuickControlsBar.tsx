@@ -34,7 +34,7 @@ export const QuickControlsBar: React.FC<Props> = ({
   ];
 
   return (
-    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-40 px-3 py-1.5 rounded-full bg-zinc-950/80 border border-zinc-800/80 backdrop-blur-md flex items-center gap-2 shadow-2xl font-mono text-[11px] opacity-70 hover:opacity-100 transition-opacity">
+    <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-40 px-3 py-1.5 rounded-full bg-zinc-950/80 border border-zinc-800/80 backdrop-blur-md flex items-center gap-2 shadow-2xl font-mono text-[11px] opacity-70 hover:opacity-100 transition-opacity">
       <span className="text-[10px] text-zinc-500 font-black pl-1 uppercase">ESCENARIOS:</span>
 
       {pills.map((p) => {
