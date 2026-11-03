@@ -35,7 +35,7 @@ export const LetterboxContainer: React.FC<Props> = ({ children }) => {
           transform: `scale(${scale})`,
           transformOrigin: 'center center',
         }}
-        className="relative bg-black text-white shrink-0 shadow-2xl overflow-hidden border border-zinc-900"
+        className="relative bg-[#000000] text-white shrink-0 overflow-hidden"
       >
         {children}
       </div>

@@ -1,29 +1,31 @@
 import { create } from 'zustand';
 import {
+  AppState,
   ChassisSettings,
   DDUState,
   FuelTelemetry,
   Microsector,
   MicrosectorStatus,
   MockScenario,
+  PilotProfile,
   TimedFullscreenOverlay,
 } from '../types/ddu';
 import { LapCompletedEvent, TelemetryFrame } from '../types/telemetry';
 
 const INITIAL_TELEMETRY: TelemetryFrame = {
   type: 'FRAME',
-  timestamp: Date.now(),
+  timestamp: 0,
   car: {
-    speedKmh: 312,
-    rpms: 12450,
+    speedKmh: 0,
+    rpms: 0,
     maxRpm: 13000,
-    gear: 7,
-    throttle: 1.0,
+    gear: 0,
+    throttle: 0.0,
     brake: 0.0,
-    clutch: 0.0,
-    steer: 0.02,
-    drsAvailable: true,
-    drsEnabled: true,
+    clutch: 1.0,
+    steer: 0.0,
+    drsAvailable: false,
+    drsEnabled: false,
     tc: 2,
     abs: 3,
     brakeBias: 58.5,
@@ -31,10 +33,10 @@ const INITIAL_TELEMETRY: TelemetryFrame = {
     isInPitLane: false,
   },
   tyres: {
-    pressurePsi: [27.6, 27.8, 27.7, 27.9],
-    tempCoreC: [88.2, 91.4, 85.0, 92.1],
-    wear: [98.5, 97.8, 99.1, 98.6],
-    tempBrakesC: [623, 648, 634, 701],
+    pressurePsi: [27.0, 27.0, 27.0, 27.0],
+    tempCoreC: [75.0, 75.0, 75.0, 75.0],
+    wear: [100.0, 100.0, 100.0, 100.0],
+    tempBrakesC: [350, 350, 350, 350],
   },
   timing: {
     lapTimeMs: 0,
@@ -48,22 +50,22 @@ const INITIAL_TELEMETRY: TelemetryFrame = {
   },
   dynamics: {
     gForce: {
-      lat: 0.45,
-      lon: 0.85,
-      vert: 0.05,
+      lat: 0.0,
+      lon: 0.0,
+      vert: 0.0,
     },
     worldPos: {
-      x: 245.32,
-      y: 12.0,
-      z: -412.18,
+      x: 0.0,
+      y: 0.0,
+      z: 0.0,
     },
   },
   session: {
     flag: 'GREEN',
-    position: 2,
-    track: 'monza',
-    carModel: 'ks_ferrari_sf70h',
-    fuel: 46.2,
+    position: 1,
+    track: '',
+    carModel: '',
+    fuel: 45.0,
     maxFuel: 105.0,
     tyreCompound: 'SOFT',
   },
@@ -83,24 +85,35 @@ const INITIAL_FUEL: FuelTelemetry = {
   lapsAutonomy: 18,
 };
 
+const INITIAL_PILOT: PilotProfile = {
+  name: 'Invitado',
+  alias: 'INVITADO',
+  isGuest: true,
+};
+
 // Generar 20 microsectores en la pista (S1: 0..6, S2: 7..13, S3: 14..19)
 const createInitialMicrosectors = (): Microsector[] => {
   return Array.from({ length: 20 }, (_, i) => ({
     id: i,
-    status: (i < 9 ? (i % 3 === 0 ? 'purple' : i % 2 === 0 ? 'green' : 'yellow') : i === 9 ? 'active' : 'upcoming') as MicrosectorStatus,
+    status: (i === 0 ? 'active' : 'upcoming') as MicrosectorStatus,
     macroSector: (i < 7 ? 1 : i < 14 ? 2 : 3) as (1 | 2 | 3),
-    deltaMs: i < 9 ? (i % 3 === 0 ? -240 : i % 2 === 0 ? -80 : 120) : undefined,
   }));
 };
 
 let timedOverlayTimer: number | null = null;
 
 export const useTelemetryStore = create<DDUState>((set, get) => ({
+  appState: 'STANDBY',
+  pilotProfile: INITIAL_PILOT,
+  isSimulatorConnected: false,
+  calibrationProgress: 0,
+  lastFrameReceivedAt: 0,
+
   telemetry: INITIAL_TELEMETRY,
   chassis: INITIAL_CHASSIS,
   fuel: INITIAL_FUEL,
   brakes: {
-    tempDiscsC: [623, 648, 634, 701],
+    tempDiscsC: [350, 350, 350, 350],
   },
 
   isConnected: false,
@@ -115,7 +128,7 @@ export const useTelemetryStore = create<DDUState>((set, get) => ({
   isInPitLane: false,
   pitLimiterActive: false,
   tyreCompound: 'SOFT',
-  macroSectors: ['purple', 'active', 'upcoming'],
+  macroSectors: ['active', 'upcoming', 'upcoming'],
   timedOverlay: null,
   microsectors: createInitialMicrosectors(),
 
@@ -129,7 +142,45 @@ export const useTelemetryStore = create<DDUState>((set, get) => ({
   isMockActive: false, // Por defecto conecta directamente al backend de telemetria en vivo
   mockScenario: 'RACE_STINT',
 
+  setAppState: (appState: AppState) => {
+    set({ appState });
+  },
+
+  setPilotProfile: (pilotProfile: PilotProfile) => {
+    set({ pilotProfile });
+  },
+
+  setSimulatorConnected: (isSimulatorConnected: boolean) => {
+    set({ isSimulatorConnected });
+  },
+
+  setCalibrationProgress: (calibrationProgress: number) => {
+    set({ calibrationProgress });
+  },
+
+  startCalibration: () => {
+    const current = get().appState;
+    if (current === 'CALIBRATING' || current === 'ON_SESSION') return;
+    set({
+      appState: 'CALIBRATING',
+      calibrationProgress: 0,
+    });
+  },
+
   updateTelemetry: (frame: TelemetryFrame) => {
+    const prevState = get();
+
+    // Detectar si el cuadro corresponde a una sesión activa en pista
+    const hasValidSession =
+      Boolean(frame.session.track && frame.session.track.trim() !== '' && !frame.session.track.toLowerCase().includes('desconocido')) ||
+      frame.car.rpms > 0 ||
+      frame.car.speedKmh > 0 ||
+      prevState.isMockActive;
+
+    if (prevState.appState === 'STANDBY' && hasValidSession) {
+      prevState.startCalibration();
+    }
+
     set((state) => {
       // 1. Gestión del Mejor Tiempo de la Sesión Activa
       const sessionReset = frame.timing.currentLap < state.telemetry.timing.currentLap;
@@ -175,7 +226,7 @@ export const useTelemetryStore = create<DDUState>((set, get) => ({
       let biasChanged = false;
 
       if (frame.car.tc !== undefined) {
-        const parsedTc = frame.car.tc <= 1.0 ? Math.round(frame.car.tc) : Math.round(frame.car.tc);
+        const parsedTc = Math.round(frame.car.tc);
         if (parsedTc !== state.chassis.tc) {
           nextChassis.tc = parsedTc;
           tcChanged = true;
@@ -183,7 +234,7 @@ export const useTelemetryStore = create<DDUState>((set, get) => ({
       }
 
       if (frame.car.abs !== undefined) {
-        const parsedAbs = frame.car.abs <= 1.0 ? Math.round(frame.car.abs) : Math.round(frame.car.abs);
+        const parsedAbs = Math.round(frame.car.abs);
         if (parsedAbs !== state.chassis.abs) {
           nextChassis.abs = parsedAbs;
           absChanged = true;
@@ -200,8 +251,8 @@ export const useTelemetryStore = create<DDUState>((set, get) => ({
         }
       }
 
-      // Si el cambio proviene del simulador en vivo, disparar el overlay temporal correspondiente
-      if (state.isConnected && state.telemetry.timestamp > 0) {
+      // Si el cambio proviene del simulador en vivo y ya estamos en sesión, disparar el overlay temporal correspondiente
+      if (state.appState === 'ON_SESSION' && state.isConnected && state.telemetry.timestamp > 0) {
         if (biasChanged) {
           get().showTimedOverlay(
             {
@@ -275,7 +326,6 @@ export const useTelemetryStore = create<DDUState>((set, get) => ({
 
       let nextMicrosectors = state.microsectors;
 
-      // Detectar inicio de una nueva vuelta completada
       if (currentLap !== previousLap && currentLap > 0) {
         nextMicrosectors = Array.from({ length: 20 }, (_, i) => ({
           id: i,
@@ -288,13 +338,8 @@ export const useTelemetryStore = create<DDUState>((set, get) => ({
       const copy = [...nextMicrosectors];
       let hasChanges = false;
 
-      // Actualizar segmentos ya transitados
       for (let i = 0; i < currentMicroIdx; i++) {
         if (copy[i].status === 'upcoming' || copy[i].status === 'active') {
-          // Lógica estricta de telemetría de competición:
-          // - Récord de sector: morado ('purple') si deltaMs < -150
-          // - Mejora personal: verde ('green') si deltaMs <= 0
-          // - Pérdida de tiempo / sin mejora: amarillo/gris ('yellow') si deltaMs > 0
           let status: MicrosectorStatus = 'yellow';
           if (deltaMs < -150) {
             status = 'purple';
@@ -313,7 +358,6 @@ export const useTelemetryStore = create<DDUState>((set, get) => ({
         }
       }
 
-      // El segmento actual donde se ubica el vehículo
       if (copy[currentMicroIdx] && copy[currentMicroIdx].status !== 'active') {
         copy[currentMicroIdx] = {
           ...copy[currentMicroIdx],
@@ -326,10 +370,9 @@ export const useTelemetryStore = create<DDUState>((set, get) => ({
         nextMicrosectors = copy;
       }
 
-      // 7. Lógica Oficial de los 3 Sectores de Circuito (S1, S2, S3)
+      // 8. Lógica Oficial de los 3 Sectores de Circuito (S1, S2, S3)
       let nextMacroSectors = [...state.macroSectors] as [MicrosectorStatus, MicrosectorStatus, MicrosectorStatus];
 
-      // Al cruzar la línea de meta: ELIMINAR inmediatamente los colores de la vuelta anterior
       if (currentLap !== previousLap && currentLap > 0) {
         nextMacroSectors = ['active', 'upcoming', 'upcoming'];
       } else {
@@ -338,14 +381,12 @@ export const useTelemetryStore = create<DDUState>((set, get) => ({
           nextMacroSectors[1] = 'upcoming';
           nextMacroSectors[2] = 'upcoming';
         } else if (sector === 2) {
-          // Consolidar Sector 1 solo una vez y mantenerlo inmutable durante el resto de la vuelta
           if (nextMacroSectors[0] === 'active' || nextMacroSectors[0] === 'upcoming') {
             nextMacroSectors[0] = deltaMs <= 0 ? 'purple' : 'yellow';
           }
           nextMacroSectors[1] = 'active';
           nextMacroSectors[2] = 'upcoming';
         } else if (sector === 3) {
-          // Consolidar Sector 2 solo una vez y mantenerlo inmutable
           if (nextMacroSectors[1] === 'active' || nextMacroSectors[1] === 'upcoming') {
             nextMacroSectors[1] = deltaMs <= 0 ? 'purple' : 'yellow';
           }
@@ -354,6 +395,8 @@ export const useTelemetryStore = create<DDUState>((set, get) => ({
       }
 
       return {
+        lastFrameReceivedAt: Date.now(),
+        isSimulatorConnected: hasValidSession,
         telemetry: nextTelemetry,
         chassis: nextChassis,
         isInPitLane: nextInPit,
@@ -524,6 +567,11 @@ export const useTelemetryStore = create<DDUState>((set, get) => ({
 
   setMockActive: (active: boolean) => {
     set({ isMockActive: active });
+    if (active) {
+      get().startCalibration();
+    } else {
+      set({ appState: 'STANDBY', isSimulatorConnected: false });
+    }
   },
 
   setMockScenario: (scenario: MockScenario) => {

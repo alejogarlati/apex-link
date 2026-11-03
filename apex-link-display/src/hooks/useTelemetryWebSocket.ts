@@ -2,31 +2,83 @@ import { useEffect, useRef } from 'react';
 import { useTelemetryStore } from '../store/useTelemetryStore';
 import { LapCompletedEvent, TelemetryFrame, TelemetrySocketMessage } from '../types/telemetry';
 
-const getWsUrl = (): string => {
+const getHost = (): string => {
   if (typeof window !== 'undefined' && window.location && window.location.hostname) {
-    const host = window.location.hostname;
-    return `ws://${host}:8080/ws/telemetry`;
+    return window.location.hostname;
   }
-  return 'ws://localhost:8080/ws/telemetry';
+  return 'localhost';
 };
+
+export const getWsUrl = (): string => `ws://${getHost()}:8080/ws/telemetry`;
+export const getApiBaseUrl = (): string => `http://${getHost()}:8080`;
 
 export const useTelemetryWebSocket = () => {
   const updateTelemetry = useTelemetryStore((s) => s.updateTelemetry);
   const triggerLapCompleted = useTelemetryStore((s) => s.triggerLapCompleted);
   const setConnectionStatus = useTelemetryStore((s) => s.setConnectionStatus);
+  const setPilotProfile = useTelemetryStore((s) => s.setPilotProfile);
+  const setSimulatorConnected = useTelemetryStore((s) => s.setSimulatorConnected);
+  const setAppState = useTelemetryStore((s) => s.setAppState);
   const isMockActive = useTelemetryStore((s) => s.isMockActive);
 
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // If user explicitly activated mock simulation, WebSocket can idle or attempt background connection
+    let isUnmounted = false;
+
+    const fetchBackendStatusAndProfile = async () => {
+      try {
+        const res = await fetch(`${getApiBaseUrl()}/api/estado`, {
+          method: 'GET',
+          headers: { Accept: 'application/json' },
+        });
+        if (!res.ok || isUnmounted) return;
+        const json = await res.json();
+        const datos = json?.datos || json?.data;
+        if (datos) {
+          setPilotProfile({
+            name: datos.pilotName || 'Invitado',
+            alias: datos.pilotAlias || 'INVITADO',
+            isGuest: datos.isGuest ?? true,
+          });
+          if (typeof datos.isConnected === 'boolean') {
+            setSimulatorConnected(datos.isConnected);
+          }
+        }
+      } catch {
+        // Fallback silencioso a Invitado si el endpoint no responde
+      }
+    };
+
+    // Monitorear inactividad de cuadros (retorno automático a STANDBY si se sale de la sesión)
+    const watchdogInterval = window.setInterval(() => {
+      const store = useTelemetryStore.getState();
+      if (store.isMockActive) return;
+
+      const elapsedSinceLastFrame = Date.now() - store.lastFrameReceivedAt;
+      if (store.lastFrameReceivedAt > 0 && elapsedSinceLastFrame > 3200) {
+        if (store.appState === 'ON_SESSION') {
+          setAppState('STANDBY');
+        }
+        if (store.isSimulatorConnected) {
+          setSimulatorConnected(false);
+        }
+      }
+
+      if (store.isConnected && store.appState === 'STANDBY') {
+        fetchBackendStatusAndProfile();
+      }
+    }, 1500);
+
     if (isMockActive) {
       setConnectionStatus(true, 1);
-      return;
+      setSimulatorConnected(true);
+      return () => {
+        isUnmounted = true;
+        clearInterval(watchdogInterval);
+      };
     }
-
-    let isUnmounted = false;
 
     const connect = () => {
       if (isUnmounted) return;
@@ -39,6 +91,7 @@ export const useTelemetryWebSocket = () => {
         ws.onopen = () => {
           if (isUnmounted) return;
           setConnectionStatus(true, 1);
+          fetchBackendStatusAndProfile();
         };
 
         ws.onmessage = (event) => {
@@ -51,7 +104,7 @@ export const useTelemetryWebSocket = () => {
               triggerLapCompleted(data as LapCompletedEvent);
             }
           } catch {
-            // Ignore malformed packets silently
+            // Ignorar paquetes malformados
           }
         };
 
@@ -63,11 +116,12 @@ export const useTelemetryWebSocket = () => {
         ws.onclose = () => {
           if (isUnmounted) return;
           setConnectionStatus(false);
-          // Try reconnecting after 1s
+          setSimulatorConnected(false);
           reconnectTimeoutRef.current = window.setTimeout(connect, 1000);
         };
       } catch {
         setConnectionStatus(false);
+        setSimulatorConnected(false);
         reconnectTimeoutRef.current = window.setTimeout(connect, 1000);
       }
     };
@@ -76,6 +130,7 @@ export const useTelemetryWebSocket = () => {
 
     return () => {
       isUnmounted = true;
+      clearInterval(watchdogInterval);
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
@@ -83,5 +138,13 @@ export const useTelemetryWebSocket = () => {
         socketRef.current.close();
       }
     };
-  }, [isMockActive, updateTelemetry, triggerLapCompleted, setConnectionStatus]);
+  }, [
+    isMockActive,
+    updateTelemetry,
+    triggerLapCompleted,
+    setConnectionStatus,
+    setPilotProfile,
+    setSimulatorConnected,
+    setAppState,
+  ]);
 };
