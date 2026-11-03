@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  --background: #000000;
+  --foreground: #ffffff;
+
+  /* Paleta Oficial BMW M Motorsport */
+  --canvas: #000000;
+  --surface-card: #1a1a1a;
+  --surface-elevated: #262626;
+  --surface-soft: #0d0d0d;
+  --hairline: #3c3c3c;
+  --hairline-strong: #262626;
+  --body-muted: #7e7e7e;
+  --body-secondary: #bbbbbb;
+
+  /* Franja Tricolor M */
+  --m-blue-light: #0066b1;
+  --m-blue-dark: #1c69d4;
+  --m-red: #e22718;
+
+  /* Semántica de Telemetría */
+  --telemetry-throttle: #0fa336;
+  --telemetry-brake: #e22718;
+  --telemetry-warning: #f4b400;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-canvas: var(--canvas);
+  --color-surface-card: var(--surface-card);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-soft: var(--surface-soft);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-body-muted: var(--body-muted);
+  --color-body-secondary: var(--body-secondary);
+
+  --color-m-blue-light: var(--m-blue-light);
+  --color-m-blue-dark: var(--m-blue-dark);
+  --color-m-red: var(--m-red);
+
+  --color-telemetry-throttle: var(--telemetry-throttle);
+  --color-telemetry-brake: var(--telemetry-brake);
+  --color-telemetry-warning: var(--telemetry-warning);
+}
+
+body {
+  background: var(--canvas);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-feature-settings: "tnum" 1;
+  font-variant-numeric: tabular-nums;
+  min-height: 100vh;
+}
