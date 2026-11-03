@@ -10,15 +10,15 @@ export function CtaBand() {
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-black border border-[#3c3c3c] text-xs font-bold uppercase tracking-[0.2em] text-[#bbbbbb]">
           <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
-          Listo para Competir
+          Suite Integral de Competición
         </div>
 
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold uppercase tracking-tight text-white">
-          Montá tu pantalla y <span className="text-[#e22718]">salí a pista</span>
+          El control total de tu telemetría en una <span className="text-[#e22718]">sola plataforma</span>
         </h2>
 
         <p className="text-[#bbbbbb] text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-          Enchufá tu teléfono a la computadora por cable USB, abrí el simulador y experimentá la telemetría en tiempo real desde la primera curva.
+          Conectá tu simulador, colocá tu instrumental en el volante y abrí tu muro de telemetría en boxes. Empezá a limar décimas con la suite definitiva para Assetto Corsa.
         </p>
 
         <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">

@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ApexLink | Instrumental de Cabina y Telemetría SimRacing",
+  title: "ApexLink | Ecosistema de Telemetría SimRacing & Live Pitwall",
   description:
-    "Convertí tu smartphone en la pantalla de tu volante de carreras. Instrumental DDU en tiempo real, luces de corte instantáneas y telemetría analítica de boxes para Assetto Corsa.",
+    "Ecosistema integral de telemetría para simracing: instrumental digital de cabina, Live Pitwall a 60 Hz en boxes, laboratorio analítico 2D y plataforma SaaS de competición para Assetto Corsa.",
 };
 
 export default function RootLayout({
