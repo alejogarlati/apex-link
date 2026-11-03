@@ -9,7 +9,6 @@ interface TyreGraphicItemProps {
   pressurePsi: number;
   tempBrakeC?: number;
   compound: TyreCompound;
-  onCycleCompound: () => void;
 }
 
 const TyreGraphicItem: React.FC<TyreGraphicItemProps> = ({
@@ -19,7 +18,6 @@ const TyreGraphicItem: React.FC<TyreGraphicItemProps> = ({
   pressurePsi,
   tempBrakeC,
   compound,
-  onCycleCompound,
 }) => {
   // 1. Color de relleno de la cubierta según su temperatura física
   const getThermalFillColor = (temp: number) => {
@@ -58,11 +56,7 @@ const TyreGraphicItem: React.FC<TyreGraphicItemProps> = ({
   const compoundTextColor = getCompoundTextColor(compound);
 
   return (
-    <div
-      onClick={onCycleCompound}
-      title="Toca para cambiar compuesto F1"
-      className="flex items-center gap-4 cursor-pointer select-none group py-1"
-    >
+    <div className="flex items-center gap-4 select-none py-1">
       {/* 1. Forma de neumático (100% RELLENO según temperatura térmica) */}
       <div
         className={`w-[56px] h-[115px] rounded-[12px] border-2 flex flex-col justify-between items-center py-3 transition-all duration-150 ${thermalFill}`}
@@ -84,7 +78,7 @@ const TyreGraphicItem: React.FC<TyreGraphicItemProps> = ({
           {tempC.toFixed(0)}°C
         </span>
 
-        {/* Presión en PSI (Nuevo requerimiento) */}
+        {/* Presión en PSI */}
         <span className="text-[20px] font-black text-cyan-400 leading-none mt-0.5">
           {pressurePsi.toFixed(1)} PSI
         </span>
@@ -115,13 +109,6 @@ const TyreGraphicItem: React.FC<TyreGraphicItemProps> = ({
 export const ZoneBTyresAndBrakes: React.FC = () => {
   const tyres = useTelemetryStore((s) => s.telemetry.tyres);
   const compound = useTelemetryStore((s) => s.tyreCompound);
-  const setTyreCompound = useTelemetryStore((s) => s.setTyreCompound);
-
-  const cycleCompound = () => {
-    const list: TyreCompound[] = ['SOFT', 'MEDIUM', 'HARD', 'INTER', 'WET'];
-    const idx = list.indexOf(compound);
-    setTyreCompound(list[(idx + 1) % list.length]);
-  };
 
   return (
     <div className="w-[480px] h-full p-8 flex flex-col justify-between border-r border-zinc-800 select-none font-mono">
@@ -134,7 +121,6 @@ export const ZoneBTyresAndBrakes: React.FC = () => {
           pressurePsi={tyres.pressurePsi[0]}
           tempBrakeC={tyres.tempBrakesC?.[0]}
           compound={compound}
-          onCycleCompound={cycleCompound}
         />
         <TyreGraphicItem
           label="FR"
@@ -143,7 +129,6 @@ export const ZoneBTyresAndBrakes: React.FC = () => {
           pressurePsi={tyres.pressurePsi[1]}
           tempBrakeC={tyres.tempBrakesC?.[1]}
           compound={compound}
-          onCycleCompound={cycleCompound}
         />
       </div>
 
@@ -156,7 +141,6 @@ export const ZoneBTyresAndBrakes: React.FC = () => {
           pressurePsi={tyres.pressurePsi[2]}
           tempBrakeC={tyres.tempBrakesC?.[2]}
           compound={compound}
-          onCycleCompound={cycleCompound}
         />
         <TyreGraphicItem
           label="RR"
@@ -165,7 +149,6 @@ export const ZoneBTyresAndBrakes: React.FC = () => {
           pressurePsi={tyres.pressurePsi[3]}
           tempBrakeC={tyres.tempBrakesC?.[3]}
           compound={compound}
-          onCycleCompound={cycleCompound}
         />
       </div>
     </div>

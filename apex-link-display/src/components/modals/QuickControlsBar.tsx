@@ -1,7 +1,8 @@
 import React from 'react';
 import { useTelemetryStore } from '../../store/useTelemetryStore';
 import { MockScenario } from '../../types/ddu';
-import { Maximize2, Minimize2, Settings2 } from 'lucide-react';
+import { Home, Maximize2, Minimize2, Settings2 } from 'lucide-react';
+import { MSlantedBadge } from '../common/BmwMComponents';
 
 interface Props {
   onOpenDiagnostics: () => void;
@@ -18,6 +19,7 @@ export const QuickControlsBar: React.FC<Props> = ({
   const mockScenario = useTelemetryStore((s) => s.mockScenario);
   const setMockScenario = useTelemetryStore((s) => s.setMockScenario);
   const setMockActive = useTelemetryStore((s) => s.setMockActive);
+  const setAppState = useTelemetryStore((s) => s.setAppState);
   const pitLimiterActive = useTelemetryStore((s) => s.pitLimiterActive);
   const isInPitLane = useTelemetryStore((s) => s.isInPitLane || s.mockScenario === 'PIT_LANE');
   const setPitLimiter = useTelemetryStore((s) => s.setPitLimiter);
@@ -26,16 +28,35 @@ export const QuickControlsBar: React.FC<Props> = ({
   const currentLap = useTelemetryStore((s) => s.telemetry.timing.currentLap);
 
   const pills: { key: MockScenario; label: string }[] = [
-    { key: 'RACE_STINT', label: '🏁 Monza Vuelta' },
-    { key: 'RETTIFILO_BRAKING', label: '🛑 Frenada -2.8G' },
-    { key: 'DRS_ZONE', label: '⚡ DRS 320km/h' },
-    { key: 'CURVA_GRANDE_ACCEL', label: '🏎️ Curva 2.4G' },
-    { key: 'PIT_LANE', label: '🅿️ Pit Limiter' },
+    { key: 'RACE_STINT', label: '🏁 MONZA' },
+    { key: 'RETTIFILO_BRAKING', label: '🛑 RETTIFILO -2.8G' },
+    { key: 'DRS_ZONE', label: '⚡ DRS 320' },
+    { key: 'CURVA_GRANDE_ACCEL', label: '🏎️ CURVA 2.4G' },
+    { key: 'PIT_LANE', label: '🅿️ BOXES' },
   ];
 
   return (
-    <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-40 px-3 py-1.5 rounded-full bg-zinc-950/80 border border-zinc-800/80 backdrop-blur-md flex items-center gap-2 shadow-2xl font-mono text-[11px] opacity-70 hover:opacity-100 transition-opacity">
-      <span className="text-[10px] text-zinc-500 font-black pl-1 uppercase">ESCENARIOS:</span>
+    <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-40 px-4 py-2 rounded-none bg-[#0a0a0a]/95 border border-[#3c3c3c] backdrop-blur-md flex items-center gap-2.5 shadow-2xl font-mono text-[11px] opacity-80 hover:opacity-100 transition-opacity">
+      <MSlantedBadge height="h-4" />
+
+      {/* Botón Volver a STANDBY */}
+      <button
+        onClick={() => {
+          setMockActive(false);
+          setAppState('STANDBY');
+        }}
+        title="Volver a Pantalla Pre-Sesión (Standby)"
+        className="px-3 py-1 rounded-none font-bold tracking-[0.1em] uppercase bg-[#141414] text-white hover:bg-[#e22718] hover:text-white transition-all flex items-center gap-1.5 cursor-pointer border border-[#3c3c3c] hover:border-[#e22718]"
+      >
+        <Home className="w-3.5 h-3.5" />
+        STANDBY
+      </button>
+
+      <div className="w-[1px] h-4 bg-[#262626] mx-0.5" />
+
+      <span className="text-[10px] text-[#7e7e7e] font-bold tracking-[0.15em] uppercase">
+        ESCENARIOS:
+      </span>
 
       {pills.map((p) => {
         const isActive = isMockActive && mockScenario === p.key;
@@ -46,10 +67,10 @@ export const QuickControlsBar: React.FC<Props> = ({
               setMockActive(true);
               setMockScenario(p.key);
             }}
-            className={`px-2.5 py-1 rounded-full font-bold transition-all cursor-pointer ${
+            className={`px-3 py-1 rounded-none font-bold tracking-wider uppercase transition-all cursor-pointer border ${
               isActive
-                ? 'bg-purple-600 text-white shadow-[0_0_10px_#E040FB]'
-                : 'bg-zinc-900/80 text-zinc-400 hover:text-white hover:bg-zinc-800'
+                ? 'bg-[#e22718] border-[#e22718] text-white shadow-[0_0_10px_rgba(226,39,24,0.5)]'
+                : 'bg-[#121212] border-[#262626] text-[#bbbbbb] hover:text-white hover:border-[#3c3c3c]'
             }`}
           >
             {p.label}
@@ -57,7 +78,7 @@ export const QuickControlsBar: React.FC<Props> = ({
         );
       })}
 
-      <div className="w-[1px] h-4 bg-zinc-800 mx-1" />
+      <div className="w-[1px] h-4 bg-[#262626] mx-1" />
 
       {/* Quick Pit Lane entry, Limiter toggle & Lap triggers */}
       <button
@@ -71,10 +92,10 @@ export const QuickControlsBar: React.FC<Props> = ({
           }
         }}
         title="Entrar o Salir de Boxes (Tecla P / O)"
-        className={`px-2 py-0.5 rounded font-black transition-all cursor-pointer ${
+        className={`px-2.5 py-1 rounded-none font-bold tracking-wider uppercase transition-all cursor-pointer border ${
           isInPitLane
-            ? 'bg-amber-400 text-black shadow-[0_0_8px_#F59E0B]'
-            : 'bg-zinc-900/90 text-zinc-400 hover:text-white hover:bg-zinc-800'
+            ? 'bg-[#e22718] text-white border-[#e22718] shadow-[0_0_8px_#e22718]'
+            : 'bg-[#121212] border-[#262626] text-[#bbbbbb] hover:text-white hover:border-[#3c3c3c]'
         }`}
       >
         🅿️ {isInPitLane ? 'BOXES [ON]' : 'BOXES [OFF]'}
@@ -84,10 +105,10 @@ export const QuickControlsBar: React.FC<Props> = ({
         <button
           onClick={() => setPitLimiter(!pitLimiterActive)}
           title="Alternar Limitador de Boxes ON/OFF (Tecla P en boxes)"
-          className={`px-2 py-0.5 rounded font-black transition-all cursor-pointer ${
+          className={`px-2.5 py-1 rounded-none font-bold tracking-wider uppercase transition-all cursor-pointer border ${
             pitLimiterActive
-              ? 'bg-cyan-400 text-black shadow-[0_0_8px_#00E5FF]'
-              : 'bg-rose-600 text-white shadow-[0_0_8px_#EF4444] animate-pulse'
+              ? 'bg-[#e22718] text-white border-[#e22718] shadow-[0_0_8px_#e22718]'
+              : 'bg-[#121212] border-[#3c3c3c] text-white'
           }`}
         >
           {pitLimiterActive ? 'LIMITER ON' : 'LIMITER OFF'}
@@ -109,27 +130,27 @@ export const QuickControlsBar: React.FC<Props> = ({
           });
         }}
         title="Disparar Overlay Vuelta Rápida (Tecla L)"
-        className="px-2 py-0.5 rounded font-black bg-zinc-900/90 text-purple-400 hover:text-purple-300 hover:bg-zinc-800 transition-all cursor-pointer"
+        className="px-2.5 py-1 rounded-none font-bold tracking-wider uppercase bg-[#121212] border border-[#262626] text-[#e22718] hover:text-white hover:bg-[#e22718] hover:border-[#e22718] transition-all cursor-pointer"
       >
         ⚡ PB [L]
       </button>
 
-      <div className="w-[1px] h-4 bg-zinc-800 mx-1" />
+      <div className="w-[1px] h-4 bg-[#262626] mx-1" />
 
-      {/* Diagnostics Modal Toggle Button */}
+      {/* Circular Diagnostics Button */}
       <button
         onClick={onOpenDiagnostics}
         title="Abrir Panel de Diagnóstico y Calibración"
-        className="p-1.5 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-cyan-400 transition-colors cursor-pointer"
+        className="p-1.5 rounded-full bg-[#121212] hover:bg-[#1f1f1f] border border-[#3c3c3c] hover:border-[#e22718] text-[#bbbbbb] hover:text-white transition-colors cursor-pointer"
       >
         <Settings2 className="w-4 h-4" />
       </button>
 
-      {/* Fullscreen Button */}
+      {/* Circular Fullscreen Button */}
       <button
         onClick={onToggleFullscreen}
         title={isFullscreen ? 'Salir de Pantalla Completa' : 'Modo Kiosco Fullscreen'}
-        className="p-1.5 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+        className="p-1.5 rounded-full bg-[#121212] hover:bg-[#1f1f1f] border border-[#3c3c3c] hover:border-[#e22718] text-[#bbbbbb] hover:text-white transition-colors cursor-pointer"
       >
         {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
       </button>

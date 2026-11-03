@@ -1,5 +1,13 @@
 import { LapCompletedEvent, TelemetryFrame } from './telemetry';
 
+export type AppState = 'STANDBY' | 'CALIBRATING' | 'ON_SESSION';
+
+export interface PilotProfile {
+  name: string;
+  alias: string;
+  isGuest: boolean;
+}
+
 export interface ChassisSettings {
   tc: number; // Traction Control level 1..12
   tcCut: number; // TC Cut rate 1..8
@@ -55,6 +63,13 @@ export type TimedFullscreenOverlay =
   | null;
 
 export interface DDUState {
+  // Lifecycle & Profile State
+  appState: AppState;
+  pilotProfile: PilotProfile;
+  isSimulatorConnected: boolean;
+  calibrationProgress: number; // 0.0 .. 1.0
+  lastFrameReceivedAt: number;
+
   // Telemetry frame
   telemetry: TelemetryFrame;
   
@@ -102,6 +117,11 @@ export interface DDUState {
   mockScenario: MockScenario;
   
   // Actions
+  setAppState: (state: AppState) => void;
+  setPilotProfile: (profile: PilotProfile) => void;
+  setSimulatorConnected: (connected: boolean) => void;
+  setCalibrationProgress: (progress: number) => void;
+  startCalibration: () => void;
   updateTelemetry: (frame: TelemetryFrame) => void;
   triggerLapCompleted: (event: LapCompletedEvent) => void;
   setConnectionStatus: (connected: boolean, latencyMs?: number) => void;
