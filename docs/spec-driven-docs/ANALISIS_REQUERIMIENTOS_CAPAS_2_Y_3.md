@@ -1,14 +1,12 @@
 # 📑 Documento Maestro de Análisis de Requerimientos y Especificación Funcional: Capa 2 (DDU Móvil) y Capa 3 (WebApp SaaS)
 
-> **Proyecto:** ApexLink — Ecosistema Distribuido de Telemetría SimRacing en Tiempo Real, Instrumental de Cockpit y Plataforma SaaS de Competición  
-> **Ámbito:** Proyecto Final Integrador / Demostración en Vivo para Jurado y Docentes — **FAPPE 2026**  
-> **Metodología Oficial:** Desarrollo Dirigido por Especificaciones (*Spec-Driven Development* - SDD Intensivo)  
-> **Capas Analizadas:**  
-> - **Capa 2:** `apex-link-display` (Instrumental Digital de Cockpit DDU para Volante / Vite 6 + React 19 + Zustand 5)  
-> - **Capa 3:** `apex-link-web` (Plataforma Web SaaS de Ingeniería de Boxes, Live Pitwall y Laboratorio de Telemetría / Next.js 15 + uPlot + Canvas 2D + PostgreSQL)  
-> **Estado de la Capa 1 (Backend):** Finalizada y auditada en `apex-link-telemetry` (Kestrel HTTP/REST @ `:8080` y WebSocket RFC 6455 @ `/ws/telemetry`).  
-> **Fecha de Emisión:** 29 de Octubre de 2026  
-> **Vigencia y Jerarquía:** Documento Rector y Vinculante para los Desarrolladores 2 y 3. No deja ningún menú, botón, función o recurso gráfico al azar.
+> **Proyecto:** ApexLink — Ecosistema Distribuido de Telemetría SimRacing en Tiempo Real, Instrumental de Cockpit y Plataforma SaaS de Competición**Ámbito:** Proyecto Final Integrador / Demostración en Vivo para Jurado y Docentes — **FAPPE 2026****Metodología Oficial:** Desarrollo Dirigido por Especificaciones (*Spec-Driven Development* - SDD Intensivo)**Capas Analizadas:**
+>
+> - **Capa 2:** `apex-link-display` (Instrumental Digital de Cockpit DDU para Volante / Vite 6 + React 19 + Zustand 5)
+> - **Capa 3:** `apex-link-web` (Plataforma Web SaaS de Ingeniería de Boxes, Live Pitwall y Laboratorio de Telemetría / Next.js 15 + uPlot + Canvas 2D + PostgreSQL)
+>   **Estado de la Capa 1 (Backend):** Finalizada y auditada en `apex-link-telemetry` (Kestrel HTTP/REST @ `:8080` y WebSocket RFC 6455 @ `/ws/telemetry`).
+>   **Fecha de Emisión:** 29 de Octubre de 2026
+>   **Vigencia y Jerarquía:** Documento Rector y Vinculante para los Desarrolladores 2 y 3. No deja ningún menú, botón, función o recurso gráfico al azar.
 
 ---
 
@@ -47,14 +45,18 @@
 ## 1. Marco Metodológico, Alcance y Principios de Integración
 
 ### 1.1. Contexto de Producción y Estado de la Capa 1
+
 La Capa 1 (Backend Core Relay) se encuentra desarrollada en C# .NET sobre ASP.NET Core, habiendo superado una auditoría integral que valida:
+
 - **WebSocket a 60 Hz en Pista / 5 Hz en Pausa:** `ws://localhost:8080/ws/telemetry` emitiendo paquetes JSON `FRAME` tipados y eventos `LAP_COMPLETED`.
 - **API REST Post-Sesión:** Endpoints en `http://localhost:8080/api/...` para consultar estado, sesiones históricas, clasificación de vueltas y telemetría espacial metro a metro.
 - **Persistencia Concurrente:** SQLite local con modo WAL (*Write-Ahead Logging*).
 - **Conmutador Mock:** Posibilidad de conmutar en caliente entre Assetto Corsa real y el simulador sintético mediante `POST /api/mock/alternar` o el parámetro de arranque `--demo`.
 
 ### 1.2. Principio de Aislamiento y Resiliencia en FAPPE 2026
+
 Para la exhibición académica presencial, el sistema debe garantizar **cero puntos únicos de falla**:
+
 1. **Independencia de Internet:** La WebApp y el DDU deben funcionar al 100% en modo local/offline sin conexión a internet. Fuentes tipográficas, scripts e iconos deben residir en los paquetes locales del frontend.
 2. **Enlace USB Físico Determinístico para el DDU:** Conexión mediante `adb reverse tcp:8080 tcp:8080` que garantiza una latencia menor a $0.8\text{ ms}$, inmune a la saturación de redes Wi-Fi en el auditorio.
 3. **Unificación de Nomenclatura en Inglés camelCase:** Conforme a la auditoría técnica de la Capa 1, las interfaces TypeScript de las Capas 2 y 3 adoptan formalmente la nomenclatura camelCase en inglés estandarizada por el backend (`speedKmh`, `throttle`, `distanceMeters`, `circuit`, `lapNumber`, `bestLapTimeMs`).
@@ -77,7 +79,7 @@ flowchart LR
         Zustand["Zustand 5 Store\n(Selectores Atómicos)"]
         WakeLock["useScreenWakeLock\n(Screen On)"]
         Kiosk["useModoKiosco\n(Fullscreen)"]
-        
+      
         subgraph RenderGPU ["Renderizado Acelerado por GPU"]
             Central["Columna Central\n(Marcha + Shift Lights 15Hz)"]
             Tires["Panel Neumáticos\n(4 Ruedas + Freno)"]
@@ -110,6 +112,7 @@ flowchart LR
 ---
 
 ### 2.2. Ergonomía de Competición y Rendimiento a 60-144 FPS
+
 1. **Fondo Negro Absoluto (`#000000`):** En pantallas OLED/AMOLED de smartphones, los píxeles negros están completamente apagados. Esto produce:
    - Contraste infinito que elimina reflejos parásitos hacia la vista del piloto.
    - Cero fatiga visual en cabinas oscuras.
@@ -124,6 +127,7 @@ flowchart LR
 El DDU opera a través de un contenedor maestro auto-centrado con relación de aspecto base de **2.22:1 (1920 x 864 px)** que aplica *letterboxing* negro automático en pantallas de 16:9, 19.5:9, 20:9 o 21:9.
 
 Dispone de **3 vistas/modos operativos**:
+
 1. **Layout Primario de Carrera (Race Mode):** Pantalla operativa por defecto durante la conducción en pista, optimizada para F1 y prototipos GT3.
 2. **Banner de Notificación de Vuelta (Lap Completed Overlay):** Animación superpuesta no intrusiva de 4 segundos de duración que celebra el cruce de meta, indicando si se logró récord personal.
 3. **Modal de Diagnóstico y Calibración (Setup/Diag Mode):** Accedido mediante pulsación prolongada de 2 segundos en la esquina superior izquierda, permitiendo verificar ping del WebSocket, estado del cable USB, nivel de batería del móvil y alternar entre visualización F1 (Rev LEDs superiores) y GT3 (tacómetro analógico circular).
@@ -153,13 +157,14 @@ A continuación se detalla la funcionalidad exacta de cada elemento visible en e
 ```
 
 #### A. Zona A1: Barra Superior de Testigos de Alerta (Status Warning Strip)
+
 * **Ubicación:** Esquina superior izquierda (25% del ancho superior).
 * **Testigo 1 — Pit Limiter (`car.speedKmh` & estado pits):**
   - *Función:* Se activa cuando el monoplaza entra al carril de boxes o el limitador está encendido.
   - *Comportamiento:* Parpadeo a $4\text{ Hz}$ en color azul brillante (`#00E5FF`) y texto `"PIT LIM"`. Al desactivarse se oculta.
 * **Testigo 2 — Estado del DRS (`car.drsAvailable`, `car.drsEnabled`):**
   - *Función:* Informa disponibilidad y activación del alerón móvil.
-  - *Comportamiento:* 
+  - *Comportamiento:*
     - Inactivo/Fuera de zona: Contorno tenue gris `#333333`.
     - `drsAvailable = true` y `drsEnabled = false`: Fondo naranja intermitente con texto `"DRS READY"`.
     - `drsEnabled = true`: Fondo verde fluorescente `#00FF00` con texto `"DRS OPEN"` y zumbido visual.
@@ -170,6 +175,7 @@ A continuación se detalla la funcionalidad exacta de cada elemento visible en e
   - *Función:* Muestra un punto indicador de latencia del socket. Verde ($< 2\text{ ms}$), Amarillo ($2-10\text{ ms}$), Rojo/Intermitente (desconectado).
 
 #### B. Zona A2: Caja de Delta Dinámico y Barra Bicolor
+
 * **Ubicación:** Centro superior (50% del ancho superior).
 * **Display Numérico de Delta (`timing.deltaMs`):**
   - *Función:* Muestra la diferencia de tiempo instantánea en segundos y milésimas contra la mejor vuelta.
@@ -182,6 +188,7 @@ A continuación se detalla la funcionalidad exacta de cada elemento visible en e
   - *Comportamiento:* Si el piloto gana tiempo, una barra verde se expande hacia la izquierda desde el centro; si pierde tiempo, una barra roja se expande hacia la derecha.
 
 #### C. Zona A3: Monitor de Sesión y Competencia
+
 * **Ubicación:** Esquina superior derecha (25% del ancho superior).
 * **Tipo y Tiempo de Sesión (`session.flag`, cronómetro):**
   - *Función:* Muestra `"PRACTICE"`, `"QUALIFY"` o `"RACE"` junto al tiempo restante o transcurrido (`HH:MM:SS`).
@@ -191,6 +198,7 @@ A continuación se detalla la funcionalidad exacta de cada elemento visible en e
   - *Función:* Muestra la vuelta en curso (ej. `"LAP 05 / 24"`).
 
 #### D. Zona B: Matriz Térmica de Neumáticos y Discos de Freno
+
 * **Ubicación:** Flanco lateral izquierdo.
 * **Matriz de 4 Ruedas (`tyres.pressurePsi[4]`, `tyres.tempCoreC[4]`, `tyres.wear[4]`):**
   - *Disposición:* Cuadrante visual correspondiente a FL (Delantero Izq), FR (Delantero Der), RL (Trasero Izq), RR (Trasero Der).
@@ -204,6 +212,7 @@ A continuación se detalla la funcionalidad exacta de cada elemento visible en e
   - *Función:* Barra vertical contigua a cada rueda simulando temperatura de disco de carbono. Superados los $650^\circ\text{C}$, emite un resplandor naranja incandescente.
 
 #### E. Zona C: Columna Instrumental Central (Core Cockpit)
+
 * **Ubicación:** Centro de la pantalla.
 * **Shift Lights Bar (15 LEDs Estroboscópicos F1):**
   - *Función:* Guía luminosa para el punto de cambio de marcha ascendente (*Upshift*).
@@ -221,6 +230,7 @@ A continuación se detalla la funcionalidad exacta de cada elemento visible en e
   - *Función:* Velocidad instantánea en formato grande (ej. `312 KM/H`).
 
 #### F. Zona D: Bloque de Cronometraje Oficial
+
 * **Ubicación:** Flanco lateral derecho.
 * **Predicted Lap Time:** Tiempo de vuelta proyectado estimado al milisegundo en color cian (`#00E5FF`).
 * **Last Lap Time (`timing.lapTimeStr`):** Tiempo de la última vuelta completada en color amarillo dorado (`#FFD600`).
@@ -228,6 +238,7 @@ A continuación se detalla la funcionalidad exacta de cada elemento visible en e
 * **Indicador de Sector (`timing.sector`):** Rótulo del sector transitado actualmente (`SEC 1`, `SEC 2` o `SEC 3`).
 
 #### G. Zona E: Botonera de Parámetros Electrónicos y Chasis
+
 * **Ubicación:** Esquina inferior izquierda.
 * **Widgets de Parámetros:** Tarjetas compactas con valores numéricos de:
   - `TC`: Control de Tracción (Nivel 1..8).
@@ -236,12 +247,14 @@ A continuación se detalla la funcionalidad exacta de cada elemento visible en e
   - `MAP`: Mapa de Inyección / Mezcla de Motor (ej. `RACE 1`).
 
 #### H. Zona F: Monitor de Gestión de Combustible
+
 * **Ubicación:** Esquina inferior derecha.
 * **Litros Restantes en Tanque:** Valor decimal (ej. `44.8 L`).
 * **Consumo Medio por Vuelta:** Cálculo acumulativo (ej. `2.35 L/LAP`).
 * **Autonomía Proyectada:** Estimación entera de vueltas restantes antes del vaciado (ej. `19 LAPS`).
 
 #### I. Controles Auxiliares Táctiles (Ocultos / On-Tap)
+
 * **Botón Kiosco (Tap en Esquina Superior Derecha):** Activa/desactiva pantalla completa del navegador mediante la Fullscreen API.
 * **Selector de Unidades (Tap en Velocímetro):** Conmuta instantáneamente entre `KM/H` y `MPH`.
 * **Botón de Diagnóstico (Tap prolongado 2s en Esquina Superior Izquierda):** Despliega el overlay de depuración con latencia de red, recuento de cuadros perdidos y selector de modo Mock manual.
@@ -288,6 +301,7 @@ stateDiagram-v2
 ### 3.2. Shell de Boxes, Layouts y Sistema de Navegación
 
 La plataforma implementa dos layouts principales:
+
 1. **Layout Público (`(public)`):** Para la Landing Page (`/`), login (`/login`), registro (`/registro`) y recuperación de contraseña (`/recuperar-password`), con navbar flotante translúcido y footer institucional.
 2. **Layout Autenticado de Boxes (`(app)`):** Con Sidebar lateral colapsable, barra superior de estado de conexión con el simulador, monitor de ping a 60 Hz y switch rápido de Modo Mock.
 
@@ -312,6 +326,7 @@ ESTRUCTURA DEL SHELL DE BOXES:
 ### 3.3. Desglose Exhaustivo Vista por Vista, Sección por Sección y Control por Control
 
 #### Vista 1: Landing Page Pública (`/`)
+
 * **Navbar Flotante:**
   - *Logo ApexLink:* Isotipo vectorial interactivo con texto en degradé cian-púrpura. Clic redirige a `/`.
   - *Enlaces:* `"Características"`, `"Democratización Hardware"`, `"Circuitos FAPPE"`, `"Documentación"`.
@@ -336,6 +351,7 @@ ESTRUCTURA DEL SHELL DE BOXES:
 ---
 
 #### Vista 2: Autenticación, Acceso y Seguridad (`/login`, `/registro`)
+
 * **Pantalla de Inicio de Sesión (`/login`):**
   - *Input Email (`input-email`):* Tipo email, placeholder `"piloto@apexlink.racing"`, validación de formato RFC 5322.
   - *Input Contraseña (`input-password`):* Tipo password, botón para alternar visibilidad (ojo tachado / visible).
@@ -350,6 +366,7 @@ ESTRUCTURA DEL SHELL DE BOXES:
 ---
 
 #### Vista 3: Hub Central y Selector de Simuladores (`/hub`)
+
 * **Grilla de Tarjetas Interactivas de Simulación:**
   - *Tarjeta 1: Assetto Corsa (Kunos Simulazioni):*
     - Estado: `🟢 ACTIVO / CONECTADO`.
@@ -363,6 +380,7 @@ ESTRUCTURA DEL SHELL DE BOXES:
 ---
 
 #### Vista 4: Dashboard General del Piloto & AI Race Coach (`/app`)
+
 * **Banner de Bienvenida y Estado del Simulador:**
   - Muestra foto/avatar del piloto, dorsal favorito, auto activo y estado del enlace WebSocket a 60 Hz.
 * **Widget Resumen de Última Tanda Rodada:**
@@ -379,6 +397,7 @@ ESTRUCTURA DEL SHELL DE BOXES:
 ---
 
 #### Vista 5: Live Pitwall en Tiempo Real a 60 Hz (`/app/live`)
+
 * **Ruta:** `/app/live`
 * **Propósito:** Consola del ingeniero de pista en boxes mientras el coche rueda en el simulador.
 * **Widgets en Pantalla:**
@@ -402,6 +421,7 @@ ESTRUCTURA DEL SHELL DE BOXES:
 ---
 
 #### Vista 6: Laboratorio Analítico Post-Sesión & Trazada 2D (`/app/analysis`)
+
 * **Ruta:** `/app/analysis`
 * **Propósito:** Debriefing analítico profundo basado en el **Dominio de Distancia Métrica ($0 \to L_{\text{circuito}}$ metros)**.
 * **Selector Superior de Sesión y Vueltas:**
@@ -429,6 +449,7 @@ ESTRUCTURA DEL SHELL DE BOXES:
 ---
 
 #### Vista 7: Explorador Histórico de Tandas (`/app/sessions`)
+
 * **Filtros de Búsqueda:** Selector por circuito, monoplaza, fecha y tipo de tanda (Práctica, Clasificación, Carrera).
 * **Tabla Paginada de Sesiones:** Muestra fecha/hora de inicio, duración, total de vueltas, vuelta rápida obtenida y estado de sincronización.
 * **Detalle de Vuelta al Expandir:** Muestra la lista de todas las vueltas con badges `BEST` (púrpura) o `INVALID` (rojo por exceso de límites), splits de S1, S2, S3 y botón *"Cargar en Laboratorio"*.
@@ -437,6 +458,7 @@ ESTRUCTURA DEL SHELL DE BOXES:
 ---
 
 #### Vista 8: Catálogo de Circuitos Rodados (`/app/circuitos`)
+
 * **Tarjetas de Circuitos FAPPE 2026:**
   - *Monza F1 2025 (`monza_f1_2025`):* Principal de exhibición en vivo. Longitud: $5.757\text{ m}$, 11 curvas, 2 zonas DRS.
   - *Red Bull Ring GP (`ks_red_bull_ring`):* Circuito alpino explorable con $+63.5\text{ m}$ de altimetría. Longitud: $4.285\text{ m}$, 10 curvas.
@@ -444,12 +466,15 @@ ESTRUCTURA DEL SHELL DE BOXES:
 * **Métricas por Pista:**
   - Récord personal registrado (PB) con fecha y vehículo.
   - **Vuelta Óptima Teórica (*Ideal Lap*):** Cálculo automático uniendo los mejores parciales individuales:
-    $$\text{Ideal} = \min(\text{S1}) + \min(\text{S2}) + \min(\text{S3})$$
+    $$
+    \text{Ideal} = \min(\text{S1}) + \min(\text{S2}) + \min(\text{S3})
+    $$
   - Delta de potencial de mejora (ej. *"Tenés un margen de $-0.320\text{ s}$ optimizando tus sectores"*).
 
 ---
 
 #### Vista 9: Garaje de Vehículos (`/app/garaje`)
+
 * **Flota de Monoplazas y GTs:**
   - Tarjetas técnicas para monoplazas rodados en el simulador (`Ferrari SF70H`, `Porsche 911 GT3 R`, etc.).
   - Muestra odómetro virtual de kilómetros rodados, velocidad máxima histórica, consumo medio de combustible y límite de corte de revoluciones.
@@ -457,11 +482,14 @@ ESTRUCTURA DEL SHELL DE BOXES:
 ---
 
 #### Vista 10: Perfil de Piloto, Ratings y Logros (`/app/perfil`)
+
 * **Carnet Digital de Piloto:**
   - Nombre, avatar personalizable, número dorsal y biografía.
   - **Pace Rating (0-100):** Algoritmo que mide la proximidad de los vértices y curvas al ritmo récord.
   - **Safety Rating (Grados S, A, B, C, D):** Proporción de vueltas válidas sin salidas de pista ni toques:
-    $$\text{Safety} = \frac{\text{Vueltas Válidas}}{\text{Vueltas Totales}} \times 100$$
+    $$
+    \text{Safety} = \frac{\text{Vueltas Válidas}}{\text{Vueltas Totales}} \times 100
+    $$
   - **Consistency Index (%):** Regularidad cronometrada vuelta a vuelta.
 * **Vitrina de Trofeos y Logros Desbloqueables:**
   - Badges con estilo Liquid Glass para logros como: *Bautismo de Asfalto*, *Club de los 300 km/h*, *Metrónomo de Pista*, *Dominio Púrpura* y *Rey de Monza*.
@@ -470,6 +498,7 @@ ESTRUCTURA DEL SHELL DE BOXES:
 ---
 
 #### Vista 11: Ajustes, Hardware y Conexión (`/app/ajustes`)
+
 * **Preferencias Métricas:**
   - Toggles para alternar: $km/h \leftrightarrow mph$, $PSI \leftrightarrow bar$, $^\circ\text{C} \leftrightarrow ^\circ\text{F}$.
 * **Configuración del Backend Kestrel:**
@@ -484,6 +513,7 @@ ESTRUCTURA DEL SHELL DE BOXES:
 ### 4.1. Elección Tecnológica Justificada: Resend + React Email + PostgreSQL
 
 Para satisfacer el requerimiento estricto del usuario:
+
 > *"especificar qué tecnología utilizaremos para implementar el recupero de contraseña de cada usuario que se guardará en la DB (debe recibir un mail con un código o token para poder validarlo)"*
 
 Se selecciona la arquitectura de referencia de la industria moderna en Next.js:
@@ -534,7 +564,7 @@ sequenceDiagram
     participant Web as 🖥️ Next.js WebApp
     participant DB as 🐘 PostgreSQL
     participant Resend as ✉️ Resend API / Local Fallback
-    
+  
     Piloto->>Web: 1. Ingresa email en /recuperar-password
     Web->>Web: Sanitiza email y valida formato RFC 5322
     Web->>DB: Busca usuario por email
@@ -783,6 +813,7 @@ const estilos = {
 ### 4.5. Flujo de Pantallas, Inputs, Validaciones y Server Actions
 
 #### Pantalla A: Solicitud de Código (`/recuperar-password`)
+
 * **Input Email (`input-email-recovery`):** Con icono de sobre en cian.
 * **Botón "Enviar Código de Seguridad" (`btn-send-recovery-code`):**
   - Acción: Dispara la Server Action `solicitarRecuperacionPassword(email)`.
@@ -790,6 +821,7 @@ const estilos = {
 * **Enlace "Volver a Inicio de Sesión":** Redirige a `/login`.
 
 #### Pantalla B: Validación de Código OTP (`/validar-codigo`)
+
 * **Subtítulo:** Muestra el correo al cual fue enviado el código con un botón *"Cambiar correo"*.
 * **Contenedor de 6 Inputs de Dígito Individual (`otp-input-0` a `otp-input-5`):**
   - *Comportamiento de UI de Alta Gama:*
@@ -803,6 +835,7 @@ const estilos = {
   - Temporizador descendente de 60 segundos (`"Reenviar código en 59s..."`). Al llegar a cero, se activa el botón interactivo *"Reenviar código ahora"*.
 
 #### Pantalla C: Creación de Nueva Contraseña (`/restablecer-password`)
+
 * **Input Nueva Contraseña (`input-new-password`):**
   - Barra de fortaleza de contraseña reactiva dividida en 4 segmentos: *Débil (Rojo)*, *Regular (Naranja)*, *Fuerte (Verde)*, *Excelente (Cian)*.
   - Lista de verificación en vivo:
@@ -823,14 +856,14 @@ Para que ningún aspecto visual quede al azar, a continuación se detalla la nó
 
 ### 5.1. Identidad de Marca: Logotipos, Isotipos y Favicons
 
-| Recurso | Archivo Físico | Dimensiones / Formato | Propósito y Ubicación en la App |
-| :--- | :--- | :--- | :--- |
-| **Isotipo Principal (Monograma APEX)** | `public/assets/brand/apex-iso.svg` | SVG Vectorial escalable | Icono del monoplaza y la letra 'A' en vértice de curva con degradé `#00E5FF` $\to$ `#E040FB`. Usado en Navbar y animaciones. |
-| **Imagotipo Completo Horizontal** | `public/assets/brand/apexlink-logo-horizontal.svg` | SVG Vectorial ($480 \times 120\text{ px}$) | Isotipo + texto "APEXLINK" con tipografía italic geométrica. Usado en Landing Header, Navbar de Boxes y correos. |
-| **Favicon Multi-Resolución** | `public/favicon.ico` | ICO ($16 \times 16$, $32 \times 32$, $48 \times 48\text{ px}$) | Icono de pestaña del navegador. |
-| **Apple Touch Icon** | `public/apple-touch-icon.png` | PNG ($180 \times 180\text{ px}$) | Icono de acceso directo en iOS / Safari. |
-| **Iconos PWA Android** | `public/assets/brand/pwa-icon-192.png` y `pwa-icon-512.png` | PNG transparente ($192 \times 192$ y $512 \times 512\text{ px}$) | Instalación del DDU en Android como Progressive Web App independiente. |
-| **OpenGraph / Redes Sociales** | `public/assets/brand/og-image-apexlink.png` | PNG ($1200 \times 630\text{ px}$) | Portada para previsualización en WhatsApp, Twitter/X y LinkedIn. |
+| Recurso                                      | Archivo Físico                                                 | Dimensiones / Formato                                                | Propósito y Ubicación en la App                                                                                                    |
+| :------------------------------------------- | :-------------------------------------------------------------- | :------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------- |
+| **Isotipo Principal (Monograma APEX)** | `public/assets/brand/apex-iso.svg`                            | SVG Vectorial escalable                                              | Icono del monoplaza y la letra 'A' en vértice de curva con degradé `#00E5FF` $\to$ `#E040FB`. Usado en Navbar y animaciones. |
+| **Imagotipo Completo Horizontal**      | `public/assets/brand/apexlink-logo-horizontal.svg`            | SVG Vectorial ($480 \times 120\text{ px}$)                         | Isotipo + texto "APEXLINK" con tipografía italic geométrica. Usado en Landing Header, Navbar de Boxes y correos.                   |
+| **Favicon Multi-Resolución**          | `public/favicon.ico`                                          | ICO ($16 \times 16$, $32 \times 32$, $48 \times 48\text{ px}$) | Icono de pestaña del navegador.                                                                                                     |
+| **Apple Touch Icon**                   | `public/apple-touch-icon.png`                                 | PNG ($180 \times 180\text{ px}$)                                   | Icono de acceso directo en iOS / Safari.                                                                                             |
+| **Iconos PWA Android**                 | `public/assets/brand/pwa-icon-192.png` y `pwa-icon-512.png` | PNG transparente ($192 \times 192$ y $512 \times 512\text{ px}$) | Instalación del DDU en Android como Progressive Web App independiente.                                                              |
+| **OpenGraph / Redes Sociales**         | `public/assets/brand/og-image-apexlink.png`                   | PNG ($1200 \times 630\text{ px}$)                                  | Portada para previsualización en WhatsApp, Twitter/X y LinkedIn.                                                                    |
 
 ---
 
@@ -839,19 +872,25 @@ Para que ningún aspecto visual quede al azar, a continuación se detalla la nó
 Para generar los recursos multimedia de alto impacto de la Landing Page mediante herramientas de Inteligencia Artificial generativa (**Midjourney v6**, **DALL-E 3** o **Flux 1.1 Pro**), se establecen los siguientes prompts oficiales:
 
 #### 1. Hero Banner Principal: Smartphone en Volante F1 + Pantalla de Boxes
+
 * **Archivo Destino:** `public/assets/marketing/hero-cockpit-pitwall.png` (Aspecto 16:9 - $3840 \times 2160\text{ px}$).
 * **Prompt Oficial en Inglés:**
   > `"Cinematic close-up of a high-end Formula 1 carbon fiber simulator steering wheel mounted with a modern bezel-less smartphone used as a glowing digital dashboard unit (DDU). The smartphone screen displays crisp digital racing telemetry, cyan gear number, vibrant 15-LED shift light strip at cut-off, and lap times. In the blurred dark background, an engineer's laptop running a futuristic dark-mode telemetry pitwall dashboard with multi-axis racing graphs and track maps. Professional studio lighting, neon cyan and magenta accents, dark carbon cockpit atmosphere, 8k resolution, photorealistic, Unreal Engine 5 render style, hyper-detailed --ar 16:9 --style raw --v 6.0"`
+  >
 
 #### 2. Infografía de Democratización: Volante Fanatec vs ApexLink Smartphone
+
 * **Archivo Destino:** `public/assets/marketing/hardware-comparison.png` ($1920 \times 1080\text{ px}$).
 * **Prompt Oficial en Inglés:**
   > `"Split-screen comparison product render. Left side: An overly expensive professional sim racing wheel with a bulky LCD display showing a red price tag of $1,200 USD, studio shadows, cool tones. Right side: A sleek modern smartphone docked onto a minimalist sim steering wheel via a glowing high-speed USB-C cable showing glowing cyan and emerald racing telemetry with a price tag of $0 USD, vibrant neon atmosphere, winning motorsport aesthetic, photorealistic, 8k --ar 16:9 --v 6.0"`
+  >
 
 #### 3. Fondo Texturizado Cockpit Carbon & Glass
+
 * **Archivo Destino:** `public/assets/marketing/bg-carbon-glass.png` ($2560 \times 1440\text{ px}$).
 * **Prompt Oficial en Inglés:**
   > `"Abstract dark automotive background, matte woven twill carbon fiber texture seamlessly blending into frosted smoked glass with subtle ambient cyan and purple rim lighting, racing telemetry grid lines subtly etched in the dark, moody motorsport aesthetic, clean minimal, 8k resolution --ar 16:9 --v 6.0"`
+  >
 
 ---
 
@@ -882,6 +921,7 @@ public/assets/circuits/
 ```
 
 #### Parámetros de Calibración de `map.ini` (Oficiales de Assetto Corsa):
+
 1. **Monza F1 2025 (`monza_f1_2025`):**
    ```ini
    [PARAMETERS]
@@ -921,6 +961,7 @@ public/assets/circuits/
 ### 5.4. Assets del Garaje: Renders de Monoplazas y Siluetas Vectoriales
 
 Para el catálogo del Garaje (`/app/garaje`), se requieren ilustraciones laterales recortadas con fondo transparente en formato WebP:
+
 1. `public/assets/cars/ks_ferrari_sf70h.webp` ($800 \times 400\text{ px}$): Monoplaza Ferrari F1 SF70H en vista de tres cuartos.
 2. `public/assets/cars/porsche_911_gt3_r.webp` ($800 \times 400\text{ px}$): Prototipo GT3 con librea de competición.
 3. `public/assets/cars/bmw_m2_cs_racing.webp` ($800 \times 400\text{ px}$): Turismo deportivo de iniciación.
@@ -1030,11 +1071,11 @@ WBS CAPA 3 (apex-link-web - 122.0 hs):
 
 Para considerar finalizado el desarrollo de las Capas 2 y 3, cada componente debe superar de forma obligatoria los siguientes criterios de verificación:
 
-| Componente / Módulo | Prueba de Aceptación Obligatoria | Métrica de Éxito Requerida |
-| :--- | :--- | :--- |
-| **DDU Móvil (`apex-link-display`)** | Renderizado continuo conectado vía `adb reverse` sobre smartphone Android real. | $60.0\text{ FPS}$ fijos (0 caídas de cuadros), latencia $< 0.8\text{ ms}$, CPU móvil $< 12\%$. |
-| **Shift Lights F1** | Régimen de corte de motor simulado en 7ma marcha. | Destello simultáneo de los 15 LEDs a $15\text{ Hz}$ en azul/blanco exactamente al superar el 96% de RPM. |
-| **Recuperación de Contraseña** | Solicitud de código OTP desde `/recuperar-password` hasta `/restablecer-password`. | Correo transaccional entregado en $< 2\text{ s}$ vía Resend (o notificación de consola local), código válido por 15 min, bloqueo tras 3 intentos. |
-| **Live Pitwall Web** | Monitoreo en vivo de una vuelta en Monza F1 2025. | Trazado continuo en Canvas 2D con pedales a 60 Hz y notificación Toast emergente al cruzar la meta. |
-| **Laboratorio uPlot** | Carga de dos vueltas completas (~9.600 puntos métricos) en `/app/analysis`. | Renderizado en $< 5\text{ ms}$, paneo y zoom a 60 FPS, cursor sincronizado con el mapa 2D. |
-| **Modo Offline FAPPE** | Desconexión física del cable Ethernet / Wi-Fi de la laptop del stand. | 100% de navegación operativa en la WebApp y el DDU utilizando el backend local Kestrel y SQLite/PostgreSQL. |
+| Componente / Módulo                         | Prueba de Aceptación Obligatoria                                                       | Métrica de Éxito Requerida                                                                                                                            |
+| :------------------------------------------- | :-------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **DDU Móvil (`apex-link-display`)** | Renderizado continuo conectado vía `adb reverse` sobre smartphone Android real.      | $60.0\text{ FPS}$ fijos (0 caídas de cuadros), latencia $< 0.8\text{ ms}$, CPU móvil $< 12\%$.                                                  |
+| **Shift Lights F1**                    | Régimen de corte de motor simulado en 7ma marcha.                                      | Destello simultáneo de los 15 LEDs a $15\text{ Hz}$ en azul/blanco exactamente al superar el 96% de RPM.                                             |
+| **Recuperación de Contraseña**       | Solicitud de código OTP desde `/recuperar-password` hasta `/restablecer-password`. | Correo transaccional entregado en $< 2\text{ s}$ vía Resend (o notificación de consola local), código válido por 15 min, bloqueo tras 3 intentos. |
+| **Live Pitwall Web**                   | Monitoreo en vivo de una vuelta en Monza F1 2025.                                       | Trazado continuo en Canvas 2D con pedales a 60 Hz y notificación Toast emergente al cruzar la meta.                                                    |
+| **Laboratorio uPlot**                  | Carga de dos vueltas completas (~9.600 puntos métricos) en `/app/analysis`.          | Renderizado en $< 5\text{ ms}$, paneo y zoom a 60 FPS, cursor sincronizado con el mapa 2D.                                                            |
+| **Modo Offline FAPPE**                 | Desconexión física del cable Ethernet / Wi-Fi de la laptop del stand.                 | 100% de navegación operativa en la WebApp y el DDU utilizando el backend local Kestrel y SQLite/PostgreSQL.                                            |

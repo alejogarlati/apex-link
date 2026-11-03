@@ -4,9 +4,9 @@ const CLAVE_ALMACENAMIENTO_AUTH = "apexlink_auth_sesion";
 
 export const PILOTO_INVITADO_FAPPE: PerfilUsuario = {
   id: "fappe-guest-2026",
-  nombre: "Piloto Invitado FAPPE",
-  alias: "APEX-INVITADO",
-  email: "invitado@fappe2026.edu.ar",
+  nombre: "Piloto de Pruebas",
+  alias: "PILOTO_01",
+  email: "piloto@apexlink.io",
   esInvitadoFappe: true,
   rating: {
     paceRating: 2180,
@@ -41,8 +41,8 @@ export const PILOTO_INVITADO_FAPPE: PerfilUsuario = {
     },
     {
       id: "fappe-showcase",
-      titulo: "Piloto Oficial FAPPE 2026",
-      descripcion: "Conducción en vivo en el stand de innovación tecnológica",
+      titulo: "Piloto Oficial ApexLink",
+      descripcion: "Conducción en pista con telemetría de boxes activa",
       icono: "award",
       desbloqueado: true,
       fechaDesbloqueo: "2026-10-31",

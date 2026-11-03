@@ -34,10 +34,10 @@ const SIMULADORES: TarjetaSimulador[] = [
     nombre: "Assetto Corsa",
     desarrollador: "Kunos Simulazioni",
     activo: true,
-    estadoBadge: "🟢 Conectado / Stand FAPPE",
+    estadoBadge: "🟢 Conectado / En Pista",
     descripcion:
-      "Adquisición determinística directa por Win32 Memory Mapped Files a 60 Hz. Servidor Kestrel local acoplado a la memoria del proceso acs.exe.",
-    protocolo: "Win32 MMF + WebSocket 60 Hz",
+      "Adquisición de chasis, gomas y tiempos de vuelta en tiempo real para Assetto Corsa.",
+    protocolo: "Enlace Directo 60 Hz",
     circuitoDemo: "Autodromo Nazionale Monza (5.793 m)",
     vehiculoDemo: "Ferrari SF70H / BMW M2 CS",
   },
@@ -150,7 +150,7 @@ export default function PaginaHubSimuladores() {
             Selecciona el Simulador de Competición
           </h1>
           <p className="text-sm text-[#bbbbbb] mt-1 max-w-2xl">
-            ApexLink opera como pasarela agnóstica de telemetría. Para la exhibición oficial de FAPPE 2026, el motor principal se encuentra acoplado a Assetto Corsa.
+            ApexLink opera como pasarela de telemetría en tiempo real acoplada a Assetto Corsa para transmitir datos directamente a tu teléfono y muro de boxes.
           </p>
         </div>
 
@@ -249,7 +249,7 @@ export default function PaginaHubSimuladores() {
 
       {/* Footer */}
       <footer className="border-t border-[#262626] py-4 px-6 text-center text-xs text-[#7e7e7e]">
-        ApexLink SimRacing Gateway • Assetto Corsa Pipeline v1.0 • Stand FAPPE 2026
+        ApexLink SimRacing Gateway • Instrumental y Telemetría en Tiempo Real
       </footer>
     </div>
   );

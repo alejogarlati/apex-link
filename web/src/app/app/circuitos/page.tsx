@@ -71,7 +71,7 @@ export default function PaginaCircuitos() {
                       : "bg-[#262626] border-[#3c3c3c] text-[#7e7e7e]"
                   }`}
                 >
-                  {pista.activo ? "Activo Stand FAPPE" : "Próximamente"}
+                  {pista.activo ? "Circuito Activo" : "Próximamente"}
                 </span>
               </div>
 
@@ -91,7 +91,7 @@ export default function PaginaCircuitos() {
                   <span className="text-white">{pista.zonasDrs}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#7e7e7e]">Récord Stand:</span>
+                  <span className="text-[#7e7e7e]">Récord de Pista:</span>
                   <span className="text-[#0fa336] font-bold">{pista.recordStand}</span>
                 </div>
               </div>

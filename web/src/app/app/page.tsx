@@ -244,10 +244,10 @@ export default function PaginaDashboardBoxes() {
             <Trophy className="w-5 h-5 text-[#f4b400]" />
             <div>
               <h3 className="text-base font-bold uppercase tracking-tight text-white">
-                Leaderboard Oficial • Stand FAPPE 2026
+                Tabla de Récords Oficiales • Monza GP
               </h3>
               <p className="text-xs text-[#7e7e7e]">
-                Registros en vivo marcados por jurados, docentes y pilotos en el simulador
+                Registros en vivo marcados por pilotos en el simulador con telemetría en tiempo real
               </p>
             </div>
           </div>
@@ -261,13 +261,13 @@ export default function PaginaDashboardBoxes() {
             <div className="flex items-center gap-3">
               <span className="text-sm font-bold font-mono text-[#f4b400] w-6">01</span>
               <div>
-                <div className="text-xs font-bold text-white">Alejo Garlati (Dev 3)</div>
+                <div className="text-xs font-bold text-white">Alejo Garlati (Piloto Pro)</div>
                 <div className="text-[10px] text-[#7e7e7e]">Ferrari SF70H • P.B. Oficial</div>
               </div>
             </div>
             <div className="text-right">
               <div className="text-sm font-bold font-mono text-[#0fa336]">01:21.240</div>
-              <div className="text-[10px] text-[#7e7e7e]">Récord del Stand</div>
+              <div className="text-[10px] text-[#7e7e7e]">Récord de Pista</div>
             </div>
           </div>
 
@@ -275,7 +275,7 @@ export default function PaginaDashboardBoxes() {
             <div className="flex items-center gap-3">
               <span className="text-sm font-bold font-mono text-[#bbbbbb] w-6">02</span>
               <div>
-                <div className="text-xs font-bold text-white">Prof. Evaluador FAPPE</div>
+                <div className="text-xs font-bold text-white">Martin Basso (Sim Pro)</div>
                 <div className="text-[10px] text-[#7e7e7e]">Ferrari SF70H • Ronda 2</div>
               </div>
             </div>
@@ -289,7 +289,7 @@ export default function PaginaDashboardBoxes() {
             <div className="flex items-center gap-3">
               <span className="text-sm font-bold font-mono text-[#e22718] w-6">03</span>
               <div>
-                <div className="text-xs font-bold text-white">Estudiante Ing. UTN</div>
+                <div className="text-xs font-bold text-white">Lucas Di Grassi (GT3)</div>
                 <div className="text-[10px] text-[#7e7e7e]">Ferrari SF70H • Ronda 1</div>
               </div>
             </div>

@@ -1,142 +1,287 @@
 import Link from "next/link";
-import { Gauge, Zap, ArrowRight } from "lucide-react";
-import { FappeBanner } from "@/components/landing/FappeBanner";
+import { Zap, Play, Gauge } from "lucide-react";
+import { MSlantedBadge } from "@/components/landing/MSlantedBadge";
+import { RacerManifesto } from "@/components/landing/RacerManifesto";
 import { HardwareComparison } from "@/components/landing/HardwareComparison";
 import { FeaturesGrid } from "@/components/landing/FeaturesGrid";
+import { MonzaTrackShowcase } from "@/components/landing/MonzaTrackShowcase";
+import { CtaBand } from "@/components/landing/CtaBand";
 
 export default function PaginaInicio() {
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col selection:bg-[#0066b1] selection:text-white">
-      {/* Franja Tricolor BMW M */}
-      <div className="h-1.5 w-full flex">
-        <div className="h-full w-1/3 bg-[#0066b1]" />
-        <div className="h-full w-1/3 bg-[#1c69d4]" />
-        <div className="h-full w-1/3 bg-[#e22718]" />
+    <div className="min-h-screen bg-black text-white flex flex-col selection:bg-[#e22718] selection:text-white">
+      {/* Franja Tricolor BMW M Superior (4px) */}
+      <div className="w-full h-1 flex shrink-0 sticky top-0 z-50">
+        <div className="flex-1 bg-[#0066b1]" />
+        <div className="flex-1 bg-[#1c69d4]" />
+        <div className="flex-1 bg-[#e22718]" />
       </div>
 
-      {/* Header Superior */}
-      <header className="border-b border-[#262626] bg-black/90 backdrop-blur sticky top-0 z-50">
+      {/* Barra de Navegación de Cabina (TopNav) */}
+      <header className="border-b border-[#262626] bg-black/95 backdrop-blur sticky top-1 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#1a1a1a] border border-[#3c3c3c] rounded">
-              <Gauge className="w-5 h-5 text-[#0066b1]" />
-            </div>
-            <span className="text-lg font-bold uppercase tracking-tight text-white font-mono">
-              Apex<span className="text-[#0066b1]">Link</span>
+          <Link href="/" className="flex items-center gap-3 group">
+            <MSlantedBadge className="h-5" />
+            <span className="text-xl font-bold uppercase tracking-[0.15em] text-white font-mono">
+              APEX<span className="text-[#e22718]">LINK</span>
             </span>
-            <span className="hidden sm:inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-[#1a1a1a] border border-[#3c3c3c] text-[#bbbbbb]">
-              FAPPE 2026
-            </span>
-          </div>
+          </Link>
 
-          <nav className="flex items-center gap-3 sm:gap-4">
+          <nav className="hidden md:flex items-center gap-6">
+            <a
+              href="#volante"
+              className="text-xs font-bold uppercase tracking-[0.15em] text-[#bbbbbb] hover:text-white transition-colors"
+            >
+              En el Volante
+            </a>
             <Link
               href="/hub"
-              className="text-xs font-bold uppercase tracking-wider text-[#bbbbbb] hover:text-white px-3 py-2 transition-colors"
+              className="text-xs font-bold uppercase tracking-[0.15em] text-[#bbbbbb] hover:text-white transition-colors"
             >
-              Simuladores
+              En Boxes
             </Link>
+            <a
+              href="#comparativa"
+              className="text-xs font-bold uppercase tracking-[0.15em] text-[#bbbbbb] hover:text-white transition-colors"
+            >
+              Comparativa
+            </a>
+            <a
+              href="#monza"
+              className="text-xs font-bold uppercase tracking-[0.15em] text-[#bbbbbb] hover:text-white transition-colors"
+            >
+              Circuitos
+            </a>
+          </nav>
+
+          <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="text-xs font-bold uppercase tracking-wider text-white bg-[#0066b1] hover:bg-[#1c69d4] px-4 py-2 rounded transition-all shadow-md shadow-[#0066b1]/20 flex items-center gap-1.5"
+              className="h-10 px-5 rounded-none bg-[#e22718] hover:bg-[#c91f12] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center gap-2 transition-all border border-[#e22718] shadow-[0_0_15px_rgba(226,39,24,0.3)] cursor-pointer"
             >
               <Zap className="w-3.5 h-3.5 fill-white" />
-              Acceso a Boxes
+              Probar Telemetría
             </Link>
-          </nav>
+          </div>
         </div>
       </header>
 
       {/* Hero Section Principal */}
       <section className="relative pt-20 pb-24 overflow-hidden border-b border-[#262626] bg-gradient-to-b from-black via-[#0d0d0d] to-black">
-        {/* Glow de Acento Tricolor de Fondo */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-to-r from-[#0066b1]/20 via-[#1c69d4]/15 to-[#e22718]/15 blur-3xl pointer-events-none rounded-full" />
+        {/* Resplandor sutil rojo M de fondo */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-[#e22718]/10 blur-3xl pointer-events-none" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1a1a1a] border border-[#3c3c3c] text-xs font-bold uppercase tracking-widest text-[#bbbbbb] mb-8">
+          {/* Baliza de Estado de Carrera */}
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#141414] border border-[#3c3c3c] text-xs font-bold uppercase tracking-[0.2em] text-[#bbbbbb] mb-8">
             <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
-            Ecosistema de Telemetría Distribuida para Assetto Corsa
+            Enlace Directo Listo · Instrumental de Carrera en Vivo
           </div>
 
+          {/* Titular Principal */}
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold uppercase tracking-tight text-white max-w-5xl mx-auto leading-[1.05]">
-            Telemetría SimRacing de Nivel F1{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0066b1] via-[#1c69d4] to-[#e22718]">
-              Sin Barreras de Costo
+            Un volante de competición{" "}
+            <span className="text-[#e22718] block sm:inline">
+              en la pantalla de tu teléfono
             </span>
           </h1>
 
+          {/* Bajada */}
           <p className="mt-6 text-base sm:text-lg text-[#bbbbbb] max-w-3xl mx-auto leading-relaxed">
-            Plataforma integral para ingeniería de boxes y cabina de pilotaje. Adquisición Win32 en tiempo real a 60 Hz, túnel USB determinístico de latencia sub-milisegundo y laboratorio analítico 2D sin pagar hardware privativo.
+            Montá tu smartphone en el aro de tu volante y tené la instrumentación de un monoplaza de Fórmula 1 o GT3 al instante. Mirá tu delta de tiempo en cada curva, clavá las marchas en el punto exacto con las luces de corte y cuidá la temperatura de tus gomas sin gastar fortunas en equipamiento privativo.
           </p>
 
-          {/* Botones de Llamado a la Acción */}
+          {/* Botonera de Acción */}
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/login"
-              className="w-full sm:w-auto px-8 py-3.5 rounded font-bold uppercase tracking-wider text-xs bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-all shadow-xl shadow-[#0066b1]/25 flex items-center justify-center gap-2 group cursor-pointer"
+              className="w-full sm:w-auto h-[52px] px-8 rounded-none bg-[#e22718] hover:bg-[#c91f12] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#e22718] shadow-[0_0_25px_rgba(226,39,24,0.35)] cursor-pointer"
             >
-              <Zap className="w-4 h-4 fill-white" />
-              Iniciar Demostración en Vivo
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <Play className="w-4 h-4 fill-current" />
+              ENTRAR A PISTA (MODO DEMO)
             </Link>
 
             <Link
               href="/hub"
-              className="w-full sm:w-auto px-8 py-3.5 rounded font-bold uppercase tracking-wider text-xs bg-[#1a1a1a] hover:bg-[#262626] border border-[#3c3c3c] text-white transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto h-[52px] px-8 rounded-none bg-[#141414] hover:bg-[#1f1f1f] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#3c3c3c] hover:border-[#e22718] cursor-pointer"
             >
               <Gauge className="w-4 h-4 text-[#bbbbbb]" />
-              Selector de Simuladores (Gateway)
+              VER MURO DE TELEMETRÍA EN BOXES
             </Link>
           </div>
 
-          {/* Chips de Especificaciones Técnicas */}
-          <div className="mt-16 pt-10 border-t border-[#262626] flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs font-mono text-[#bbbbbb]">
-            <div className="flex items-center gap-2">
-              <span className="text-[#0fa336] font-bold">●</span>
-              <span>60 Hz Win32 MMF</span>
+          {/* Barra de Especificaciones de Cabina (TrackSpecBar) */}
+          <div className="mt-16 pt-10 border-t border-[#262626] grid grid-cols-2 md:grid-cols-4 gap-6 text-left">
+            <div className="p-4 bg-black/60 border border-[#262626]">
+              <div className="text-xl font-bold font-mono text-white flex items-center gap-1.5">
+                0 <span className="text-xs text-[#0fa336] font-sans">MS</span>
+              </div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-white mt-1">
+                De Retardo
+              </div>
+              <div className="text-[11px] text-[#7e7e7e] mt-0.5">
+                Las luces de corte van al compás del motor
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[#0066b1] font-bold">●</span>
-              <span>&lt; 0.8 ms Túnel USB</span>
+
+            <div className="p-4 bg-black/60 border border-[#262626]">
+              <div className="text-xl font-bold font-mono text-white flex items-center gap-1.5">
+                OLED <span className="text-xs text-[#0066b1] font-sans">PURA</span>
+              </div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-white mt-1">
+                Negro Absoluto
+              </div>
+              <div className="text-[11px] text-[#7e7e7e] mt-0.5">
+                Cero encandilamiento en carreras nocturnas
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[#e22718] font-bold">●</span>
-              <span>Monza GP (5.793 m)</span>
+
+            <div className="p-4 bg-black/60 border border-[#262626]">
+              <div className="text-xl font-bold font-mono text-white flex items-center gap-1.5">
+                USB <span className="text-xs text-[#1c69d4] font-sans">DIRECTO</span>
+              </div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-white mt-1">
+                Cero Cortes Wi-Fi
+              </div>
+              <div className="text-[11px] text-[#7e7e7e] mt-0.5">
+                Conexión cableada inmune a caídas de red
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[#f4b400] font-bold">●</span>
-              <span>Next.js 15 + C# .NET 8</span>
+
+            <div className="p-4 bg-black/60 border border-[#262626]">
+              <div className="text-xl font-bold font-mono text-[#0fa336] flex items-center gap-1.5">
+                $0 <span className="text-xs text-[#bbbbbb] font-sans">USD</span>
+              </div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-white mt-1">
+                En Volantes Nuevos
+              </div>
+              <div className="text-[11px] text-[#7e7e7e] mt-0.5">
+                Usás el móvil que ya tenés en el cajón
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Banner FAPPE 2026 */}
-      <FappeBanner />
+      {/* Franja Tricolor M Divisoria */}
+      <div className="w-full h-1 flex shrink-0">
+        <div className="flex-1 bg-[#0066b1]" />
+        <div className="flex-1 bg-[#1c69d4]" />
+        <div className="flex-1 bg-[#e22718]" />
+      </div>
+
+      {/* Manifiesto del Piloto */}
+      <RacerManifesto />
+
+      {/* Franja Tricolor M Divisoria */}
+      <div className="w-full h-1 flex shrink-0">
+        <div className="flex-1 bg-[#0066b1]" />
+        <div className="flex-1 bg-[#1c69d4]" />
+        <div className="flex-1 bg-[#e22718]" />
+      </div>
+
+      {/* Los Tres Momentos de la Carrera */}
+      <FeaturesGrid />
+
+      {/* Franja Tricolor M Divisoria */}
+      <div className="w-full h-1 flex shrink-0">
+        <div className="flex-1 bg-[#0066b1]" />
+        <div className="flex-1 bg-[#1c69d4]" />
+        <div className="flex-1 bg-[#e22718]" />
+      </div>
 
       {/* Comparativa de Hardware */}
       <HardwareComparison />
 
-      {/* Grid de 3 Pilares */}
-      <FeaturesGrid />
+      {/* Franja Tricolor M Divisoria */}
+      <div className="w-full h-1 flex shrink-0">
+        <div className="flex-1 bg-[#0066b1]" />
+        <div className="flex-1 bg-[#1c69d4]" />
+        <div className="flex-1 bg-[#e22718]" />
+      </div>
 
-      {/* Footer Oficial */}
-      <footer className="border-t border-[#262626] bg-black py-12 text-[#7e7e7e]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#1a1a1a] border border-[#3c3c3c] rounded">
-              <Gauge className="w-4 h-4 text-[#0066b1]" />
+      {/* Análisis en Pista: Monza GP */}
+      <MonzaTrackShowcase />
+
+      {/* Franja Tricolor M Divisoria */}
+      <div className="w-full h-1 flex shrink-0">
+        <div className="flex-1 bg-[#0066b1]" />
+        <div className="flex-1 bg-[#1c69d4]" />
+        <div className="flex-1 bg-[#e22718]" />
+      </div>
+
+      {/* Llamado a Pista Pre-Footer */}
+      <CtaBand />
+
+      {/* Franja Tricolor M Divisoria */}
+      <div className="w-full h-1 flex shrink-0">
+        <div className="flex-1 bg-[#0066b1]" />
+        <div className="flex-1 bg-[#1c69d4]" />
+        <div className="flex-1 bg-[#e22718]" />
+      </div>
+
+      {/* Pie de Página Oficial (Footer) */}
+      <footer className="border-t border-[#262626] bg-black py-16 text-[#7e7e7e]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 border-b border-[#262626]">
+            <div className="flex items-center gap-3">
+              <MSlantedBadge className="h-4" />
+              <span className="text-base font-bold uppercase text-white font-mono tracking-[0.15em]">
+                APEX<span className="text-[#e22718]">LINK</span>
+              </span>
+              <span className="text-xs text-[#7e7e7e]">
+                • Instrumental de Cabina y Telemetría de Boxes
+              </span>
             </div>
-            <span className="text-sm font-bold uppercase text-white font-mono">
-              Apex<span className="text-[#0066b1]">Link</span> Pitwall
-            </span>
-            <span className="text-xs text-[#7e7e7e]">
-              • Proyecto de Ingeniería FAPPE 2026
-            </span>
+
+            <nav className="flex flex-wrap items-center gap-6 text-xs font-bold uppercase tracking-wider">
+              <a href="#volante" className="text-[#bbbbbb] hover:text-white transition-colors">
+                En el Volante
+              </a>
+              <Link href="/hub" className="text-[#bbbbbb] hover:text-white transition-colors">
+                En Boxes
+              </Link>
+              <a href="#comparativa" className="text-[#bbbbbb] hover:text-white transition-colors">
+                Comparativa
+              </a>
+              <a href="#monza" className="text-[#bbbbbb] hover:text-white transition-colors">
+                Monza GP
+              </a>
+              <Link href="/login" className="text-[#e22718] hover:text-white transition-colors">
+                Acceso a Cabina
+              </Link>
+            </nav>
           </div>
 
-          <div className="text-xs text-center md:text-right">
-            Desarrollado bajo metodología Spec-Driven Development (SDD) • Dev 1, Dev 2 y Dev 3
+          {/* Información de Hardware y Compatibilidad */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-xs leading-relaxed text-[#bbbbbb]">
+            <div>
+              <div className="font-bold uppercase tracking-wider text-white mb-2">
+                Compatibilidad de Volantes y Bases
+              </div>
+              <p>
+                Compatible con volantes Logitech (G29, G923, Pro), Thrustmaster (T300, T-GT, TS-PC), Fanatec (CSL, DD Pro, ClubSport) y bases Direct Drive (Moza, Simagic, Asetek, Simucube).
+              </p>
+            </div>
+
+            <div>
+              <div className="font-bold uppercase tracking-wider text-white mb-2">
+                Simulador Soportado
+              </div>
+              <p>
+                Diseñado para Assetto Corsa con adquisición en tiempo real. Próximamente disponible para iRacing, Assetto Corsa Competizione y F1.
+              </p>
+            </div>
+          </div>
+
+          {/* Nota Aclaratoria Legal */}
+          <div className="pt-6 border-t border-[#1f1f1f] text-[11px] text-[#555555] flex flex-col md:flex-row items-center justify-between gap-4">
+            <p>
+              ApexLink es una plataforma independiente desarrollada para la comunidad de simracing. No posee afiliación comercial con Kunos Simulazioni ni con fabricantes de hardware de volantes.
+            </p>
+            <p className="shrink-0 font-mono">
+              © 2026 APEXLINK · ALL RIGHTS RESERVED
+            </p>
           </div>
         </div>
       </footer>
