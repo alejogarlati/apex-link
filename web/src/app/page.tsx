@@ -1,10 +1,8 @@
 import Link from "next/link";
 import { Zap, Play, Gauge } from "lucide-react";
 import { MSlantedBadge } from "@/components/landing/MSlantedBadge";
-import { RacerManifesto } from "@/components/landing/RacerManifesto";
-import { HardwareComparison } from "@/components/landing/HardwareComparison";
 import { FeaturesGrid } from "@/components/landing/FeaturesGrid";
-import { MonzaTrackShowcase } from "@/components/landing/MonzaTrackShowcase";
+import { QuickStartSteps } from "@/components/landing/QuickStartSteps";
 import { CtaBand } from "@/components/landing/CtaBand";
 
 export default function PaginaInicio() {
@@ -17,7 +15,7 @@ export default function PaginaInicio() {
         <div className="flex-1 bg-[#e22718]" />
       </div>
 
-      {/* Barra de Navegación de Cabina (TopNav) */}
+      {/* Barra de Navegación (TopNav) */}
       <header className="border-b border-[#262626] bg-black/95 backdrop-blur sticky top-1 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
@@ -27,37 +25,25 @@ export default function PaginaInicio() {
             </span>
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-8">
             <a
-              href="#pitwall"
+              href="#caracteristicas"
               className="text-xs font-bold uppercase tracking-[0.15em] text-[#bbbbbb] hover:text-white transition-colors"
             >
-              Live Pitwall
+              Características
             </a>
             <a
-              href="#analisis"
+              href="#como-funciona"
               className="text-xs font-bold uppercase tracking-[0.15em] text-[#bbbbbb] hover:text-white transition-colors"
             >
-              Laboratorio 2D
+              Cómo Funciona
             </a>
-            <a
-              href="#ddu"
+            <Link
+              href="/hub"
               className="text-xs font-bold uppercase tracking-[0.15em] text-[#bbbbbb] hover:text-white transition-colors"
             >
-              Instrumental DDU
-            </a>
-            <a
-              href="#comparativa"
-              className="text-xs font-bold uppercase tracking-[0.15em] text-[#bbbbbb] hover:text-white transition-colors"
-            >
-              Comparativa
-            </a>
-            <a
-              href="#monza"
-              className="text-xs font-bold uppercase tracking-[0.15em] text-[#bbbbbb] hover:text-white transition-colors"
-            >
-              Monza GP
-            </a>
+              En Boxes
+            </Link>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -66,7 +52,7 @@ export default function PaginaInicio() {
               className="h-10 px-5 rounded-none bg-[#e22718] hover:bg-[#c91f12] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center gap-2 transition-all border border-[#e22718] shadow-[0_0_15px_rgba(226,39,24,0.3)] cursor-pointer"
             >
               <Zap className="w-3.5 h-3.5 fill-white" />
-              Probar Telemetría
+              Probar Demo
             </Link>
           </div>
         </div>
@@ -78,23 +64,23 @@ export default function PaginaInicio() {
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-[#e22718]/10 blur-3xl pointer-events-none" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {/* Baliza de Estado del Ecosistema */}
+          {/* Baliza de Estado */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#141414] border border-[#3c3c3c] text-xs font-bold uppercase tracking-[0.2em] text-[#bbbbbb] mb-8">
             <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
-            Enlace Directo Listo · Ecosistema Integral de Telemetría para Assetto Corsa
+            Sistema Activo · Telemetría en Tiempo Real para Assetto Corsa
           </div>
 
           {/* Titular Principal */}
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold uppercase tracking-tight text-white max-w-5xl mx-auto leading-[1.05]">
-            Telemetría en tiempo real, ingeniería de boxes{" "}
+            Telemetría accesible{" "}
             <span className="text-[#e22718] block sm:inline">
-              y análisis de competición
+              para todo simracer
             </span>
           </h1>
 
           {/* Bajada */}
           <p className="mt-6 text-base sm:text-lg text-[#bbbbbb] max-w-3xl mx-auto leading-relaxed">
-            De la cabina al muro de boxes y al análisis post-sesión. ApexLink es la plataforma integral de telemetría para simracing: adquiere los datos de tu auto a 60 Hz, proyecta el instrumental en tu volante, transmite la ingeniería en vivo a boxes y analiza cada metro de tu trazada en un laboratorio 2D para encontrar las décimas que te separan de la pole.
+            Conectá tu volante, mirá los datos de tu auto en tiempo real y analizá tus vueltas desde cualquier navegador web. Sin configuraciones complicadas, sin software pesado y compatible con tu equipamiento actual.
           </p>
 
           {/* Botonera de Acción */}
@@ -104,7 +90,7 @@ export default function PaginaInicio() {
               className="w-full sm:w-auto h-[52px] px-8 rounded-none bg-[#e22718] hover:bg-[#c91f12] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#e22718] shadow-[0_0_25px_rgba(226,39,24,0.35)] cursor-pointer"
             >
               <Play className="w-4 h-4 fill-current" />
-              ENTRAR A PISTA (MODO DEMO)
+              PROBAR DEMO EN VIVO
             </Link>
 
             <Link
@@ -112,11 +98,11 @@ export default function PaginaInicio() {
               className="w-full sm:w-auto h-[52px] px-8 rounded-none bg-[#141414] hover:bg-[#1f1f1f] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#3c3c3c] hover:border-[#e22718] cursor-pointer"
             >
               <Gauge className="w-4 h-4 text-[#bbbbbb]" />
-              VER MURO DE TELEMETRÍA EN BOXES
+              VER ENTORNO DE BOXES
             </Link>
           </div>
 
-          {/* Barra de Especificaciones del Ecosistema */}
+          {/* Barra de Especificaciones Reales */}
           <div className="mt-16 pt-10 border-t border-[#262626] grid grid-cols-2 md:grid-cols-4 gap-6 text-left">
             <div className="p-4 bg-black/60 border border-[#262626]">
               <div className="text-xl font-bold font-mono text-white flex items-center gap-1.5">
@@ -126,43 +112,43 @@ export default function PaginaInicio() {
                 En Tiempo Real
               </div>
               <div className="text-[11px] text-[#7e7e7e] mt-0.5">
-                Adquisición continua de chasis, gomas y pedales
+                Transmisión continua de físicas y chasis
               </div>
             </div>
 
             <div className="p-4 bg-black/60 border border-[#262626]">
               <div className="text-xl font-bold font-mono text-white flex items-center gap-1.5">
-                DOMINIO <span className="text-xs text-[#0066b1] font-sans">MÉTRICO</span>
+                ENLACE <span className="text-xs text-[#0066b1] font-sans">DIRECTO</span>
               </div>
               <div className="text-[11px] font-bold uppercase tracking-wider text-white mt-1">
-                Metro a Metro
+                USB o Red Local
               </div>
               <div className="text-[11px] text-[#7e7e7e] mt-0.5">
-                Telemetría en distancia de pista sin desfase temporal
+                Sin latencia perceptible en cabina
               </div>
             </div>
 
             <div className="p-4 bg-black/60 border border-[#262626]">
               <div className="text-xl font-bold font-mono text-white flex items-center gap-1.5">
-                LIVE <span className="text-xs text-[#1c69d4] font-sans">PITWALL</span>
+                NAVEGADOR <span className="text-xs text-[#1c69d4] font-sans">WEB</span>
               </div>
               <div className="text-[11px] font-bold uppercase tracking-wider text-white mt-1">
-                En Boxes
+                Desde Cualquier Dispositivo
               </div>
               <div className="text-[11px] text-[#7e7e7e] mt-0.5">
-                Puesto de ingeniero de pista en vivo en tu navegador
+                Acceso a boxes en PC, tablet o celular
               </div>
             </div>
 
             <div className="p-4 bg-black/60 border border-[#262626]">
-              <div className="text-xl font-bold font-mono text-[#e22718] flex items-center gap-1.5">
-                DISPLAY <span className="text-xs text-[#bbbbbb] font-sans">DDU</span>
+              <div className="text-xl font-bold font-mono text-[#0fa336] flex items-center gap-1.5">
+                CERO <span className="text-xs text-[#bbbbbb] font-sans">PLUGINS</span>
               </div>
               <div className="text-[11px] font-bold uppercase tracking-wider text-white mt-1">
-                En Cabina
+                Detección Automática
               </div>
               <div className="text-[11px] text-[#7e7e7e] mt-0.5">
-                Luces de corte y delta dinámico en el volante
+                Listo para girar con Assetto Corsa
               </div>
             </div>
           </div>
@@ -176,17 +162,7 @@ export default function PaginaInicio() {
         <div className="flex-1 bg-[#e22718]" />
       </div>
 
-      {/* Manifiesto: La Ciencia de Limar Décimas */}
-      <RacerManifesto />
-
-      {/* Franja Tricolor M Divisoria */}
-      <div className="w-full h-1 flex shrink-0">
-        <div className="flex-1 bg-[#0066b1]" />
-        <div className="flex-1 bg-[#1c69d4]" />
-        <div className="flex-1 bg-[#e22718]" />
-      </div>
-
-      {/* Los Cuatro Pilares del Ecosistema */}
+      {/* Grilla de Características Concretas */}
       <FeaturesGrid />
 
       {/* Franja Tricolor M Divisoria */}
@@ -196,8 +172,8 @@ export default function PaginaInicio() {
         <div className="flex-1 bg-[#e22718]" />
       </div>
 
-      {/* Comparativa: Software Tradicional vs ApexLink */}
-      <HardwareComparison />
+      {/* Cómo Empezar en Tres Pasos */}
+      <QuickStartSteps />
 
       {/* Franja Tricolor M Divisoria */}
       <div className="w-full h-1 flex shrink-0">
@@ -206,17 +182,7 @@ export default function PaginaInicio() {
         <div className="flex-1 bg-[#e22718]" />
       </div>
 
-      {/* Análisis en Pista: Monza GP */}
-      <MonzaTrackShowcase />
-
-      {/* Franja Tricolor M Divisoria */}
-      <div className="w-full h-1 flex shrink-0">
-        <div className="flex-1 bg-[#0066b1]" />
-        <div className="flex-1 bg-[#1c69d4]" />
-        <div className="flex-1 bg-[#e22718]" />
-      </div>
-
-      {/* Llamado a Boxes Pre-Footer */}
+      {/* Llamado a Probar Demo */}
       <CtaBand />
 
       {/* Franja Tricolor M Divisoria */}
@@ -236,26 +202,20 @@ export default function PaginaInicio() {
                 APEX<span className="text-[#e22718]">LINK</span>
               </span>
               <span className="text-xs text-[#7e7e7e]">
-                • Ecosistema Distribuido de Telemetría SimRacing en Tiempo Real
+                • Telemetría en Tiempo Real y Análisis de Vueltas
               </span>
             </div>
 
             <nav className="flex flex-wrap items-center gap-6 text-xs font-bold uppercase tracking-wider">
-              <a href="#pitwall" className="text-[#bbbbbb] hover:text-white transition-colors">
-                Live Pitwall
+              <a href="#caracteristicas" className="text-[#bbbbbb] hover:text-white transition-colors">
+                Características
               </a>
-              <a href="#analisis" className="text-[#bbbbbb] hover:text-white transition-colors">
-                Laboratorio 2D
+              <a href="#como-funciona" className="text-[#bbbbbb] hover:text-white transition-colors">
+                Cómo Funciona
               </a>
-              <a href="#ddu" className="text-[#bbbbbb] hover:text-white transition-colors">
-                Instrumental DDU
-              </a>
-              <a href="#comparativa" className="text-[#bbbbbb] hover:text-white transition-colors">
-                Comparativa
-              </a>
-              <a href="#monza" className="text-[#bbbbbb] hover:text-white transition-colors">
-                Monza GP
-              </a>
+              <Link href="/hub" className="text-[#bbbbbb] hover:text-white transition-colors">
+                En Boxes
+              </Link>
               <Link href="/login" className="text-[#e22718] hover:text-white transition-colors">
                 Acceso a Cabina
               </Link>
@@ -266,19 +226,19 @@ export default function PaginaInicio() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-xs leading-relaxed text-[#bbbbbb]">
             <div>
               <div className="font-bold uppercase tracking-wider text-white mb-2">
-                Simulador Soportado & Adquisición
+                Simulador Soportado
               </div>
               <p>
-                Adquisición en tiempo real acoplada a Assetto Corsa. Próximamente disponible para iRacing, Assetto Corsa Competizione y F1 24.
+                Diseñado para Assetto Corsa con adquisición directa en tiempo real. Próximamente disponible para otros títulos líderes de simracing.
               </p>
             </div>
 
             <div>
               <div className="font-bold uppercase tracking-wider text-white mb-2">
-                Compatibilidad de Volantes y Hardware
+                Compatibilidad de Volantes y Pantallas
               </div>
               <p>
-                Compatible con cualquier base y aro de volante: Logitech (G29, G923, Pro), Thrustmaster (T300, T-GT, TS-PC), Fanatec (CSL, DD Pro, ClubSport) y Direct Drive (Moza, Simagic, Asetek, Simucube).
+                Compatible con bases y aros Logitech, Thrustmaster, Fanatec y Direct Drive (Moza, Simagic, Simucube). Visualizable en monitores, tablets o teléfonos móviles.
               </p>
             </div>
           </div>
@@ -286,7 +246,7 @@ export default function PaginaInicio() {
           {/* Nota Aclaratoria Legal */}
           <div className="pt-6 border-t border-[#1f1f1f] text-[11px] text-[#555555] flex flex-col md:flex-row items-center justify-between gap-4">
             <p>
-              ApexLink es una plataforma independiente desarrollada para la comunidad de simracing. No posee afiliación comercial con Kunos Simulazioni, MoTeC ni fabricantes de hardware.
+              ApexLink es una plataforma independiente desarrollada para la comunidad de simracing. No posee afiliación comercial con Kunos Simulazioni ni con fabricantes de hardware.
             </p>
             <p className="shrink-0 font-mono">
               © 2026 APEXLINK · ALL RIGHTS RESERVED
