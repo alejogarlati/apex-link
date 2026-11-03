@@ -30,6 +30,22 @@ export interface EstadoServicioDto {
   modeloVehiculo: string;
   longitudPistaMetros: number;
   autosActivos: number;
+
+  // Propiedades serializadas con JsonPropertyName en C#
+  isConnected?: boolean;
+  isMockMode?: boolean;
+  circuit?: string;
+  carModel?: string;
+  trackLengthMeters?: number;
+  activeCars?: number;
+
+  // Perfil del piloto activo
+  pilotName?: string;
+  pilotAlias?: string;
+  isGuest?: boolean;
+  nombrePiloto?: string;
+  aliasPiloto?: string;
+  esInvitado?: boolean;
 }
 
 /** Tipo de sesión oficial */
