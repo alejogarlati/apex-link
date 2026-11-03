@@ -1,12 +1,12 @@
 # 📚 Documentación Técnica Integral: Módulo 3 — Plataforma Web SaaS de Boxes, Telemetría y Gestión de Pilotos (apex-link-web)
 
-> **Módulo:** Módulo 3 (Ecosistema Web SaaS de Ingeniería de Pista, Perfil de Piloto y Telemetría Distribuida)  
-> **Nombre Oficial del Repositorio:** `apex-link-web`  
-> **Modelo de Aplicación:** Plataforma SaaS Completa (Landing Page Pública $\to$ Autenticación Local & Invitado FAPPE [Steam TBD] $\to$ Hub Selector de Simulador $\to$ Dashboard de Ingeniería de Competición)  
-> **Hardware Objetivo:** Laptops de boxes, Monitores de telemetría de pitwall (1080p / 1440p / 4K) y Tablets de alta resolución (Lenovo Tab P11 / iPad)  
-> **Origen de Datos:** Módulo 1 (Backend de Telemetría C# .NET 8 @ `http://localhost:8080` y `ws://localhost:8080/ws/telemetry`)  
-> **Tipo de Aplicación:** Web App Reactiva de Alto Rendimiento (Next.js 15 App Router + React 19 + TypeScript 5.7 + Tailwind CSS + uPlot + HTML5 Canvas 2D + Zustand 5)  
-> **Metodología de Desarrollo:** Spec-Driven Development (SDD Intensivo) — Conforme 1:1 con `CONTRATOS_TELEMETRIA_Y_API.md`  
+> **Módulo:** Módulo 3 (Ecosistema Web SaaS de Ingeniería de Pista, Perfil de Piloto y Telemetría Distribuida)
+> **Nombre Oficial del Repositorio:** `apex-link-web`
+> **Modelo de Aplicación:** Plataforma SaaS Completa (Landing Page Pública $\to$ Autenticación Local & Invitado FAPPE [Steam TBD] $\to$ Hub Selector de Simulador $\to$ Dashboard de Ingeniería de Competición)
+> **Hardware Objetivo:** Laptops de boxes, Monitores de telemetría de pitwall (1080p / 1440p / 4K) y Tablets de alta resolución (Lenovo Tab P11 / iPad)
+> **Origen de Datos:** Módulo 1 (Backend de Telemetría C# .NET 8 @ `http://localhost:8080` y `ws://localhost:8080/ws/telemetry`)
+> **Tipo de Aplicación:** Web App Reactiva de Alto Rendimiento (Next.js 15 App Router + React 19 + TypeScript 5.7 + Tailwind CSS + uPlot + HTML5 Canvas 2D + Zustand 5)
+> **Metodología de Desarrollo:** Spec-Driven Development (SDD Intensivo) — Conforme 1:1 con `CONTRATOS_TELEMETRIA_Y_API.md`
 > **Estado del Documento:** Versión 2.0 (Arquitectura SaaS Expandida Oficial)
 
 ---
@@ -18,11 +18,11 @@
 3. [Módulo 0: Landing Page Pública y Presentación FAPPE 2026](#3-módulo-0-landing-page-pública-y-presentación-fappe-2026)
 4. [Módulo 1: Autenticación, Seguridad y Conexión con Steam](#4-módulo-1-autenticación-seguridad-y-conexión-con-steam)
 5. [Módulo 2: Hub Central y Selector de Simuladores (Sim Racing Gateway)](#5-módulo-2-hub-central-y-selector-de-simuladores-sim-racing-gateway)
-6. [Módulo 3: Dashboard General del Piloto & AI Race Coach](#6-módulo-3-dashboard-general-del-piloto--ai-race-coach)
+6. [Módulo 3: Dashboard General del Piloto &amp; AI Race Coach](#6-módulo-3-dashboard-general-del-piloto--ai-race-coach)
 7. [Módulo 4: Perfil de Piloto, Sistema de Rating y Logros Gamificados](#7-módulo-4-perfil-de-piloto-sistema-de-rating-y-logros-gamificados)
 8. [Módulo 5: Catálogo de Circuitos Rodados y Garaje de Monoplazas](#8-módulo-5-catálogo-de-circuitos-rodados-y-garaje-de-monoplazas)
 9. [Módulo 6: Live Pitwall (Muro de Boxes en Tiempo Real @ 60 Hz)](#9-módulo-6-live-pitwall-muro-de-boxes-en-tiempo-real--60-hz)
-10. [Módulo 7: Laboratorio Analítico Post-Sesión & Trazada 2D con Heatmaps](#10-módulo-7-laboratorio-analítico-post-sesión--trazada-2d-con-heatmaps)
+10. [Módulo 7: Laboratorio Analítico Post-Sesión &amp; Trazada 2D con Heatmaps](#10-módulo-7-laboratorio-analítico-post-sesión--trazada-2d-con-heatmaps)
 11. [Módulo 8: Explorador Histórico de Tandas y Clasificación](#11-módulo-8-explorador-histórico-de-tandas-y-clasificación)
 12. [Módulo 9: Ajustes, Personalización y Preferencias de Hardware](#12-módulo-9-ajustes-personalización-y-preferencias-de-hardware)
 13. [Estructura Completa de Archivos del Repositorio (`apex-link-web`)](#13-estructura-completa-de-archivos-del-repositorio-apex-link-web)
@@ -33,7 +33,9 @@
 ## 1. Visión General del Producto SaaS y Propuesta de Valor
 
 ### 1.1. De un Visualizador Aislado a una Plataforma SaaS Integral
+
 La versión original de `apex-link-web` fue concebida como un monitor de telemetría de boxes. Sin embargo, para maximizar el rigor académico y el impacto en la feria **FAPPE 2026**, la plataforma evoluciona a un **Software as a Service (SaaS) completo de rendimiento automovilístico**:
+
 * **Experiencia de Entrada Profesional:** Una Landing Page pública de alto impacto visual que comunica el problema, la propuesta técnica y la democratización de periféricos.
 * **Identidad y Trazabilidad del Conductor:** Acceso autenticado mediante credenciales locales o modo rápido *"Piloto Invitado FAPPE"* (con campo manual opcional de Steam ID; el protocolo de autenticación Steam OpenID 2.0 se clasifica como **TBD / Post-MVP** para erradicar dependencias de internet en la feria), permitiendo que cada evaluador o piloto tenga su propio perfil de telemetría registrado.
 * **Hub Multi-Simulador (Extensibilidad):** Selector central de títulos de simulación; en este MVP opera de forma nativa con **Assetto Corsa**, manteniendo los demás títulos líderes de la industria (*iRacing*, *Assetto Corsa Competizione*, *F1 24*, *Le Mans Ultimate*) catalogados como *"Próximamente"*.
@@ -49,9 +51,9 @@ flowchart TD
     Login["🔐 /login (Inicio Sesión / Steam)"]
     Register["📝 /registro (Alta de Piloto)"]
     Recover["🔑 /recuperar-password"]
-    
+  
     Hub["🎮 /hub (Selector de Simuladores)"]
-    
+  
     subgraph AC_Ecosystem ["Entorno Assetto Corsa (/app/...)"]
         Dashboard["📊 /app (Dashboard General & Coach)"]
         LivePit["⏱️ /app/live (Live Pitwall @ 60 Hz)"]
@@ -69,7 +71,7 @@ flowchart TD
     Login --> Recover
     Login --> Hub
     Register --> Hub
-    
+  
     Hub -->|Assetto Corsa Activo| Dashboard
     Hub -.->|iRacing / ACC / F1| Disabled["Próximamente (Locked)"]
 
@@ -177,29 +179,34 @@ flowchart TD
 * **Componentes Nucleares:**
 
 ### 7.1. Sistema de Calificación y Ratings Deportivos
+
 * **Pace Rating (Ritmo Puro - Escala 0 a 100):** Determinado por la velocidad escalar alcanzada en vértices y la proximidad al récord mundial/local del circuito.
 * **Safety Rating (Seguridad y Respeto a Límites - Grado S, A, B, C, D):** Proporción matemática de vueltas limpias:
-  $$\text{Safety} = \frac{\text{Vueltas Válidas}}{\text{Vueltas Totales}} \times 100$$
+  $$
+  \text{Safety} = \frac{\text{Vueltas Válidas}}{\text{Vueltas Totales}} \times 100
+  $$
+
   Penaliza salidas de pista (`NumberOfTyresOut >= 4`), roces contra muros y trompos.
 * **Consistency Index (% Consistencia):** Desviación estándar promedio entre vueltas limpias consecutivas en una misma tanda.
 
 ### 7.2. Vitrina de Logros y Trofeos (Achievements)
 
-| Icono | Nombre del Logro | Condición de Desbloqueo Telemétrico |
-| :---: | :--- | :--- |
-| 🏁 | **Bautismo de Asfalto** | Completar la primera vuelta válida en cualquier circuito. |
-| ⚡ | **Club de los 300** | Superar los $300\text{ km/h}$ en la recta principal de cualquier trazado. |
-| 🎯 | **Metrónomo de Pista** | Registrar 5 vueltas consecutivas con una variación temporal inferior a $\pm 0.150\text{ s}$. |
-| 🟣 | **Dominio Púrpura** | Marcar los tres mejores sectores (S1, S2, S3) en una misma vuelta. |
-| 🛑 | **Maestro del Trail-Braking** | Mantener desaceleración combinada con más de $1.4\text{ G}$ lateral en la entrada a curva. |
-| 🛡️ | **Piloto Limpio (Fair Play)** | Completar un stint de más de 12 vueltas con 100% de vueltas reglamentarias. |
-| 🏆 | **Rey de Monza** | Romper la barrera del $01:21.500$ en Monza con el monoplaza de Fórmula 1. |
+| Icono | Nombre del Logro                    | Condición de Desbloqueo Telemétrico                                                           |
+| :---: | :---------------------------------- | :---------------------------------------------------------------------------------------------- |
+|  🏁  | **Bautismo de Asfalto**       | Completar la primera vuelta válida en cualquier circuito.                                      |
+|  ⚡  | **Club de los 300**           | Superar los $300\text{ km/h}$ en la recta principal de cualquier trazado.                     |
+|  🎯  | **Metrónomo de Pista**       | Registrar 5 vueltas consecutivas con una variación temporal inferior a $\pm 0.150\text{ s}$. |
+|  🟣  | **Dominio Púrpura**          | Marcar los tres mejores sectores (S1, S2, S3) en una misma vuelta.                              |
+|  🛑  | **Maestro del Trail-Braking** | Mantener desaceleración combinada con más de $1.4\text{ G}$ lateral en la entrada a curva.  |
+| 🛡️ | **Piloto Limpio (Fair Play)** | Completar un stint de más de 12 vueltas con 100% de vueltas reglamentarias.                    |
+|  🏆  | **Rey de Monza**              | Romper la barrera del $01:21.500$ en Monza con el monoplaza de Fórmula 1.                    |
 
 ---
 
 ## 8. Módulo 5: Catálogo de Circuitos Rodados y Garaje de Monoplazas
 
 ### 8.1. Explorador de Circuitos (`/app/circuitos`)
+
 * **Alcance Oficial para la Exhibición FAPPE 2026:**
   - **Circuito Principal de Retransmisión en Vivo (Live Pitwall @ 60 Hz):**
     - ⚡ **`Autodromo Nazionale Monza (F1 2025)` (`monza_f1_2025`):** Circuito principal de demostración en el stand. Longitud: **5.757 m**, 11 curvas oficiales (*Prima Variante, Curva Biassono, Variante della Roggia, Lesmo 1 & 2, Serraglio, Ascari, Parabolica*) y 2 zonas DRS activas. Conectado al stream en tiempo real del simulador y al motor de simulación mock determinístico.
@@ -211,10 +218,13 @@ flowchart TD
   - Total de vueltas rodadas y distancia métrica acumulada en kilómetros.
   - **Vuelta Récord Personal (PB):** Tiempo absoluto registrado con fecha y vehículo utilizado.
   - **Vuelta Óptima Teórica (*Ideal Lap*):** Cálculo matemático automático sumando los mejores sectores históricos individuales:
-    $$\text{Tiempo Ideal} = \min(\text{S1}) + \min(\text{S2}) + \min(\text{S3})$$
+    $$
+    \text{Tiempo Ideal} = \min(\text{S1}) + \min(\text{S2}) + \min(\text{S3})
+    $$
   - **Delta de Potencial de Mejora:** Diferencia entre la Mejor Vuelta Real y la Vuelta Óptima Teórica (ej. *"Tenés un margen de mejora de $-0.430\text{ s}$ uniendo tus mejores sectores"*).
 
 ### 8.2. Garaje de Vehículos (`/app/garaje`)
+
 * **Flota de Monoplazas y GTs:** Tarjetas técnicas para cada vehículo rodado en el simulador (`Ferrari SF70H`, `Porsche 911 GT3 R`, `BMW M2 CS Racing`, etc.).
 * **Ficha Técnica Telemétrica:**
   - Régimen de corte máximo de revoluciones (`maxRpm`).
@@ -254,10 +264,18 @@ flowchart TD
   3. **Motor de Renderizado de Circuito (Decisión de Diseño Oficial: HTML5 Canvas 2D):**
      Se adopta oficialmente **HTML5 Canvas 2D** como el estándar de renderizado de circuitos y trazada en ApexLink (descartando dependencias pesadas de 3D como Three.js para garantizar 0 KB de sobrecarga en bundles y 144 FPS estables en laptops educativas). Dispone de dos modos de conmutación en caliente:
      - **Modo Broadcast Oficial Kunos (`map.png` + `map.ini`):** Dibuja la silueta transparente oficial del asfalto servida desde el backend o catálogo local, proyectando las coordenadas $(X, Z)$ mediante la fórmula de calibración nativa de Assetto Corsa:
-       $$\text{NormX} = \frac{X + \text{X\_OFFSET} + \text{MARGIN}}{\text{SCALE\_FACTOR} \times \text{WIDTH}}, \quad \text{NormY} = \frac{Z + \text{Z\_OFFSET} + \text{MARGIN}}{\text{SCALE\_FACTOR} \times \text{HEIGHT}}$$
-       $$\text{PixelX} = \text{OffsetX} + \text{NormX} \times \text{RenderW}, \quad \text{PixelY} = \text{OffsetY} + \text{NormY} \times \text{RenderH}$$
+
+       $$
+       \text{NormX} = \frac{X + \text{X\_OFFSET} + \text{MARGIN}}{\text{SCALE\_FACTOR} \times \text{WIDTH}}, \quad \text{NormY} = \frac{Z + \text{Z\_OFFSET} + \text{MARGIN}}{\text{SCALE\_FACTOR} \times \text{HEIGHT}}
+       $$
+
+       $$
+       \text{PixelX} = \text{OffsetX} + \text{NormX} \times \text{RenderW}, \quad \text{PixelY} = \text{OffsetY} + \text{NormY} \times \text{RenderH}
+       $$
+
        Permite un calce milimétrico de la trazada sobre el asfalto oficial independiente de la resolución nativa de la imagen.
      - **Modo Isométrico 3D Matemático con Altimetría Real:** Proyección trigonométrica pura sobre Canvas 2D con rotación de azimut $(\theta)$ e inclinación $(\phi)$ libres con el ratón. Proyecta las 3 coordenadas $(X, Y, Z)$ con sombra en el suelo, columnas de suspensión (*drop-pins*) y **Normalización Topográfica Adaptativa de Altura**:
+
        - **Desnivel Extremo ($\ge 50\text{ m}$, ej. Red Bull Ring con 63.5m):** Multiplicador $\mathbf{1.0\times}$ (escala real 1:1, evitando distorsiones desproporcionadas en circuitos de montaña).
        - **Desnivel Moderado ($25\text{ m} \to 50\text{ m}$, ej. Imola con 34.3m):** Multiplicador $\mathbf{1.25\times}$.
        - **Desnivel Plano ($< 25\text{ m}$, ej. Monza con 12.8m):** Multiplicador $\mathbf{2.0\times}$ (garantiza que pendientes sutiles como Lesmo o Ascari sean perceptibles por el piloto).
@@ -425,6 +443,7 @@ gantt
 ```
 
 ### Criterios de Aceptación Globales (Definition of Done):
+
 1. **Flujo de Navegación Fluido:** El usuario puede navegar desde la Landing pública hasta el análisis de telemetría sin recargas bruscas ni bloqueos de interfaz.
 2. **Compatibilidad Estricta de Contratos:** Todas las llamadas consumen los DTOs definidos en `CONTRATOS_TELEMETRIA_Y_API.md` sin modificaciones no autorizadas.
 3. **Cero Dependencia Externa en Demostración:** Todos los activos visuales (iconos, fuentes, portadas) residen localmente; la plataforma opera 100% desconectada de Internet durante la exhibición en el stand.

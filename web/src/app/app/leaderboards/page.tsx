@@ -2,11 +2,11 @@ import { Trophy } from "lucide-react";
 
 export default function PaginaLeaderboards() {
   const ranking = [
-    { posicion: 1, piloto: "Alejo Garlati (Dev 3)", tiempo: "01:21.240", delta: "Ref", auto: "Ferrari SF70H", vueltas: 18 },
-    { posicion: 2, piloto: "Prof. Evaluador FAPPE", tiempo: "01:22.450", delta: "+1.210 s", auto: "Ferrari SF70H", vueltas: 8 },
-    { posicion: 3, piloto: "Estudiante Ing. UTN", tiempo: "01:24.110", delta: "+2.870 s", auto: "Ferrari SF70H", vueltas: 14 },
-    { posicion: 4, piloto: "Piloto Visitante Stand 4", tiempo: "01:25.890", delta: "+4.650 s", auto: "Ferrari SF70H", vueltas: 6 },
-    { posicion: 5, piloto: "Invitado Demo FAPPE", tiempo: "01:27.420", delta: "+6.180 s", auto: "Ferrari SF70H", vueltas: 5 },
+    { posicion: 1, piloto: "Alejo Garlati (Piloto Pro)", tiempo: "01:21.240", delta: "Ref", auto: "Ferrari SF70H", vueltas: 18 },
+    { posicion: 2, piloto: "Martin Basso (Sim Pro)", tiempo: "01:22.450", delta: "+1.210 s", auto: "Ferrari SF70H", vueltas: 8 },
+    { posicion: 3, piloto: "Lucas Di Grassi (GT3)", tiempo: "01:24.110", delta: "+2.870 s", auto: "Ferrari SF70H", vueltas: 14 },
+    { posicion: 4, piloto: "Franco Colapinto (Sim)", tiempo: "01:25.890", delta: "+4.650 s", auto: "Ferrari SF70H", vueltas: 6 },
+    { posicion: 5, piloto: "Piloto Invitado (Demo)", tiempo: "01:27.420", delta: "+6.180 s", auto: "Ferrari SF70H", vueltas: 5 },
   ];
 
   return (
@@ -15,11 +15,11 @@ export default function PaginaLeaderboards() {
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 bg-[#0066b1]" />
           <h1 className="text-xl font-bold tracking-tight text-white uppercase sm:text-2xl">
-            Leaderboard Oficial • Stand FAPPE 2026
+            Tabla de Récords y Clasificación Oficial
           </h1>
         </div>
         <p className="mt-1 text-xs text-[#bbbbbb]">
-          Tiempos registrados en el simulador durante la feria. Autodromo Nazionale Monza • Ferrari SF70H.
+          Tiempos registrados en el simulador con telemetría en tiempo real. Autodromo Nazionale Monza • Ferrari SF70H.
         </p>
       </div>
 
@@ -28,7 +28,7 @@ export default function PaginaLeaderboards() {
           <div className="flex items-center gap-2">
             <Trophy className="w-4 h-4 text-[#f4b400]" />
             <span className="text-xs font-bold uppercase tracking-wider text-white">
-              Clasificación General del Stand
+              Clasificación General de Monza GP
             </span>
           </div>
           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#0fa336]/15 text-[#0fa336] border border-[#0fa336]/30">

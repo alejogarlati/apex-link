@@ -60,9 +60,9 @@ const ENLACES_NAVEGACION = [
   },
   {
     href: "/app/leaderboards",
-    etiqueta: "Stand FAPPE Ranking",
+    etiqueta: "Tabla de Récords",
     icono: Trophy,
-    descripcion: "Tiempos del jurado",
+    descripcion: "Clasificación y deltas",
   },
   {
     href: "/app/ajustes",
@@ -222,7 +222,7 @@ export default function LayoutAppBoxes({
           {/* Footer de Versión en Sidebar */}
           <div className="p-4 border-t border-[#262626] bg-black text-[11px] text-[#7e7e7e]">
             <div className="font-bold text-[#bbbbbb]">ApexLink SaaS v2.0</div>
-            <div>Edición FAPPE 2026 • SDD</div>
+            <div>Telemetría de Competición</div>
           </div>
         </aside>
 

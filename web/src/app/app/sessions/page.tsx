@@ -4,7 +4,7 @@ import { Trophy, Car, ArrowRight, Gauge, Clock } from "lucide-react";
 export default function PaginaSesiones() {
   const sesiones = [
     {
-      id: "sesion-monza-fappe",
+      id: "sesion-monza-sf70h",
       circuito: "Autodromo Nazionale Monza",
       configuracion: "Grand Prix (5.793 m)",
       fecha: "31 Oct 2026 • 19:15 UTC",
