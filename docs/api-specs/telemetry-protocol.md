@@ -91,11 +91,12 @@ El relay o servidor web expone rutas para consultar el histórico y descargar lo
 
 | Método | Endpoint | Descripción | Respuesta |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/status` | Estado del simulador y conexión. | `{ "connected": true, "game": "Assetto Corsa", "track": "monza", "isMock": false }` |
-| `GET` | `/api/sessions` | Listado de sesiones grabadas en el simulador. | Array con IDs de sesión, fecha, pista y auto. |
-| `GET` | `/api/sessions/:id/laps` | Lista de vueltas registradas en una sesión. | Resumen de tiempos por vuelta y banderas. |
-| `GET` | `/api/laps/:lapId/telemetry` | Array completo de muestras de telemetría de esa vuelta. | JSON con las muestras para graficar trazada y curvas. |
-| `POST` | `/api/mock/toggle` | Activa o desactiva el motor de simulación de prueba. | `{ "mockActive": true }` |
+| `GET` | `/api/estado` | Estado del simulador, circuito, longitud y perfil del piloto. | `{ "exitoso": true, "datos": { "isConnected": true, "isMockMode": false, "circuit": "monza", "carModel": "ks_ferrari_sf70h", "trackLengthMeters": 5793.0, "activeCars": 1, "pilotName": "Alejo Garlati", "pilotAlias": "GARLATI", "isGuest": false } }` |
+| `GET` | `/api/sesiones` | Listado paginado de sesiones grabadas en SQLite (WAL). | `{ "exitoso": true, "datos": { "elementos": [...], "paginaActual": 1, ... } }` |
+| `GET` | `/api/sesiones/{sesionId}/vueltas` | Lista de vueltas registradas en una sesión específica. | `{ "exitoso": true, "datos": [ { "id": "...", "numeroVuelta": 1, "tiempoVueltaMs": 81240, ... } ] }` |
+| `GET` | `/api/vueltas/{vueltaId}/telemetria` | Muestras completas de telemetría en dominio métrico ($0$ a $L_{\text{pista}}$). | `{ "exitoso": true, "datos": { "muestras": [...] } }` |
+| `GET` | `/api/vueltas/comparar` | Comparación métrica de telemetría entre dos vueltas (`vueltaReferenciaId` y `vueltaComparadaId`). | `{ "exitoso": true, "datos": { "vueltaA": {...}, "vueltaB": {...}, "deltas": [...] } }` |
+| `POST` | `/api/mock/alternar` | Conmutador en caliente entre memoria compartida física y generador sintético determinístico. | `{ "exitoso": true, "datos": { "isMockActive": true, "message": "..." } }` |
 
 ---
 
