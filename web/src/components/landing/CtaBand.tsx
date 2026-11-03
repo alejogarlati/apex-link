@@ -10,15 +10,15 @@ export function CtaBand() {
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-black border border-[#3c3c3c] text-xs font-bold uppercase tracking-[0.2em] text-[#bbbbbb]">
           <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
-          Suite Integral de Competición
+          Probá el Sistema en Vivo
         </div>
 
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold uppercase tracking-tight text-white">
-          El control total de tu telemetría en una <span className="text-[#e22718]">sola plataforma</span>
+          Salí a girar con la <span className="text-[#e22718]">telemetría en tiempo real</span>
         </h2>
 
         <p className="text-[#bbbbbb] text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-          Conectá tu simulador, colocá tu instrumental en el volante y abrí tu muro de telemetría en boxes. Empezá a limar décimas con la suite definitiva para Assetto Corsa.
+          Iniciá la demostración interactiva con datos reales de Assetto Corsa y explorá el instrumental de cabina y el muro de boxes al instante.
         </p>
 
         <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -35,7 +35,7 @@ export function CtaBand() {
             className="w-full sm:w-auto h-[52px] px-8 rounded-none bg-[#141414] hover:bg-[#1f1f1f] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#3c3c3c] hover:border-[#e22718] cursor-pointer"
           >
             <Gauge className="w-4 h-4 text-[#bbbbbb]" />
-            VER MURO DE TELEMETRÍA EN BOXES
+            VER ENTORNO DE BOXES
           </Link>
         </div>
       </div>
