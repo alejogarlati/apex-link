@@ -1,196 +1,164 @@
 # 🏎️ ApexLink — Human Interface Guidelines (HIG) y Copywriting de la Landing Page
 
 > **Documento:** Guía de Diseño Visual (HIG), Arquitectura de Información y Textos Oficiales de la Landing Page (`web/src/app/page.tsx`).  
+> **Documento Rector / Fuente de Verdad:** `docs/spec-driven-docs/BRIEF_INTEGRAL_SISTEMA_3_CAPAS.md` (*"Ecosistema Distribuido de Telemetría SimRacing en Tiempo Real, Análisis Post-Sesión y Plataforma SaaS de Competición"*).  
 > **Destinatario Único:** El piloto virtual y usuario de SimRacing.  
-> **Enfoque:** 100% experiencia de pista, instrumental de cabina y análisis de telemetría. **Sin menciones a tecnologías, código, arquitecturas de software ni evaluaciones académicas.**  
-> **Sistema de Diseño:** [BMW M Design System (`DESIGN.md`)](https://getdesign.md/bmw-m/design-md) — Siluetas rectangulares a 0px (`rounded-none`), fondo negro puro (`#000000`), Rojo M (`#e22718`) dominante y franja M tricolor estructural.  
-> **Estándar de Redacción:** Reglas `/no-ai-slop` (directo, sin rodeos, sin frases armadas de marketing, con el lenguaje real de los pilotos).
+> **Enfoque:** Suite Integral de Telemetría de Competición (Live Cockpit DDU + Live Pitwall en Boxes + Laboratorio Analítico 2D Post-Sesión + SaaS Driver Intelligence). **Sin menciones a tecnologías subyacentes de código, frameworks ni aspectos de evaluación académica.**  
+> **Sistema de Diseño:** [BMW M Design System (`DESIGN.md`)](https://getdesign.md/bmw-m/design-md) — Siluetas rectangulares a 0px (`rounded-none`), fondo negro puro (`#000000`), Rojo M (`#e22718`) dominante y franja M tricolor estructural (4px).  
+> **Estándar de Redacción:** Reglas `/no-ai-slop` (directo, técnico de motorsport, sin rodeos, con el lenguaje real de pilotos e ingenieros de pista).
 
 ---
 
 ## 📑 Índice de Contenidos
 
-1. [Identidad Visual y Reglas de Interfaz (Design System HIG)](#1-identidad-visual-y-reglas-de-interfaz-design-system-hig)
-   - 1.1. Lienzo y Superficies de Cabina
-   - 1.2. Balance de Colores: Rojo M y Negro de Pista
-   - 1.3. La Franja M Tricolor Estructural (`m-stripe-divider`)
-   - 1.4. Geometría Mecánica: Siluetas a 0px (`rounded-none`)
-   - 1.5. Tipografía de Instrumental y Números Invariables
-2. [Estructura Visual de la Landing Page](#2-estructura-visual-de-la-landing-page)
-3. [Textos Definitivos Sección por Sección (Copy Deck)](#3-textos-definitivos-sección-por-sección-copy-deck)
-   - 3.1. Barra Superior de Cabina (`TopNav`)
-   - 3.2. Sección Principal de Entrada (`HeroSection`)
-   - 3.3. Barra de Métricas Rápidas de Carrera (`TrackSpecBar`)
-   - 3.4. Manifiesto del Piloto: Medir vs Adivinar (`RacerManifesto`)
-   - 3.5. Tabla Comparativa de Volantes y Costos (`HardwareComparison`)
-   - 3.6. Los Tres Momentos de la Carrera (`RacerExperienceGrid`)
-   - 3.7. Análisis en Pista: La Telemetría en Monza GP (`MonzaTrackShowcase`)
-   - 3.8. Llamado a Pista Pre-Footer (`CtaBand`)
-   - 3.9. Pie de Página (`Footer`)
-4. [Componentes Listos para Implementar en Tailwind CSS](#4-componentes-listos-para-implementar-en-tailwind-css)
-5. [Verificación Anti-Slop: Lenguaje de Piloto a Piloto](#5-verificación-anti-slop-lenguaje-de-piloto-a-piloto)
+1. [Posicionamiento de Producto: Ecosistema Integral de Telemetría](#1-posicionamiento-de-producto-ecosistema-integral-de-telemetría)
+2. [Identidad Visual y Reglas de Interfaz (Design System HIG)](#2-identidad-visual-y-reglas-de-interfaz-design-system-hig)
+   - 2.1. Lienzo y Superficies de Cabina
+   - 2.2. Balance de Colores: Rojo M y Negro de Pista
+   - 2.3. La Franja M Tricolor Estructural (`m-stripe-divider`)
+   - 2.4. Geometría Mecánica: Siluetas a 0px (`rounded-none`)
+   - 2.5. Tipografía de Instrumental y Números Invariables
+3. [Estructura Visual de la Landing Page (Flujo de 360 Grados)](#3-estructura-visual-de-la-landing-page-flujo-de-360-grados)
+4. [Textos Definitivos Sección por Sección (Copy Deck Oficial)](#4-textos-definitivos-sección-por-sección-copy-deck-oficial)
+   - 4.1. Barra Superior de Navegación (`TopNav`)
+   - 4.2. Sección Principal de Entrada (`HeroSection`)
+   - 4.3. Barra de Métricas del Ecosistema (`EcosystemMetricsBar`)
+   - 4.4. Manifiesto: La Ciencia de Limar Décimas (`RacerManifesto`)
+   - 4.5. Los Cuatro Pilares del Ecosistema (`FeaturesGrid`)
+   - 4.6. Comparativa: Software de Telemetría Tradicional vs ApexLink (`SoftwareComparison`)
+   - 4.7. Análisis en Pista: La Telemetría en Monza GP (`MonzaTrackShowcase`)
+   - 4.8. Llamado a Boxes Pre-Footer (`CtaBand`)
+   - 4.9. Pie de Página (`Footer`)
+5. [Verificación Anti-Slop y Equilibrio del Ecosistema](#5-verificación-anti-slop-y-equilibrio-del-ecosistema)
 
 ---
 
-## 1. Identidad Visual y Reglas de Interfaz (Design System HIG)
+## 1. Posicionamiento de Producto: Ecosistema Integral de Telemetría
 
-La interfaz se concibe como una extensión del cockpit del monoplaza: sobria, con alto contraste y sin elementos gráficos superfluos que distraigan.
+ApexLink **no es un display secundario para teléfonos móviles**. Es una **suite integral de telemetría de competición** que une la experiencia completa del automovilismo digital:
 
-### 1.1. Lienzo y Superficies de Cabina
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                         APEXLINK · SUITE INTEGRAL DE TELEMETRÍA                        │
+├──────────────────────────┬─────────────────────────────┬───────────────────────────────┤
+│ 1. EN CABINA (DDU)       │ 2. EN BOXES (LIVE PITWALL)   │ 3. POST-SESIÓN (LABORATORIO)  │
+│ Respuesta instantánea al  │ Puesto de ingeniero de      │ Telemetría metro a metro en   │
+│ volante: marcha gigante, │ pista a 60 Hz: pedales con  │ dominio de distancia, deltas  │
+│ 15 luces de corte, delta │ peak hold, fuerzas Kamm     │ de tiempo, mapas de calor 2D  │
+│ en vivo y datos térmicos.│ G-G y desgaste de cubiertas.│ e inspección de curvas.       │
+└──────────────────────────┴─────────────────────────────┴───────────────────────────────┘
+                                           ▲
+                                           │
+                        4. DRIVER INTELLIGENCE & SAAS
+               AI Race Coach · Diagnóstico de Pilotaje · Ratings
+```
+
+---
+
+## 2. Identidad Visual y Reglas de Interfaz (Design System HIG)
+
+### 2.1. Lienzo y Superficies
 
 | Token | Código HEX | Rol en la Interfaz |
 | :--- | :--- | :--- |
-| `canvas` | `#000000` | Fondo general absoluto. En pantallas de teléfono OLED apaga los píxeles negros, elimina el brillo que encandila al piloto y evita que el móvil caliente en carreras largas. |
-| `surface-soft` | `#0d0d0d` | Celdas de datos, fondos de comparativa y paneles secundarios de boxes. |
-| `surface-card` | `#141414` | Tarjetas de características, bloques de neumáticos y paneles de instrumentos. |
-| `surface-hover` | `#1f1f1f` | Estado al apoyar el cursor sobre tarjetas o botones secundarios. |
-| `hairline` | `#3c3c3c` | Línea de división fina de 1px entre bloques y bordes de tarjetas. |
-| `hairline-subtle`| `#262626` | Divisiones internas de grillas. |
+| `canvas` | `#000000` | Fondo general absoluto. Negro puro de competición. |
+| `surface-soft` | `#0d0d0d` | Celdas de datos, fondos de comparativa y paneles secundarios. |
+| `surface-card` | `#141414` | Tarjetas de pilares, módulos del pitwall y contenedores de análisis. |
+| `surface-hover` | `#1f1f1f` | Estado hover de tarjetas interactivas. |
+| `hairline` | `#3c3c3c` | Línea de separación técnica y bordes mecánicos. |
+| `hairline-subtle`| `#262626` | Divisiones de grilla internas. |
+
+### 2.2. Balance Cromático: Rojo M y Negro
+
+* **Rojo M (`#e22718`):** Color protagónico de acción, zonas de frenada en el circuito, sectores perdiendo delta de tiempo y botones primarios.
+* **Blanco Puro (`#ffffff`):** Títulos de secciones, lecturas de marcha, velocidades y cronos de récord.
+* **Gris Técnico (`#bbbbbb`):** Párrafos de lectura fluida con las especificaciones claras de cada herramienta.
+* **Verde de Pista (`#0fa336`):** Sectores mejorando vuelta rápida, acelerador al 100% y bandera verde de inicio.
+* **Azul M (`#0066b1` / `#1c69d4`):** Acento en el logotipo y distintivo de ingeniería.
+
+### 2.3. Franja M Tricolor Estructural
+
+4px de altura (`h-1`), utilizada como separador divisorio entre secciones mayores:
+* 33.3% Azul Celeste (`#0066b1`)
+* 33.3% Azul Marino (`#1c69d4`)
+* 33.3% Rojo M (`#e22718`)
 
 ---
 
-### 1.2. Balance de Colores: Rojo M y Negro de Pista
+## 3. Estructura Visual de la Landing Page (Flujo de 360 Grados)
 
-El color principal es el **Rojo M (`#e22718`)** combinado con negro absoluto y grises oscuros:
-
-* **Rojo M (`#e22718`):** Botón principal para salir a pista, barras activas, zonas de frenada en el mapa del circuito y alertas de delta perdiendo tiempo.
-* **Blanco Puro (`#ffffff`):** Títulos principales, números gigantes de marcha, velocidad y tiempos de vuelta.
-* **Gris Técnico (`#bbbbbb`):** Explicaciones claras de cómo funciona cada pantalla y herramienta.
-* **Gris Oscuro (`#7e7e7e`):** Etiquetas secundarias (unidades de medida, presión en PSI, litros de combustible).
-* **Verde de Pista (`#0fa336`):** Bandera verde, delta mejorando respecto a tu récord personal y acelerador a fondo.
-
----
-
-### 1.3. La Franja M Tricolor Estructural (`m-stripe-divider`)
-
-El distintivo tricolor de competición aparece como divisor horizontal de 4px (`h-1`):
-1. Azul Celeste (`#0066b1`) — 33.3%
-2. Azul Marino (`#1c69d4`) — 33.3%
-3. Rojo M (`#e22718`) — 33.3%
-
-Se ubica en la parte superior fija de la pantalla y como remate divisorio entre secciones principales. **Nunca se utiliza como fondo de botones ni como degradado de texto**.
-
----
-
-### 1.4. Geometría Mecánica: Siluetas a 0px (`rounded-none`)
-
-* **Esquinas vivas a 0px (`rounded-none`):** Todos los botones, tarjetas de telemetría, tablas comparativas y contenedores tienen esquinas rectas. Imitan los displays de fibra de carbono y las botoneras de aluminio de los volantes de Fórmula 1 y GT3.
-* **Círculos exclusivos (`rounded-full`):** Únicamente se permiten esquinas redondeadas en botones circulares de utilidad (ajustes, pantalla completa) o en las luces LED de corte de revoluciones.
+1. **Franja Tricolor Superior M (4px)**
+2. **Barra de Navegación (`TopNav`):** `APEXLINK` + M Badge + Enlaces: `LIVE PITWALL`, `LABORATORIO 2D`, `INSTRUMENTAL DDU`, `COMPARATIVA` + Botón `[ PROBAR TELEMETRÍA ]`.
+3. **Hero Principal (`HeroSection`):** Presentación del Ecosistema Integral de Telemetría para Assetto Corsa.
+4. **Métricas del Ecosistema (`EcosystemMetricsBar`):** 60 Hz en Vivo · Dominio Métrico · Live Pitwall · Instrumental DDU.
+5. **Divisor M (4px)**
+6. **Manifiesto de Ingeniería (`RacerManifesto`):** Dejá de adivinar dónde pierdes tiempo. Medilo.
+7. **Divisor M (4px)**
+8. **Los Cuatro Pilares del Ecosistema (`FeaturesGrid`):**
+   - 1. Live Pitwall en Boxes (Ingeniería de carrera en tiempo real)
+   - 2. Laboratorio Analítico 2D (Telemetría en distancia métrica y mapas de calor)
+   - 3. Corner Delta Inspector (Velocidades de entrada, ápice y frenada curva por curva)
+   - 4. Instrumental DDU en Cabina (Luces de corte, marcha y delta instantáneo)
+   - 5. AI Race Coach & Driver Intelligence (Diagnóstico de estilo y consistencia)
+   - 6. Plataforma SaaS & Historial de Tandas (Sesiones guardadas y clasificaciones)
+9. **Divisor M (4px)**
+10. **Comparativa de Software (`SoftwareComparison`):** Software Tradicional de Telemetría (MoTeC/desfasado/complejo) vs ApexLink (Suite Integral y Conectada).
+11. **Divisor M (4px)**
+12. **Caso en Pista: Monza GP (`MonzaTrackShowcase`):** Cómo interactúan el DDU, el Pitwall y el Laboratorio en la frenada de Rettifilo, Curva Grande y la Parabólica.
+13. **Divisor M (4px)**
+14. **Llamado a Boxes (`CtaBand`):** Conectá tu simulador y empezá a analizar tu telemetría hoy.
+15. **Divisor M (4px)**
+16. **Pie de Página Oficial (`Footer`):** Soporte de volantes, simuladores y nota legal independiente.
 
 ---
 
-### 1.5. Tipografía de Instrumental y Números Invariables
+## 4. Textos Definitivos Sección por Sección (Copy Deck Oficial)
 
-* **Titulares y Botones:** Texto en **MAYÚSCULAS**, tipografía sans-serif limpia, peso **Bold 700**, con separación entre letras de **1.5px (`tracking-[0.15em]`)** para facilitar la lectura rápida de un vistazo.
-* **Cuerpo de Lectura:** Texto claro en tamaño 15-16px, peso **Light 300** o **Regular 400**, con buena separación entre líneas.
-* **Cifras Telemétricas:** Siempre con ancho de número fijo (**`tabular-nums`**) para que la velocidad, las RPM o el delta de tiempo no se muevan hacia los costados mientras cambian a alta velocidad.
+### 4.1. Barra Superior de Cabina (`TopNav`)
 
----
-
-## 2. Estructura Visual de la Landing Page
-
-La página de inicio guía al piloto paso a paso desde el problema que tiene en su simulador hasta la solución en pista:
-
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│ [FRANJA TRICOLOR M SUPERIOR - 4px] (#0066b1 · #1c69d4 · #e22718)       │
-├────────────────────────────────────────────────────────────────────────┤
-│ 1. BARRA SUPERIOR: APEXLINK + Menú de Carrera + [ PROBAR TELEMETRÍA ] │
-├────────────────────────────────────────────────────────────────────────┤
-│ 2. HERO:                                                               │
-│    - Rótulo: "INSTRUMENTAL DE CARRERA EN VIVO PARA ASSETTO CORSA"      │
-│    - Titular: "UN VOLANTE DE COMPETICIÓN EN LA PANTALLA DE TU TELÉFONO" │
-│    - Explicación: Delta en vivo, luces de corte, gomas y telemetría     │
-│    - Botones: [ ENTRAR A PISTA (DEMO) ]   [ VER MURO DE TELEMETRÍA ]   │
-├────────────────────────────────────────────────────────────────────────┤
-│ 3. MÉTRICAS CLAVE: Cero lag por USB · Pantalla OLED · Sin gastar plata │
-├────────────────────────────────────────────────────────────────────────┤
-│ 4. MANIFIESTO: "Dejá de adivinar dónde pierdes tiempo. Medilo."       │
-├────────────────────────────────────────────────────────────────────────┤
-│ 5. COMPARATIVA: Volantes caros ($1.200 USD) vs Tu Teléfono con ApexLink│
-├────────────────────────────────────────────────────────────────────────┤
-│ 6. LOS TRES MOMENTOS:                                                  │
-│    [EN EL VOLANTE (DDU)] │ [GESTIÓN DEL AUTO] │ [EN BOXES (TELEMETRÍA)]│
-├────────────────────────────────────────────────────────────────────────┤
-│ 7. MONZA GP: Dónde frenar en Rettifilo y cómo ver tus décimas ganadas  │
-├────────────────────────────────────────────────────────────────────────┤
-│ 8. LLAMADO A PISTA: Conectá el cable USB, abrí el simulador y salí     │
-├────────────────────────────────────────────────────────────────────────┤
-│ 9. PIE DE PÁGINA: Compatibilidad con volantes y simuladores            │
-└────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 3. Textos Definitivos Sección por Sección (Copy Deck)
-
-Todos los textos están redactados en el tono de un piloto de simracing experimentado que habla con otro piloto: directo, honesto y enfocado en el rendimiento en pista.
-
----
-
-### 3.1. Barra Superior de Cabina (`TopNav`)
-
-* **Logotipo:** Emblema M oblicuo de 3 franjas (`MSlantedBadge`) junto a `APEXLINK` en mayúsculas de 20px.
-* **Enlaces de Navegación:**
-  1. `EN EL VOLANTE` (desplaza hasta la explicación del display móvil)
-  2. `EN BOXES` (desplaza hasta la explicación del muro de telemetría)
-  3. `COMPARATIVA` (desplaza hasta la tabla frente a volantes comerciales)
-  4. `CIRCUITOS` (desplaza al análisis de Monza)
+* **Logotipo:** Emblema oblicuo M + `APEXLINK` en tipografía monoespaciada en mayúsculas.
+* **Enlaces:**
+  1. `LIVE PITWALL` (`#pitwall`)
+  2. `LABORATORIO 2D` (`#analisis`)
+  3. `INSTRUMENTAL DDU` (`#ddu`)
+  4. `COMPARATIVA` (`#comparativa`)
 * **Botón de Acción Directa:**
-  - Texto: `PROBAR TELEMETRÍA`
-  - Icono: `Zap` (Rayo).
-  - Estilo: Rectangular `rounded-none`, fondo Rojo M `#e22718`, texto blanco en mayúsculas, tracking de 1.5px. Al hacer clic abre el entorno de boxes listo para probar (`/login`).
+  - `PROBAR TELEMETRÍA` (Lleva directo a `/login` para acceder al entorno de boxes interactivo).
 
----
+### 4.2. Sección Principal de Entrada (`HeroSection`)
 
-### 3.2. Sección Principal de Entrada (`HeroSection`)
-
-#### Rótulo Superior (Baliza de Estado):
+#### Baliza de Estado:
 ```
-[ ● ENLACE DIRECTO LISTO ] INSTRUMENTAL DE CARRERA EN VIVO PARA ASSETTO CORSA
+[ ● ENLACE DIRECTO LISTO ] ECOSISTEMA INTEGRAL DE TELEMETRÍA SIMRACING PARA ASSETTO CORSA
 ```
 
-#### Titular Principal (H1 Display):
+#### Titular Principal (H1):
 ```
-UN VOLANTE DE COMPETICIÓN
-EN LA PANTALLA DE TU TELÉFONO
+TELEMETRÍA EN TIEMPO REAL, INGENIERÍA DE BOXES
+Y ANÁLISIS DE COMPETICIÓN
 ```
 
 #### Bajada:
 ```
-Montá tu smartphone en el aro de tu volante y tené la instrumentación de un monoplaza de Fórmula 1 o GT3 al instante. Mirá tu delta de tiempo en cada curva, clavá las marchas en el punto exacto con las luces de corte y cuidá la temperatura de tus gomas sin gastar fortunas en equipamiento privativo.
+De la cabina al muro de boxes y al análisis post-sesión. ApexLink es la plataforma integral de telemetría para simracing: adquiere los datos de tu auto a 60 Hz, proyecta el instrumental en tu volante, transmite la ingeniería en vivo a boxes y analiza cada metro de tu trazada en un laboratorio 2D para encontrar las décimas que te separan de la pole.
 ```
 
 #### Botonera de Acción:
-* **Botón Principal:**
-  - Texto: `ENTRAR A PISTA (MODO DEMO)`
-  - Icono: `Play`
-  - Estilo: Altura 52px, esquinas a 0px (`rounded-none`), fondo Rojo M `#e22718`, texto blanco en mayúsculas con espaciado amplio, brillo sutil en rojo. Lleva directo al simulador activo.
-* **Botón Secundario:**
-  - Texto: `VER MURO DE TELEMETRÍA EN BOXES`
-  - Icono: `Gauge`
-  - Estilo: Altura 52px, esquinas a 0px, fondo negro `#141414`, borde fino `#3c3c3c`, texto blanco. Abre el panel de análisis de vueltas.
+* **Botón Primario:** `[ ENTRAR A PISTA (MODO DEMO) ]` (Rojo M `#e22718`, `rounded-none`, altura 52px).
+* **Botón Secundario:** `[ VER MURO DE TELEMETRÍA EN BOXES ]` (Fondo `#141414`, borde `#3c3c3c`, hover en rojo).
 
----
-
-### 3.3. Barra de Métricas Rápidas de Carrera (`TrackSpecBar`)
-
-Cuatro especificaciones esenciales para el piloto que va a montar el sistema en su puesto de conducción:
+### 4.3. Barra de Métricas del Ecosistema (`EcosystemMetricsBar`)
 
 | 01 | 02 | 03 | 04 |
 | :--- | :--- | :--- | :--- |
-| **0 MS DE RETARDO** | **PANTALLA OLED PURA** | **CERO CORTES WI-FI** | **$0 EN NUEVOS VOLANTES** |
-| Las luces de cambio se encienden al mismo tiempo que ruge el motor | Fondo negro que no te encandila en carreras nocturnas | Conexión directa por cable USB: sin lag ni microcortes | Usás el teléfono que ya tenés guardado en el cajón |
+| **60 HZ EN TIEMPO REAL** | **DOMINIO DE DISTANCIA** | **LIVE PITWALL EN BOXES** | **INSTRUMENTAL EN CABINA** |
+| Adquisición continua de chasis, neumáticos y pedales | Telemetría métrica metro a metro sin desfase temporal | Puesto de ingeniero de pista en vivo en tu navegador | Luces de corte y delta dinámico sin retardo en el volante |
 
----
-
-### 3.4. Manifiesto del Piloto: Medir vs Adivinar (`RacerManifesto`)
-
-Bloque sobrio con una franja lateral izquierda en Rojo M `#e22718`:
+### 4.4. Manifiesto del Piloto e Ingeniero (`RacerManifesto`)
 
 #### Rótulo:
 ```
-EL SECRETO DE LOS PILOTOS RÁPIDOS
+LA CIENCIA DE LIMAR DÉCIMAS
 ```
 
 #### Titular:
@@ -198,192 +166,95 @@ EL SECRETO DE LOS PILOTOS RÁPIDOS
 DEJÁ DE ADIVINAR DÓNDE PIERDES TIEMPO. MEDILO.
 ```
 
-#### Texto:
+#### Cuerpo:
 ```
-Bajar medio segundo en una pista no se logra dando cien vueltas a ciegas esperando que el reloj baje por arte de magia. Los pilotos que pelean la punta saben exactamente qué pasa debajo del chasis: si en la frenada de la curva 1 están parándose sobre el pedal 10 metros antes, si están sobrecalentando el neumático delantero en el apoyo o si están acelerando con las ruedas traseras todavía descargadas.
+En la Fórmula 1 y el Campeonato Mundial de Resistencia, ningún piloto sale a pista a ciegas esperando que el reloj baje por arte de magia. Cada vuelta rápida es el resultado de una conversación exacta entre el piloto al volante y el ingeniero de datos en el muro de boxes.
 
-ApexLink pone esa información en dos lugares: en tu volante mientras estás al volante de la máquina, y en tu navegador apenas entrás a boxes para comparar tu vuelta rápida contra tu referencia curva por curva.
+ApexLink traslada esa misma infraestructura al simracing: mientras manejás, tenés la lectura sensorial precisa en el aro de tu volante; mientras estás en pista, el muro de boxes monitorea en vivo tus presiones térmicas y fuerzas G; y apenas entrás al pitlane, el laboratorio 2D te muestra exactamente en qué metro frenaste antes o en qué curva perdiste la tracción.
 ```
 
----
+### 4.5. Los Cuatro Pilares del Ecosistema (`FeaturesGrid`)
 
-### 3.5. Tabla Comparativa de Volantes y Costos (`HardwareComparison`)
+1. **Live Pitwall en Boxes (En Vivo a 60 Hz):**
+   - *Titular:* El puesto de mando de tu ingeniero de pista.
+   - *Detalle:* Monitoreo en tiempo real de tu auto en pista: barras de acelerador y freno con retención de picos, diagrama de fuerzas G de fricción (Círculo de Kamm), temperaturas y presiones en las 4 cubiertas y cronometraje de stint con mapa en vivo.
+2. **Laboratorio Analítico 2D (Post-Sesión):**
+   - *Titular:* Telemetría normalizada en dominio de distancia métrica.
+   - *Detalle:* Compará tu vuelta récord contra tu vuelta anterior o la de tu rival. Las curvas se alinean por distancia exacta de pista (0 a L metros), eliminando el desfase temporal de los programas viejos.
+3. **Corner Delta Inspector (Análisis de Curvas):**
+   - *Titular:* Desglosá cada curva del circuito con un clic.
+   - *Detalle:* Seleccioná cualquier curva del trazado y mirá la velocidad de entrada, el punto exacto de frenada, la velocidad mínima en el ápice y cómo abriste el acelerador hacia la recta.
+4. **Instrumental DDU (Cabina en Tiempo Real):**
+   - *Titular:* Información visual crítica por el rabillo del ojo.
+   - *Detalle:* Display ultrarrápido para el aro del volante: marcha gigante central, 15 luces de cambio estroboscópicas progresivas, barra dinámica de delta y fondo negro AMOLED que no encandila de noche.
+5. **AI Race Coach & Driver Intelligence:**
+   - *Titular:* Diagnóstico automatizado de tu estilo de conducción.
+   - *Detalle:* Detección heurística de errores recurrentes: identificá si estás frenando con dudas, si bloqueás neumáticos en el vértice o si estás sobrecalentando el chasis por corregir con el volante cruzado.
+6. **Plataforma SaaS & Gestión de Competición:**
+   - *Titular:* Historial de sesiones, clasificaciones y métricas de ritmo.
+   - *Detalle:* Registro completo de tandas guardadas, cálculo de consistencia (Pace Rating y Safety Rating), odómetro de tus autos, catálogo de circuitos y tablas de récords.
 
-Contraste directo entre comprar un volante comercial dedicado o usar ApexLink:
+### 4.6. Comparativa de Software (`SoftwareComparison`)
 
 #### Titular:
 ```
-COMPARATIVA FRENTE A VOLANTES DEDICADOS
+SOFTWARE DE TELEMETRÍA TRADICIONAL VS LA SUITE APEXLINK
 ```
 
 #### Bajada:
 ```
-Las pantallas de carreras profesionales ya están en tu bolsillo. No necesitás cambiar de base ni pagar de más.
+El automovilismo digital moderno requiere herramientas ágiles y conectadas. Dejá atrás los programas de telemetría de los 90s, las exportaciones manuales y las aplicaciones aisladas.
 ```
 
 #### Tabla de Contraste:
 
-| Lo que necesitás en pista | Volantes comerciales dedicados (MoTeC, Fanatec, Cube Controls) | Tu teléfono con ApexLink |
+| Dimensión de Carrera | Software Tradicional (MoTeC i2 / Suites Antiguas) | ApexLink Suite Integral |
 | :--- | :--- | :--- |
-| **Costo para tu bolsillo** | **$700 a $2.000 USD** por un volante con pantalla incorporada | **$0 USD**. Reutilizás cualquier smartphone con Android |
-| **Nitidez y contraste** | Pantallas LCD opacas con marcos gruesos y fugas de luz | **Pantallas AMOLED / OLED** con contraste infinito y negros reales |
-| **Respuesta de las luces de corte** | Retrasos notables si el software del fabricante es pesado | **Instantánea**. Las luces acompañan el corte del limitador |
-| **Conexión en carrera** | Muchos requieren Wi-Fi, propensos a lag si hay saturación | **Cable USB directo**. Cero interferencias y carga continua |
-| **Temperatura de cubiertas** | Te muestran presiones básicas o números estáticos | **Mapa térmico en tiempo real**: ves si la goma está fría, óptima o hirviendo |
-| **Análisis al terminar la tanda** | Tenés que exportar archivos raros y abrirlos en programas viejos | **Entrás a tu navegador web**, elegís dos vueltas y ves el delta en el mapa |
-| **Si cambiás de base de volante** | Si cambiás de marca de volante perdés la pantalla | **Independiente de la base**: sirve en Logitech, Thrustmaster o Direct Drive |
+| **Alineación de Gráficos** | Grafican en base al **tiempo**: si vas más rápido las curvas se desfasan y se vuelve imposible comparar | **Normalización métrica metro a metro**: comparás exactamente en el mismo metro de la pista |
+| **Ingeniería en Vivo (Boxes)** | **Inexistente o compleja**: tenés que terminar la sesión y exportar archivos binarios (`.ld`) a mano | **Live Pitwall a 60 Hz**: abrí el navegador en cualquier laptop o tablet y mirás la telemetría en vivo |
+| **Correlación con la Pista** | Gráficos numéricos planos y aislados; no ves dónde estás parado en el circuito | **Mapa interactivo 2D con mapas de calor**: trazada con zonas de frenada en rojo y aceleración en verde |
+| **Instrumental en Volante** | Requiere comprar pantallas privativas caras ($1.500 USD) o software de terceros de pago | **Display DDU integrado**: conectá cualquier móvil por cable USB directo con retardo sub-milisegundo |
+| **Facilidad de Diagnóstico** | Decenas de canales matemáticos confusos diseñados para ingenieros aeronáuticos | **Inspector de Curvas y AI Coach**: encontrás en 30 segundos en qué curva perdiste las décimas |
+| **Gestión de Sesiones** | Archivos dispersos en carpetas del disco duro sin orden de carrera | **Plataforma SaaS completa**: sesiones organizadas, récords de vuelta, catálogo de pistas y perfil de piloto |
+
+### 4.7. Análisis en Pista: Monza GP (`MonzaTrackShowcase`)
+
+Demostración práctica de cómo interactúan las tres capas en el Autodromo Nazionale Monza (5.793 m):
+1. **Variante del Rettifilo (Curva 1 & 2 · 330 a 75 km/h):**
+   - *En Cabina:* Las 15 luces de cambio te llevan al corte en 7ma marcha en la recta; la barra de delta te avisa si venís mejorando.
+   - *En Boxes:* El Pitwall monitorea la presión del pedal de freno al 100% y la retención de pico de desaceleración.
+   - *Post-Sesión:* El Laboratorio 2D superpone tu frenada contra tu récord: ves si frenaste a 140 m o a 115 m y cuánto tiempo ganaste en la desaceleración.
+2. **Curva Biassono / Curva Grande (Curva 3 · 290 km/h sostenidos):**
+   - *En Cabina:* Testigo de alerta si el neumático delantero izquierdo supera la ventana térmica.
+   - *En Boxes:* El Círculo de Kamm (G-G) mide las fuerzas laterales sostenidas sobre el tren rodante.
+   - *Post-Sesión:* El mapa de calor verifica si mantuviste el acelerador al 100% o si tuviste que levantar por inestabilidad.
+3. **Parabólica Alboreto (Curva 11 · 160 a 280 km/h):**
+   - *En Cabina:* Referencia de velocidad mínima en el vértice.
+   - *En Boxes:* Telemetría de tracción y deslizamiento en la salida.
+   - *Post-Sesión:* El Corner Delta Inspector desglosa la velocidad de salida hacia la recta principal, la clave para marcar la pole.
+
+### 4.8. Llamado a Boxes (`CtaBand`)
+
+* **Titular:** `EL CONTROL TOTAL DE TU TELEMETRÍA EN UNA SOLA PLATAFORMA`
+* **Bajada:** `Conectá tu simulador, colocá tu instrumental y abrí tu muro de telemetría en boxes. Empezá a limar décimas con la suite de competición definitiva.`
+* **Botones:** `[ ENTRAR A PISTA (MODO DEMO) ]` y `[ EXPLORAR MURO DE BOXES ]`.
+
+### 4.9. Pie de Página (`Footer`)
+
+* **Logotipo:** Emblema oblicuo M + `APEXLINK`.
+* **Subtítulo:** `Ecosistema Distribuido de Telemetría SimRacing en Tiempo Real, Análisis Post-Sesión y Plataforma SaaS de Competición.`
+* **Compatibilidad de Simuladores:** `Acoplado en tiempo real con Assetto Corsa. Próximamente disponible para iRacing, Assetto Corsa Competizione y F1.`
+* **Compatibilidad de Volantes:** `Compatible con cualquier aro y base: Logitech, Thrustmaster, Fanatec, Moza, Simagic, Simucube y Direct Drive.`
+* **Nota Legal Independiente:** `ApexLink es una plataforma independiente desarrollada para la comunidad de simracing. No posee afiliación comercial con Kunos Simulazioni ni con fabricantes de hardware.`
 
 ---
 
-### 3.6. Los Tres Momentos de la Carrera (`RacerExperienceGrid`)
+## 5. Verificación Anti-Slop y Equilibrio del Ecosistema
 
-Tres tarjetas de esquinas rectas (`rounded-none`) en fondo `#0d0d0d` que explican cómo vivís la carrera con ApexLink:
-
-#### Tarjeta 1: En el volante (Mientras estás manejando)
-* **Rótulo:** `EN CABINA · PANTALLA DDU`
-* **Titular:** `TODA LA INFORMACIÓN QUE NECESITÁS POR EL RABILLO DEL OJO`
-* **Detalle para el piloto:**
-  - **Marcha colosal en el centro:** Para saber en qué cambio estás sin desviar la mirada de la pista.
-  - **15 luces de cambio progresivas:** 5 verdes, 5 rojas y 5 azules que te marcan el punto exacto de paso de marcha sin mirar el número de RPM.
-  - **Barra de delta en vivo:** En verde si venís ganando tiempo contra tu mejor marca, en rojo si venís perdiendo centésimas.
-  - **Pantalla blindada sin toques accidentales:** Todos los números son indicadores de lectura fija. Si tocás la pantalla sin querer mientras doblás, nada se desajusta.
-
-#### Tarjeta 2: En el auto (Cuidando la máquina vuelta a vuelta)
-* **Rótulo:** `CHASIS Y NEUMÁTICOS`
-* **Titular:** `SABÉ CUÁNDO APURAR EL RITMO Y CUÁNDO CUIDAR EL AUTO`
-* **Detalle para el piloto:**
-  - **Colores térmicos en las 4 ruedas:** Azul si las cubiertas están frías tras salir de boxes, verde cuando están en ventana óptima de agarre, y rojo intermitente si las estás cocinando por derrapar de más.
-  - **Presión exacta en PSI por rueda:** Controlá la subida de presión con el calor del asfalto.
-  - **Litros de nafta por vuelta:** Monitoreá el consumo exacto y cuántas vueltas de autonomía te quedan antes de entrar a cargar.
-  - **Testigo de alerón DRS y limitador de boxes:** Testigos grandes y claros para no exceder la velocidad en el pitlane.
-
-#### Tarjeta 3: En boxes (Apenas bajás del simulador)
-* **Rótulo:** `POST-SESIÓN · PLATAFORMA WEB`
-* **Titular:** `ENCONTRÁ DÓNDE PERDISTE LAS DÉCIMAS FRENTE A TU RIVAL`
-* **Detalle para el piloto:**
-  - **Mapa 2D interactivo del circuito:** Mirá tu trazada completa con las zonas de frenada pintadas en rojo y las de aceleración en verde.
-  - **Superposición de tus dos mejores vueltas:** Poné tu récord de vuelta contra la tanda anterior y mirá exactamente en qué curva soltaste el freno antes o en cuál aceleraste tarde.
-  - **Inspector de curvas:** Tocá cualquier curva del trazado y mirá a qué velocidad entraste, cuál fue tu punto de cuerda y a cuántos km/h saliste hacia la recta.
-
----
-
-### 3.7. Análisis en Pista: La Telemetría en Monza GP (`MonzaTrackShowcase`)
-
-Un bloque gráfico que muestra un caso concreto en el templo de la velocidad italiano (5.793 metros):
-
-#### Rótulo:
-```
-CIRCUITO DE PRUEBA: AUTODROMO NAZIONALE MONZA
-```
-
-#### Titular:
-```
-CÓMO LEER TUS FRENADAS EN EL TEMPLO DE LA VELOCIDAD
-```
-
-#### Puntos Clave que Ves en el Análisis:
-1. **Frenada de la Variante del Rettifilo (Curva 1):**
-   - Venís en 7ma marcha a más de 330 km/h en la recta principal.
-   - Tenés que clavar el pedal de freno para bajar a 75 km/h en apenas 120 metros.
-   - En la telemetría ves si estás frenando en el cartel de 150 metros o si podés estirar la frenada al cartel de 100 sin bloquear las gomas.
-2. **Apoyo en Curva Biassono (Curva Grande):**
-   - Un curvón largo a fondo a 290 km/h donde el neumático izquierdo soporta toda la carga lateral del chasis.
-   - La telemetría te avisa si la temperatura de la cubierta sube de los 105°C para que no la destruyas en carrera larga.
-3. **Salida de la Parabólica hacia la recta:**
-   - La curva que define el tiempo de la vuelta.
-   - Mirás en el gráfico de pedales si estás abriendo el acelerador de forma progresiva o si tuviste que soltar por subviraje.
-
----
-
-### 3.8. Llamado a Pista Pre-Footer (`CtaBand`)
-
-#### Titular:
-```
-MONTÁ TU PANTALLA Y SALÍ A PISTA
-```
-
-#### Bajada:
-```
-Enchufá tu teléfono a la computadora por cable USB, abrí el simulador y experimentá la telemetría en tiempo real desde la primera curva.
-```
-
-#### Botón de Acción Principal:
-```
-[ PROBAR EN MODO DEMOSTRACIÓN AHORA ]
-```
-
----
-
-### 3.9. Pie de Página (`Footer`)
-
-* **Logotipo:** `APEXLINK` en blanco con franja M tricolor.
-* **Descripción breve:** `Instrumental de cabina en tiempo real y telemetría analítica de boxes para pilotos de simracing.`
-* **Compatibilidad de Volantes:** `Compatible con volantes Logitech (G29, G923, Pro), Thrustmaster (T300, T-GT, TS-PC), Fanatec (CSL, DD Pro, ClubSport) y bases Direct Drive (Moza, Simagic, Asetek, Simucube).`
-* **Compatibilidad de Simuladores:** `Diseñado para Assetto Corsa. Próximamente en iRacing, Assetto Corsa Competizione y F1.`
-* **Nota Aclaratoria:** `ApexLink es una plataforma independiente desarrollada para la comunidad de simracing. No tiene afiliación comercial con Kunos Simulazioni, MoTeC ni fabricantes de volantes.`
-
----
-
-## 4. Componentes Listos para Implementar en Tailwind CSS
-
-Plantillas exactas de código con estilos BMW M (`rounded-none`, Rojo M `#e22718`, negro profundo):
-
-### 4.1. Botón Principal de Salida a Pista
-```tsx
-<button className="h-[52px] px-8 rounded-none bg-[#e22718] hover:bg-[#c91f12] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#e22718] shadow-[0_0_25px_rgba(226,39,24,0.35)] cursor-pointer">
-  <Play className="w-4 h-4 fill-current" />
-  ENTRAR A PISTA (MODO DEMO)
-</button>
-```
-
-### 4.2. Botón Secundario de Entorno de Boxes
-```tsx
-<button className="h-[52px] px-8 rounded-none bg-[#141414] hover:bg-[#1f1f1f] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#3c3c3c] hover:border-[#e22718] cursor-pointer">
-  <Gauge className="w-4 h-4 text-[#bbbbbb]" />
-  VER MURO DE TELEMETRÍA EN BOXES
-</button>
-```
-
-### 4.3. Tarjeta de Instrumental / Característica
-```tsx
-<div className="rounded-none bg-[#0d0d0d] border border-[#262626] hover:border-[#3c3c3c] p-8 flex flex-col justify-between transition-colors relative overflow-hidden group">
-  <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#e22718] opacity-0 group-hover:opacity-100 transition-opacity" />
-  <div className="flex items-center gap-3 mb-6">
-    <div className="w-10 h-10 rounded-none bg-[#141414] border border-[#3c3c3c] flex items-center justify-center text-white">
-      <Gauge className="w-5 h-5 text-[#e22718]" />
-    </div>
-    <span className="text-[11px] font-bold tracking-[0.15em] text-[#7e7e7e] uppercase">
-      EN CABINA · PANTALLA DDU
-    </span>
-  </div>
-  <h3 className="text-xl font-bold tracking-tight text-white uppercase mb-3">
-    TODA LA INFORMACIÓN QUE NECESITÁS POR EL RABILLO DEL OJO
-  </h3>
-  <p className="text-sm font-light text-[#bbbbbb] leading-relaxed">
-    Marcha colosal en el centro, 15 luces de cambio progresivas para clavar el paso de marcha y barra de delta en vivo para saber si venís mejorando tu récord.
-  </p>
-</div>
-```
-
-### 4.4. Franja Estructural M Tricolor (4px)
-```tsx
-<div className="w-full h-1 flex shrink-0">
-  <div className="flex-1 bg-[#0066b1]" />
-  <div className="flex-1 bg-[#1c69d4]" />
-  <div className="flex-1 bg-[#e22718]" />
-</div>
-```
-
----
-
-## 5. Verificación Anti-Slop: Lenguaje de Piloto a Piloto
-
-Se certifica que el nuevo documento cumple con las reglas de redacción humana directa:
-
-| Regla | Estado | Cómo se cumple en el nuevo texto |
+| Criterio | Estado | Verificación en el Copywriting |
 | :--- | :---: | :--- |
-| **Cero términos técnicos de código** | ✅ **100% PURGADO** | Se eliminaron completamente: *C#, .NET, Win32, MMF, Memory-Mapped, SQLite, WAL, SeqLock, Next.js, React, APIs, DTOs, Kestrel*. |
-| **Cero lenguaje académico o de jurado** | ✅ **100% PURGADO** | Se eliminaron todas las menciones a: *FAPPE 2026, jurado, docentes, cátedra, proyecto integrador, SDD, evaluación*. |
-| **Palabras prohibidas de marketing eliminadas** | ✅ **LIMPIO** | Cero palabras cliché: *desata tu potencial, revolucionario, cutting-edge, game changer, robusto, agilizar, empoderar*. |
-| **Términos reales de SimRacing aplicados** | ✅ **AUTÉNTICO** | Habla de *delta de vuelta, luces de corte, punto de frenada, sobrecalentamiento de gomas, ápice, subviraje, Monza Rettifilo, parada en boxes*. |
-| **Siluetas mecánicas BMW M respetadas** | ✅ **EXACTO** | Siluetas a 0px (`rounded-none`), fondo `#000000` y acento protagónico en Rojo M `#e22718`. |
+| **Equilibrio de las 3 Capas** | ✅ **PERFECTO** | DDU, Live Pitwall, Laboratorio 2D y SaaS tienen el mismo peso y coherencia en el flujo del usuario. |
+| **Sin Jerga de Código Subyacente** | ✅ **LIMPIO** | Cero menciones a C#, .NET, Win32, MMF, SQLite, WAL, SeqLock, Next.js, APIs o DTOs. |
+| **Sin Menciones Académicas** | ✅ **LIMPIO** | Cero menciones a FAPPE, jurado, tesis, cátedra, proyecto integrador o evaluación docente. |
+| **Lenguaje de Motorsport Real** | ✅ **AUTÉNTICO** | Habla de fuerzas Kamm G-G, delta acumulado, dominio métrico, ventanas térmicas, puntos de frenada y velocidad de vértice. |
+| **Estilo BMW M Riguroso** | ✅ **CUMPLIDO** | `rounded-none`, fondo `#000000`, Rojo M `#e22718`, franja tricolor de 4px y tipografía en mayúsculas de alto impacto. |

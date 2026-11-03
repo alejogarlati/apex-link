@@ -7,27 +7,27 @@ export function MonzaTrackShowcase() {
       nombre: "Variante del Rettifilo",
       velocidad: "330 → 75 km/h",
       detalle:
-        "Llegas en 7ma a fondo tras la recta principal. Parate sobre el pedal de freno para desacelerar 255 km/h en apenas 120 metros. Con la telemetría ves si estás frenando en el cartel de 150 m o si podés estirar al cartel de 100 m sin bloquear las gomas.",
+        "El DDU te marca el corte exacto en 7ma en la recta; en el Live Pitwall de boxes monitorean la frenada al 100% con retención de pico; y en el Laboratorio 2D inspeccionás si frenaste en el cartel de 150 m o si estiraste a 120 m comparando dos vueltas metro a metro.",
       acento: "text-[#e22718]",
-      borde: "border-[#e22718]",
+      capas: "Cabina + Pitwall + Laboratorio",
     },
     {
       curva: "Curva 3",
       nombre: "Curva Biassono (Grande)",
       velocidad: "290 km/h sostenidos",
       detalle:
-        "Curvón veloz a fondo hacia la primera frenada de Lesmo. La goma delantera izquierda soporta toda la fuerza centrífuga. El DDU te alerta en rojo si la temperatura supera los 105°C para evitar la degradación prematura.",
+        "Curvón a fondo donde el Círculo de Kamm en el Pitwall mide la aceleración lateral sostenida. El DDU te avisa si el neumático delantero izquierdo supera los 105°C, y el Laboratorio 2D verifica con mapa de calor si tuviste que levantar el acelerador por inestabilidad.",
       acento: "text-[#0fa336]",
-      borde: "border-[#0fa336]",
+      capas: "Fuerzas G + Matriz Térmica",
     },
     {
       curva: "Curva 11",
       nombre: "Parabolica (Alboreto)",
       velocidad: "160 → 280 km/h",
       detalle:
-        "El sector que define toda tu vuelta. Mirá en el gráfico de telemetría de boxes si abriste el acelerador de forma lineal en el vértice o si tuviste que corregir el volante por subviraje, regalándole décimas a tu rival en la recta principal.",
+        "La curva que define toda la vuelta. El Corner Delta Inspector del Laboratorio 2D desglosa la velocidad mínima en el vértice y la apertura progresiva del acelerador hacia la recta principal, la clave para limar las décimas que te dan la pole position.",
       acento: "text-[#1c69d4]",
-      borde: "border-[#1c69d4]",
+      capas: "Corner Delta Inspector",
     },
   ];
 
@@ -38,10 +38,10 @@ export function MonzaTrackShowcase() {
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#141414] border border-[#3c3c3c] text-[#bbbbbb] text-[11px] font-bold uppercase tracking-[0.2em] mb-4">
               <Compass className="w-3.5 h-3.5 text-[#e22718]" />
-              Circuito de Prueba: Autodromo Nazionale Monza
+              Caso en Pista: Autodromo Nazionale Monza (5.793 m)
             </div>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold uppercase tracking-tight text-white">
-              Cómo leer tus frenadas en el <span className="text-[#e22718]">Templo de la Velocidad</span>
+              Las Tres Capas de Telemetría en el <span className="text-[#e22718]">Templo de la Velocidad</span>
             </h2>
           </div>
           <div className="text-right">
@@ -76,9 +76,9 @@ export function MonzaTrackShowcase() {
               </div>
 
               <div className="mt-6 pt-4 border-t border-[#1f1f1f] flex items-center justify-between text-[11px] text-[#7e7e7e]">
-                <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider">
+                <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[#bbbbbb]">
                   <Flame className="w-3.5 h-3.5 text-[#e22718]" />
-                  Telemetría en Vivo
+                  {punto.capas}
                 </span>
                 <ArrowUpRight className="w-4 h-4 text-[#7e7e7e]" />
               </div>
