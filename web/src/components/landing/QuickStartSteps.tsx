@@ -81,6 +81,8 @@ export function QuickStartSteps() {
         }
       });
 
+      let lastStep = -1;
+
       // Timeline de Pin y Scroll con Snap fluido
       const tl = gsap.timeline({
         scrollTrigger: {
@@ -114,14 +116,16 @@ export function QuickStartSteps() {
               )}%`;
             }
 
-            // Iluminación dinámica que se mueve suavemente con el paso
-            if (spotlightRef.current) {
+            // Iluminación dinámica que se mueve suavemente con el paso (throttled por cambio de paso)
+            if (spotlightRef.current && stepIndex !== lastStep) {
+              lastStep = stepIndex;
               const yOffset = (stepIndex - 1) * 45;
               gsap.to(spotlightRef.current, {
                 y: yOffset,
                 opacity: 0.35 + (stepIndex % 2) * 0.15,
                 duration: 0.5,
                 ease: "power2.out",
+                overwrite: "auto",
               });
             }
           },
@@ -219,7 +223,7 @@ export function QuickStartSteps() {
             <div className="relative h-[3px] w-full bg-[#262626] rounded-full overflow-visible">
               <div
                 ref={progressBarRef}
-                className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#0066b1] via-[#1c69d4] to-[#e22718] shadow-[0_0_15px_rgba(226,39,24,0.4)] rounded-full transition-all duration-150"
+                className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#0066b1] via-[#1c69d4] to-[#e22718] shadow-[0_0_15px_rgba(226,39,24,0.4)] rounded-full"
                 style={{ width: "0%" }}
               />
               <div className="absolute inset-0 flex justify-between items-center -top-[3px]">
@@ -236,14 +240,14 @@ export function QuickStartSteps() {
               </div>
             </div>
             <div className="flex justify-between text-[11px] font-mono text-[#7e7e7e] mt-2 font-bold tracking-wider uppercase">
-              <span>01 Inicialización</span>
-              <span>02 Enlace</span>
-              <span>03 Telemetría</span>
+              <span>01 <span className="hidden sm:inline">Inicialización</span></span>
+              <span>02 <span className="hidden sm:inline">Enlace</span></span>
+              <span>03 <span className="hidden sm:inline">Telemetría</span></span>
             </div>
           </div>
 
           {/* Escenario del Carrusel Vertical */}
-          <div className="relative w-full h-[380px] sm:h-[320px] flex items-center justify-start">
+          <div className="relative w-full h-[400px] sm:h-[320px] flex items-center justify-start">
             {PASOS.map((item, index) => {
               const Icono = item.icono;
               return (
@@ -251,6 +255,10 @@ export function QuickStartSteps() {
                   key={item.numero}
                   ref={(el) => {
                     itemsRef.current[index] = el;
+                  }}
+                  style={{
+                    opacity: index === 0 ? 1 : 0,
+                    pointerEvents: index === 0 ? "auto" : "none",
                   }}
                   className="absolute inset-0 flex flex-col justify-center items-start text-left will-change-[transform,opacity,filter]"
                 >

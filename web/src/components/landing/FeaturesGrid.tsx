@@ -140,6 +140,8 @@ export function FeaturesGrid() {
         }
       });
 
+      let lastStep = -1;
+
       // Timeline de Pin y Scroll con Snap a 6 pasos
       const tl = gsap.timeline({
         scrollTrigger: {
@@ -173,14 +175,16 @@ export function FeaturesGrid() {
               )}%`;
             }
 
-            // Luz focal que sigue dinámicamente al paso
-            if (spotlightRef.current) {
+            // Luz focal que sigue dinámicamente al paso (throttled por cambio de paso)
+            if (spotlightRef.current && stepIndex !== lastStep) {
+              lastStep = stepIndex;
               const yOffset = (stepIndex - 2.5) * 35;
               gsap.to(spotlightRef.current, {
                 y: yOffset,
                 opacity: 0.35 + (stepIndex % 2) * 0.15,
                 duration: 0.5,
                 ease: "power2.out",
+                overwrite: "auto",
               });
             }
           },
@@ -278,7 +282,7 @@ export function FeaturesGrid() {
             <div className="relative h-[3px] w-full bg-[#262626] rounded-full overflow-visible">
               <div
                 ref={progressBarRef}
-                className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#0066b1] via-[#1c69d4] to-[#e22718] shadow-[0_0_15px_rgba(226,39,24,0.4)] rounded-full transition-all duration-150"
+                className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#0066b1] via-[#1c69d4] to-[#e22718] shadow-[0_0_15px_rgba(226,39,24,0.4)] rounded-full"
                 style={{ width: "0%" }}
               />
               <div className="absolute inset-0 flex justify-between items-center -top-[3px]">
@@ -295,17 +299,17 @@ export function FeaturesGrid() {
               </div>
             </div>
             <div className="flex justify-between text-[10px] font-mono text-[#7e7e7e] mt-2 font-bold tracking-wider uppercase">
-              <span>01 DDU</span>
-              <span>02 Pitwall</span>
-              <span>03 Lab 2D</span>
-              <span>04 Curvas</span>
-              <span>05 Métricas</span>
-              <span>06 Hardware</span>
+              <span>01 <span className="hidden sm:inline">DDU</span></span>
+              <span>02 <span className="hidden sm:inline">Pitwall</span></span>
+              <span>03 <span className="hidden sm:inline">Lab 2D</span></span>
+              <span>04 <span className="hidden sm:inline">Curvas</span></span>
+              <span>05 <span className="hidden sm:inline">Métricas</span></span>
+              <span>06 <span className="hidden sm:inline">Hardware</span></span>
             </div>
           </div>
 
           {/* Escenario del Carrusel Vertical */}
-          <div className="relative w-full h-[400px] sm:h-[340px] flex items-center justify-start">
+          <div className="relative w-full h-[440px] sm:h-[340px] flex items-center justify-start">
             {CARACTERISTICAS.map((item, index) => {
               const Icono = item.icono;
               return (
@@ -314,6 +318,10 @@ export function FeaturesGrid() {
                   id={item.idAnchor}
                   ref={(el) => {
                     itemsRef.current[index] = el;
+                  }}
+                  style={{
+                    opacity: index === 0 ? 1 : 0,
+                    pointerEvents: index === 0 ? "auto" : "none",
                   }}
                   className="absolute inset-0 flex flex-col justify-center items-start text-left will-change-[transform,opacity,filter]"
                 >
