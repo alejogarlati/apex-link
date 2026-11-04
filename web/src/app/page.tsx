@@ -13,11 +13,21 @@ export default function PaginaInicio() {
   const pageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Asegurar recálculo de alturas exactas de ScrollTrigger
+    // Asegurar recálculo de alturas exactas de ScrollTrigger tras montaje y carga
     const timer = setTimeout(() => {
       ScrollTrigger.refresh();
-    }, 150);
-    return () => clearTimeout(timer);
+    }, 200);
+
+    const handleResize = () => {
+      ScrollTrigger.refresh();
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   useGSAP(
@@ -305,7 +315,7 @@ export default function PaginaInicio() {
         <div className="flex-1 bg-[#e22718]" />
       </div>
 
-      {/* Grilla de Características Concretas Animada con ScrollTrigger */}
+      {/* Características de Pista con Carrusel Pinneado y ScrollTrigger */}
       <FeaturesGrid />
 
       {/* Franja Tricolor M Divisoria con Expansión por Scroll */}
@@ -315,7 +325,7 @@ export default function PaginaInicio() {
         <div className="flex-1 bg-[#e22718]" />
       </div>
 
-      {/* Cómo Empezar en Tres Pasos con Barra de Progreso y ScrollTrigger */}
+      {/* Cómo Empezar en Tres Pasos con Carrusel Pinneado y Barra de Progreso */}
       <QuickStartSteps />
 
       {/* Franja Tricolor M Divisoria con Expansión por Scroll */}
