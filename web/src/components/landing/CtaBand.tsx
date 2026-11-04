@@ -10,18 +10,25 @@ export function CtaBand() {
 
   useGSAP(
     () => {
-      // Entrada del bloque principal con suave escala y fade
-      gsap.from(".cta-content", {
-        scale: 0.94,
-        y: 30,
-        opacity: 0,
-        duration: 0.9,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top 85%",
-        },
-      });
+      if (!containerRef.current) return;
+
+      // Entrada del bloque principal
+      gsap.fromTo(
+        ".cta-content",
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.75,
+          ease: "power2.out",
+          clearProps: "opacity,transform",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 85%",
+            once: true,
+          },
+        }
+      );
 
       // Pulso suave y continuo del brillo de fondo
       gsap.to(".cta-ambient-glow", {

@@ -66,30 +66,44 @@ export function FeaturesGrid() {
 
   useGSAP(
     () => {
-      // Animación de entrada del encabezado de la sección
-      gsap.from(".features-header", {
-        y: 40,
-        opacity: 0,
-        duration: 0.9,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top 80%",
-        },
-      });
+      if (!containerRef.current) return;
 
-      // Animación escalonada de las tarjetas con ScrollTrigger
-      gsap.from(".feature-card", {
-        y: 50,
-        opacity: 0,
-        duration: 0.8,
-        stagger: 0.12,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: ".features-grid-container",
-          start: "top 82%",
-        },
-      });
+      // Encabezado
+      gsap.fromTo(
+        ".features-header",
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.7,
+          ease: "power2.out",
+          clearProps: "opacity,transform",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 85%",
+            once: true,
+          },
+        }
+      );
+
+      // Tarjetas de características
+      gsap.fromTo(
+        ".feature-card",
+        { opacity: 0, y: 35 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.65,
+          stagger: 0.08,
+          ease: "power2.out",
+          clearProps: "opacity,transform",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 80%",
+            once: true,
+          },
+        }
+      );
     },
     { scope: containerRef }
   );
@@ -116,7 +130,7 @@ export function FeaturesGrid() {
           </p>
         </div>
 
-        <div className="features-grid-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {caracteristicas.map((item, idx) => {
             const Icono = item.icono;
             return (

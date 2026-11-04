@@ -4,10 +4,8 @@ import { useGSAP } from "@gsap/react";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger, useGSAP);
-  // Configuraciones óptimas de rendimiento
-  ScrollTrigger.config({
-    limitCallbacks: true,
-    ignoreMobileResize: true,
+  ScrollTrigger.defaults({
+    markers: false,
   });
 }
 
