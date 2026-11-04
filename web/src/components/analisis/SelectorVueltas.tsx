@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { GitCompareArrows, Timer, TriangleAlert, Trophy, X } from "lucide-react";
+import { GitCompareArrows, Trophy, TriangleAlert, X, Flag, Check } from "lucide-react";
 import type { ResumenVuelta } from "@/types/telemetria";
+import { cn } from "@/lib/utils";
 
 export interface SelectorVueltasProps {
   vueltas: ResumenVuelta[];
@@ -15,15 +16,11 @@ export interface SelectorVueltasProps {
 const COLOR_VUELTA_A = "#ffffff";
 const COLOR_VUELTA_B = "#0066b1";
 
-function unirClases(...clases: Array<string | false | null | undefined>): string {
-  return clases.filter(Boolean).join(" ");
-}
-
 /** Formatea un delta en milisegundos como "+0.312" / "-0.150" (segundos). */
 function formatearDelta(deltaMs: number): string {
-  if (Math.abs(deltaMs) < 0.5) return "±0.000";
+  if (Math.abs(deltaMs) < 0.5) return "±0.000 s";
   const signo = deltaMs > 0 ? "+" : "-";
-  return `${signo}${(Math.abs(deltaMs) / 1000).toFixed(3)}`;
+  return `${signo}${(Math.abs(deltaMs) / 1000).toFixed(3)} s`;
 }
 
 function formatearNumeroVuelta(numero: number): string {
@@ -32,67 +29,11 @@ function formatearNumeroVuelta(numero: number): string {
 
 function FranjaM() {
   return (
-    <div aria-hidden className="flex h-1 w-12">
+    <div aria-hidden className="flex h-1 w-10 shrink-0">
       <span className="flex-1 bg-[#81c4ff]" />
       <span className="flex-1 bg-[#16588e]" />
       <span className="flex-1 bg-[#e22718]" />
     </div>
-  );
-}
-
-function BadgeRanura({ ranura }: { ranura: "A" | "B" }) {
-  const esA = ranura === "A";
-  return (
-    <span
-      className={unirClases(
-        "inline-flex h-5 w-5 items-center justify-center font-mono text-[10px] font-bold",
-        esA ? "bg-white text-black" : "bg-[#0066b1] text-white",
-      )}
-      aria-label={`Vuelta ${ranura}`}
-    >
-      {ranura}
-    </span>
-  );
-}
-
-function BadgeRecord() {
-  return (
-    <span className="inline-flex items-center gap-1 bg-[#0066b1] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.15em] text-white">
-      <Trophy className="h-3 w-3" strokeWidth={2.5} aria-hidden />
-      Récord
-    </span>
-  );
-}
-
-function BadgeInvalida() {
-  return (
-    <span
-      className="inline-flex items-center gap-1 border border-[#e22718]/60 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.15em] text-[#e22718]"
-      title="Vuelta inválida (track limits / corte)"
-    >
-      <TriangleAlert className="h-3 w-3" strokeWidth={2.5} aria-hidden />
-      Inv
-    </span>
-  );
-}
-
-function Delta({ deltaMs, esReferencia }: { deltaMs: number | null; esReferencia: boolean }) {
-  if (esReferencia) {
-    return (
-      <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a8a8a]">
-        Ref
-      </span>
-    );
-  }
-  if (deltaMs === null) {
-    return <span className="font-mono text-sm text-[#5a5a5a]">—</span>;
-  }
-  const color =
-    Math.abs(deltaMs) < 0.5 ? "text-[#bbbbbb]" : deltaMs < 0 ? "text-[#0fa336]" : "text-[#e22718]";
-  return (
-    <span className={unirClases("font-mono text-sm tabular-nums", color)}>
-      {formatearDelta(deltaMs)}
-    </span>
   );
 }
 
@@ -105,19 +46,24 @@ export function SelectorVueltas({
 }: SelectorVueltasProps) {
   const vueltasOrdenadas = useMemo(
     () => [...vueltas].sort((a, b) => a.numeroVuelta - b.numeroVuelta),
-    [vueltas],
+    [vueltas]
   );
 
   const mejorVuelta = useMemo(() => vueltas.find((v) => v.esMejorVuelta) ?? null, [vueltas]);
 
   const vueltaReferencia = useMemo(
     () => vueltas.find((v) => v.id === vueltaAId) ?? mejorVuelta,
-    [vueltas, vueltaAId, mejorVuelta],
+    [vueltas, vueltaAId, mejorVuelta]
+  );
+
+  const vueltaA = useMemo(
+    () => vueltas.find((v) => v.id === vueltaAId) ?? null,
+    [vueltas, vueltaAId]
   );
 
   const vueltaB = useMemo(
     () => vueltas.find((v) => v.id === vueltaBId) ?? null,
-    [vueltas, vueltaBId],
+    [vueltas, vueltaBId]
   );
 
   const manejarSeleccionA = (id: string): void => {
@@ -125,191 +71,212 @@ export function SelectorVueltas({
     enSeleccionarVueltaA(id);
   };
 
-  const manejarAlternarB = (id: string): void => {
+  const manejarAlternarB = (id: string, e: React.MouseEvent): void => {
+    e.stopPropagation();
     if (id === vueltaAId) return;
     enSeleccionarVueltaB(id === vueltaBId ? null : id);
   };
 
   return (
-    <section
-      className="flex flex-col border border-[#3c3c3c] bg-[#1a1a1a] text-white rounded-lg overflow-hidden"
-      aria-labelledby="titulo-selector-vueltas"
-    >
-      {/* Encabezado */}
-      <header className="flex flex-col gap-3 border-b border-[#3c3c3c] px-4 pb-3 pt-4">
-        <FranjaM />
-        <div className="flex items-end justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <h2
-              id="titulo-selector-vueltas"
-              className="text-xs font-bold uppercase tracking-[0.25em] text-white"
-            >
-              Vueltas
+    <div className="border border-[#262626] bg-[#141414] rounded-xl p-4 shadow-xl space-y-3.5">
+      {/* Encabezado Superior: Título, Resumen de Comparación y Mejor Vuelta */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#262626]">
+        <div className="flex items-center gap-3">
+          <FranjaM />
+          <div>
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-white flex items-center gap-2">
+              <span>Selección de Vueltas de Telemetría</span>
+              <span className="px-1.5 py-0.5 rounded bg-[#262626] text-[10px] text-[#bbbbbb] font-mono">
+                {vueltas.length} {vueltas.length === 1 ? "vuelta" : "vueltas"}
+              </span>
             </h2>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a8a8a]">
-              {vueltas.length} {vueltas.length === 1 ? "registrada" : "registradas"}
-            </p>
+          </div>
+        </div>
+
+        {/* Chips de Ranuras Activas y Mejor Vuelta */}
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          {/* Chip Vuelta A (Base) */}
+          <div className="flex items-center gap-1.5 bg-[#1a1a1a] border border-white/40 px-2.5 py-1 rounded-md text-white font-mono">
+            <span className="w-3.5 h-3.5 rounded-full bg-white text-black font-black text-[9px] flex items-center justify-center">
+              A
+            </span>
+            <span className="font-bold text-[11px]">
+              {vueltaA ? `${formatearNumeroVuelta(vueltaA.numeroVuelta)} (${vueltaA.tiempoVueltaStr})` : "Sin Base"}
+            </span>
           </div>
 
+          {/* Chip Vuelta B (Comparativa) */}
+          {vueltaB ? (
+            <div className="flex items-center gap-1.5 bg-[#1c69d4]/20 border border-[#1c69d4] px-2.5 py-1 rounded-md text-[#93c5fd] font-mono">
+              <span className="w-3.5 h-3.5 rounded-full bg-[#1c69d4] text-white font-black text-[9px] flex items-center justify-center">
+                B
+              </span>
+              <span className="font-bold text-[11px]">
+                {formatearNumeroVuelta(vueltaB.numeroVuelta)} ({vueltaB.tiempoVueltaStr})
+              </span>
+              <button
+                type="button"
+                onClick={() => enSeleccionarVueltaB(null)}
+                title="Quitar vuelta de comparación"
+                className="ml-1 text-[#93c5fd] hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 bg-[#1a1a1a] border border-[#333333] px-2.5 py-1 rounded-md text-[#7e7e7e] font-mono text-[11px]">
+              <GitCompareArrows className="w-3.5 h-3.5 text-[#555555]" />
+              <span>Sin comparativa (haz clic en "+ VS B")</span>
+            </div>
+          )}
+
+          {/* Badge Mejor Vuelta de Sesión */}
           {mejorVuelta && (
-            <div className="flex flex-col items-end gap-1">
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a8a8a]">
-                Mejor vuelta
-              </span>
-              <span className="font-mono text-base tabular-nums text-white">
-                {mejorVuelta.tiempoVueltaStr}
-              </span>
+            <div className="flex items-center gap-1.5 bg-[#0066b1]/20 border border-[#0066b1]/60 px-2.5 py-1 rounded-md text-[#81c4ff] text-[11px] font-mono">
+              <Trophy className="w-3 h-3 text-[#f4b400]" />
+              <span className="text-[10px] uppercase font-bold text-[#bbbbbb]">Récord:</span>
+              <span className="font-bold text-white">{mejorVuelta.tiempoVueltaStr}</span>
             </div>
           )}
         </div>
-
-        {/* Leyenda de ranuras */}
-        <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-[0.15em] text-[#8a8a8a]">
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2" style={{ backgroundColor: COLOR_VUELTA_A }} aria-hidden />
-            A · Base
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2" style={{ backgroundColor: COLOR_VUELTA_B }} aria-hidden />
-            B · Comparación
-          </span>
-        </div>
-      </header>
-
-      {/* Cabecera de columnas */}
-      <div className="flex items-center gap-3 border-b border-[#3c3c3c] bg-[#141414] py-2 pl-5 pr-2 text-[9px] font-bold uppercase tracking-[0.2em] text-[#6a6a6a]">
-        <span className="w-5" aria-hidden />
-        <span className="w-9">N°</span>
-        <span className="flex-1">Tiempo</span>
-        <span className="w-16 text-right">Delta</span>
-        <span className="w-9 text-center">Comp</span>
       </div>
 
-      {/* Lista */}
-      {vueltasOrdenadas.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-2 px-4 py-10 text-center">
-          <Timer className="h-6 w-6 text-[#5a5a5a]" aria-hidden />
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a8a8a]">
-            Sin vueltas en la sesión
-          </p>
-        </div>
-      ) : (
-        <ul className="max-h-[480px] overflow-y-auto" role="list">
-          {vueltasOrdenadas.map((vuelta) => {
-            const esA = vuelta.id === vueltaAId;
-            const esB = vuelta.id === vueltaBId;
-            const esReferencia = vueltaReferencia?.id === vuelta.id;
-            const deltaMs = vueltaReferencia
-              ? vuelta.tiempoVueltaMs - vueltaReferencia.tiempoVueltaMs
-              : null;
+      {/* Grid Horizontal de Tarjetas de Vuelta */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        {vueltasOrdenadas.map((vuelta) => {
+          const esA = vuelta.id === vueltaAId;
+          const esB = vuelta.id === vueltaBId;
+          const esReferencia = vueltaReferencia?.id === vuelta.id;
+          const deltaMs = vueltaReferencia
+            ? vuelta.tiempoVueltaMs - vueltaReferencia.tiempoVueltaMs
+            : null;
 
-            return (
-              <li
-                key={vuelta.id}
-                className="border-b border-[#2a2a2a] last:border-b-0"
-              >
-                <div
-                  className={unirClases(
-                    "relative flex items-stretch transition-colors",
-                    esA && "bg-white/[0.06]",
-                    esB && "bg-[#0066b1]/[0.12]",
-                    !esA && !esB && "hover:bg-white/[0.03]",
+          return (
+            <div
+              key={vuelta.id}
+              onClick={() => manejarSeleccionA(vuelta.id)}
+              className={cn(
+                "relative rounded-lg p-3 transition-all cursor-pointer border select-none flex flex-col justify-between gap-2.5 group",
+                esA
+                  ? "bg-white/[0.08] border-white ring-1 ring-white/50 shadow-md shadow-white/5"
+                  : esB
+                  ? "bg-[#1c69d4]/[0.15] border-[#1c69d4] ring-1 ring-[#1c69d4]/60 shadow-md shadow-[#1c69d4]/10"
+                  : "bg-[#1a1a1a] border-[#262626] hover:border-[#3c3c3c] hover:bg-[#202020]"
+              )}
+            >
+              {/* Cabecera de la Tarjeta */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-sm font-black text-white">
+                    {formatearNumeroVuelta(vuelta.numeroVuelta)}
+                  </span>
+                  {vuelta.esMejorVuelta && (
+                    <span className="inline-flex items-center gap-1 bg-[#0066b1] px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider text-white">
+                      <Trophy className="w-2.5 h-2.5 text-[#f4b400]" />
+                      Récord
+                    </span>
                   )}
-                >
-                  {/* Indicador lateral de ranura */}
+                  {!vuelta.esVueltaValida && (
+                    <span className="inline-flex items-center gap-1 border border-[#e22718]/60 bg-[#e22718]/10 px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider text-[#e22718]">
+                      <TriangleAlert className="w-2.5 h-2.5" />
+                      Inv
+                    </span>
+                  )}
+                </div>
+
+                {/* Badge de Ranura Asignada */}
+                <div className="flex items-center gap-1">
+                  {esA && (
+                    <span className="px-2 py-0.5 rounded bg-white text-black text-[10px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1">
+                      <Check className="w-3 h-3 stroke-[3]" /> Base A
+                    </span>
+                  )}
+                  {esB && (
+                    <span className="px-2 py-0.5 rounded bg-[#1c69d4] text-white text-[10px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1">
+                      <Check className="w-3 h-3 stroke-[3]" /> Comp B
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Tiempo de Vuelta y Delta */}
+              <div className="flex items-baseline justify-between border-t border-[#262626] pt-2">
+                <div>
+                  <span className="text-[10px] text-[#7e7e7e] block uppercase font-mono leading-none">
+                    Tiempo de Vuelta
+                  </span>
                   <span
-                    aria-hidden
-                    className="absolute inset-y-0 left-0 w-1"
-                    style={{
-                      backgroundColor: esA ? COLOR_VUELTA_A : esB ? COLOR_VUELTA_B : "transparent",
-                    }}
-                  />
-
-                  {/* Selección de Vuelta A */}
-                  <button
-                    type="button"
-                    onClick={() => manejarSeleccionA(vuelta.id)}
-                    aria-pressed={esA}
-                    aria-label={`Seleccionar vuelta ${vuelta.numeroVuelta} como base, tiempo ${vuelta.tiempoVueltaStr}`}
-                    className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-5 pr-2 text-left outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white cursor-pointer"
-                  >
-                    <span className="flex w-5 justify-center">
-                      {esA && <BadgeRanura ranura="A" />}
-                      {esB && <BadgeRanura ranura="B" />}
-                    </span>
-
-                    <span className="w-9 font-mono text-xs tabular-nums text-[#8a8a8a]">
-                      {formatearNumeroVuelta(vuelta.numeroVuelta)}
-                    </span>
-
-                    <span className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                      <span
-                        className={unirClases(
-                          "font-mono text-base tabular-nums",
-                          vuelta.esVueltaValida ? "text-white" : "text-[#8a8a8a] line-through decoration-[#e22718]/70",
-                        )}
-                      >
-                        {vuelta.tiempoVueltaStr}
-                      </span>
-                      {vuelta.esMejorVuelta && <BadgeRecord />}
-                      {!vuelta.esVueltaValida && <BadgeInvalida />}
-                    </span>
-
-                    <span className="flex w-16 justify-end">
-                      <Delta deltaMs={deltaMs} esReferencia={esReferencia} />
-                    </span>
-                  </button>
-
-                  {/* Alternar Vuelta B */}
-                  <button
-                    type="button"
-                    onClick={() => manejarAlternarB(vuelta.id)}
-                    disabled={esA}
-                    aria-pressed={esB}
-                    aria-label={
-                      esB
-                        ? `Quitar vuelta ${vuelta.numeroVuelta} de la comparación`
-                        : `Comparar vuelta ${vuelta.numeroVuelta} como vuelta B`
-                    }
-                    title={esA ? "Es la vuelta base" : esB ? "Quitar comparación" : "Comparar como B"}
-                    className={unirClases(
-                      "my-2 mr-2 flex w-9 items-center justify-center border font-mono text-xs font-bold outline-none transition-colors focus-visible:ring-1 focus-visible:ring-white cursor-pointer",
-                      esB
-                        ? "border-[#0066b1] bg-[#0066b1] text-white"
-                        : "border-[#3c3c3c] text-[#8a8a8a] hover:border-[#0066b1] hover:text-white",
-                      esA && "cursor-not-allowed opacity-25 hover:border-[#3c3c3c] hover:text-[#8a8a8a]",
+                    className={cn(
+                      "font-mono text-lg font-black tracking-tight",
+                      vuelta.esVueltaValida ? "text-white" : "text-[#8a8a8a] line-through decoration-[#e22718]"
                     )}
                   >
-                    B
-                  </button>
+                    {vuelta.tiempoVueltaStr}
+                  </span>
                 </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
 
-      {/* Pie: estado de la comparación */}
-      {vueltaB && (
-        <footer className="flex items-center justify-between gap-3 border-t border-[#3c3c3c] bg-[#141414] px-4 py-2.5">
-          <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a8a8a]">
-            <GitCompareArrows className="h-3.5 w-3.5 text-[#0066b1]" aria-hidden />
-            Comparando con
-            <span className="font-mono text-xs tracking-normal text-white">
-              {formatearNumeroVuelta(vueltaB.numeroVuelta)}
-            </span>
-          </span>
-          <button
-            type="button"
-            onClick={() => enSeleccionarVueltaB(null)}
-            className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a8a8a] outline-none transition-colors hover:text-white focus-visible:text-white cursor-pointer"
-          >
-            <X className="h-3.5 w-3.5" aria-hidden />
-            Quitar
-          </button>
-        </footer>
-      )}
-    </section>
+                <div className="text-right">
+                  <span className="text-[10px] text-[#7e7e7e] block uppercase font-mono leading-none">
+                    Delta vs Base
+                  </span>
+                  {esReferencia ? (
+                    <span className="font-mono text-xs font-bold text-[#bbbbbb] uppercase tracking-wider">
+                      Referencia
+                    </span>
+                  ) : deltaMs !== null ? (
+                    <span
+                      className={cn(
+                        "font-mono text-xs font-bold tabular-nums",
+                        deltaMs < 0 ? "text-[#0fa336]" : "text-[#e22718]"
+                      )}
+                    >
+                      {formatearDelta(deltaMs)}
+                    </span>
+                  ) : (
+                    <span className="font-mono text-xs text-[#555555]">—</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Botonera de Acción */}
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    manejarSeleccionA(vuelta.id);
+                  }}
+                  className={cn(
+                    "flex-1 py-1 px-2 rounded text-[10px] font-bold uppercase tracking-wider text-center transition-colors cursor-pointer",
+                    esA
+                      ? "bg-white text-black font-black"
+                      : "bg-[#262626] hover:bg-[#333333] text-[#bbbbbb] hover:text-white"
+                  )}
+                >
+                  {esA ? "Base Activa (A)" : "Elegir Base (A)"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => manejarAlternarB(vuelta.id, e)}
+                  disabled={esA}
+                  className={cn(
+                    "py-1 px-2.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer",
+                    esA
+                      ? "opacity-30 cursor-not-allowed bg-[#262626] text-[#666666]"
+                      : esB
+                      ? "bg-[#1c69d4] text-white hover:bg-[#16588e]"
+                      : "border border-[#3c3c3c] hover:border-[#1c69d4] text-[#bbbbbb] hover:text-white"
+                  )}
+                >
+                  {esB ? "Quitar B" : "+ VS B"}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
