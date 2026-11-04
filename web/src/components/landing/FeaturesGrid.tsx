@@ -192,9 +192,44 @@ export function FeaturesGrid() {
             setActiveStep(stepIndex);
 
             if (progressBarRef.current) {
+              const cycle = TRANS_TIME + DWELL_TIME;
+              const t = Math.max(0, Math.min(1, p)) * totalDuration;
+              let barPercent = 0;
+
+              if (t <= DWELL_TIME) {
+                // Permanencia en la característica 0 durante el umbral
+                barPercent = 0;
+              } else {
+                const elapsed = t - DWELL_TIME;
+                const cycleIndex = Math.floor(elapsed / cycle);
+                const cycleTime = elapsed % cycle;
+
+                if (cycleIndex >= totalSteps - 1) {
+                  // Permanencia en la última característica tras finalizar
+                  barPercent = 100;
+                } else {
+                  const fromPercent = (cycleIndex / (totalSteps - 1)) * 100;
+                  const toPercent = ((cycleIndex + 1) / (totalSteps - 1)) * 100;
+
+                  if (cycleTime < TRANS_TIME) {
+                    // Transición sincronizada con la misma curva easing que las tarjetas
+                    const rawProgress = cycleTime / TRANS_TIME;
+                    const easedProgress =
+                      rawProgress < 0.5
+                        ? 2 * rawProgress * rawProgress
+                        : 1 - Math.pow(-2 * rawProgress + 2, 2) / 2;
+                    barPercent =
+                      fromPercent + easedProgress * (toPercent - fromPercent);
+                  } else {
+                    // Umbral de descanso estático en el marcador de la característica
+                    barPercent = toPercent;
+                  }
+                }
+              }
+
               progressBarRef.current.style.width = `${Math.min(
                 100,
-                Math.max(0, p * 100)
+                Math.max(0, barPercent)
               )}%`;
             }
 
@@ -266,7 +301,7 @@ export function FeaturesGrid() {
   return (
     <section
       id="caracteristicas"
-      className="relative py-24 sm:py-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-black/60 via-[#0d0d0d]/70 to-black/95 border-t border-[#262626] overflow-visible"
+      className="relative pt-16 sm:pt-20 pb-24 sm:pb-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-black/60 via-[#0d0d0d]/70 to-black/95 border-t border-[#262626] overflow-visible scroll-mt-[15vh]"
     >
       {/* Resplandor ambiental de fondo */}
       <div
