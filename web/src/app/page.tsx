@@ -20,6 +20,7 @@ export default function PaginaInicio() {
   const pageRef = useRef<HTMLDivElement>(null);
   const heroStageRef = useRef<HTMLDivElement>(null);
   const heroVideoRef = useRef<HTMLVideoElement>(null);
+  const topNavRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Asegurar recálculo de alturas exactas de ScrollTrigger tras montaje y carga
@@ -147,6 +148,20 @@ export default function PaginaInicio() {
           },
         });
 
+        // 0. Al empezar a scrollear: esconder TopNav rápidamente (primeros 0.1s del TL ~ 130px de scroll)
+        if (topNavRef.current) {
+          stageTl.to(
+            topNavRef.current,
+            {
+              yPercent: -100,
+              opacity: 0,
+              duration: 0.1,
+              ease: "power2.inOut",
+            },
+            0
+          );
+        }
+
         // Fase 1 (0 -> 1.3s del TL ~ 1300px): Girar auto hasta frame 300 y aplicar zoom de hasta el 30% (scale 1.30)
         stageTl.to(playhead, {
           frame: HERO_VIDEO_STOP_FRAME,
@@ -232,6 +247,36 @@ export default function PaginaInicio() {
         );
       });
 
+      // 5. Control de visibilidad del TopNav fuera del Hero
+      if (topNavRef.current) {
+        ScrollTrigger.create({
+          trigger: "#caracteristicas",
+          start: "top 80px",
+          onEnter: () => {
+            if (topNavRef.current) {
+              gsap.to(topNavRef.current, {
+                yPercent: 0,
+                opacity: 1,
+                duration: 0.35,
+                ease: "power2.out",
+                overwrite: "auto",
+              });
+            }
+          },
+          onLeaveBack: () => {
+            if (topNavRef.current) {
+              gsap.to(topNavRef.current, {
+                yPercent: -100,
+                opacity: 0,
+                duration: 0.25,
+                ease: "power2.in",
+                overwrite: "auto",
+              });
+            }
+          },
+        });
+      }
+
       // 4. Animación de entrada del Footer
       gsap.fromTo(
         ".footer-container",
@@ -269,6 +314,15 @@ export default function PaginaInicio() {
         scrollTo: { y: 0, autoKill: true },
         ease: "power3.inOut",
       });
+      if (topNavRef.current) {
+        gsap.to(topNavRef.current, {
+          yPercent: 0,
+          opacity: 1,
+          duration: 0.35,
+          ease: "power2.out",
+          overwrite: "auto",
+        });
+      }
       return;
     }
 
@@ -299,15 +353,20 @@ export default function PaginaInicio() {
       ref={pageRef}
       className="min-h-screen bg-canvas-radial text-white flex flex-col selection:bg-[#e22718] selection:text-white"
     >
-      {/* Franja Tricolor BMW M Superior Fija (4px) */}
-      <div className="w-full h-1 flex shrink-0 sticky top-0 z-50">
-        <div className="flex-1 bg-[#0066b1]" />
-        <div className="flex-1 bg-[#1c69d4]" />
-        <div className="flex-1 bg-[#e22718]" />
-      </div>
+      {/* Barra de Navegación Superior (TopNav) con Franja Tricolor M */}
+      <div
+        ref={topNavRef}
+        className="top-nav-wrapper fixed top-0 inset-x-0 z-50 will-change-transform"
+      >
+        {/* Franja Tricolor BMW M Superior (4px) */}
+        <div className="w-full h-1 flex shrink-0">
+          <div className="flex-1 bg-[#0066b1]" />
+          <div className="flex-1 bg-[#1c69d4]" />
+          <div className="flex-1 bg-[#e22718]" />
+        </div>
 
-      {/* Barra de Navegación (TopNav) */}
-      <header className="border-b border-[#262626] bg-black/85 backdrop-blur-md sticky top-1 z-40 border-sheen transition-colors duration-300">
+        {/* Header con Backdrop Blur */}
+        <header className="border-b border-[#262626] bg-black/85 backdrop-blur-md border-sheen transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link
             href="/"
@@ -358,14 +417,15 @@ export default function PaginaInicio() {
           </div>
         </div>
       </header>
+      </div>
 
       {/* Escenario Continuo: Hero Pinneado con Rotación de Auto y Bloqueo de 500px */}
       <div
         ref={heroStageRef}
-        className="hero-turntable-stage relative w-full h-[calc(100vh-4.25rem)] min-h-[580px] max-h-[1050px] overflow-hidden flex flex-col justify-between sm:justify-start bg-canvas-radial border-b border-[#262626]"
+        className="hero-turntable-stage relative w-full h-screen h-[100dvh] min-h-[580px] overflow-hidden flex flex-col justify-between sm:justify-start bg-canvas-radial border-b border-[#262626]"
       >
         {/* Halo de luz ambiental M Motorsport */}
-        <div className="hero-parallax-glow absolute top-1/4 left-1/2 -translate-x-1/2 w-[850px] h-[360px] bg-gradient-to-r from-[#0066b1]/15 via-[#e22718]/15 to-[#0066b1]/10 blur-3xl pointer-events-none rounded-full z-0" />
+        <div className="hero-parallax-glow absolute top-1/4 left-1/2 -translate-x-1/2 w-[850px] h-[410px] bg-gradient-to-r from-[#0066b1]/15 via-[#e22718]/15 to-[#0066b1]/10 blur-3xl pointer-events-none rounded-full z-0" />
 
         {/* Video de Fondo con margen superior oscuro para continuar el fondo hacia arriba */}
         <div
@@ -376,7 +436,7 @@ export default function PaginaInicio() {
           <div className="absolute inset-x-0 top-0 h-28 sm:h-96 bg-gradient-to-b from-black via-[#06070e] to-transparent z-10 pointer-events-none" />
 
           {/* Contenedor del video con ligero desplazamiento hacia abajo para darle aire al titular */}
-          <div className="relative w-full max-w-[1550px] h-full flex items-center justify-center sm:translate-y-12">
+          <div className="relative w-full h-full flex items-center justify-center sm:translate-y-[50px]">
             <video
               ref={heroVideoRef}
               src="/landing/videos/gemini_generated_video_c76c6af4.mp4"
@@ -404,15 +464,15 @@ export default function PaginaInicio() {
         </div>
 
         {/* Sección Superior: Badge + H1 + Prompt */}
-        <div className="hero-section relative z-20 pt-6 sm:pt-12 px-4 sm:px-6 lg:px-8 text-center max-w-7xl mx-auto w-full">
+        <div className="hero-section relative z-20 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-8 text-center max-w-7xl mx-auto w-full">
           {/* Baliza de Estado Animada */}
-          <div className="hero-badge inline-flex items-center gap-2 px-3 py-1.5 bg-[#141414]/90 backdrop-blur-sm border border-[#3c3c3c] text-xs font-bold uppercase tracking-[0.2em] text-[#bbbbbb] mb-4 sm:mb-5 glow-m-red-subtle">
+          <div className="hero-badge inline-flex items-center gap-2 px-3 py-1.5 bg-[#141414]/90 backdrop-blur-sm border border-[#3c3c3c] text-xs font-bold uppercase tracking-[0.2em] text-[#bbbbbb] mb-6 sm:mb-5 glow-m-red-subtle">
             <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
-            Sistema Activo · Telemetría en Tiempo Real para Assetto Corsa
+            READY TO RACE
           </div>
 
           {/* Titular Principal Animado (H1) */}
-          <h1 className="hero-title text-3xl sm:text-6xl lg:text-7xl font-bold uppercase tracking-tight text-white max-w-5xl mx-auto leading-[1.05] drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)]">
+          <h1 className="hero-title text-4xl sm:text-6xl lg:text-7xl font-bold uppercase tracking-tight text-white max-w-5xl mx-auto leading-[1.05] drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)]">
             Telemetría accesible{" "}
             <span className="text-[#e22718] block sm:inline drop-shadow-[0_0_25px_rgba(226,39,24,0.35)]">
               para todo simracer
@@ -427,11 +487,11 @@ export default function PaginaInicio() {
 
           {/* En DESKTOP (sm:block): Subtítulo y CTAs aparecen justo debajo del H1 */}
           <div
-            className="hero-interactive-cta hidden sm:block max-w-3xl mx-auto mt-6 will-change-[transform,opacity,filter]"
+            className="hero-interactive-cta hidden sm:block max-w-3xl mx-auto mt-6 sm:mt-0 will-change-[transform,opacity,filter]"
             style={{ opacity: 0, pointerEvents: "none", transform: "translateY(-24px)" }}
           >
             <p className="hero-subtitle text-base sm:text-lg text-[#bbbbbb] leading-relaxed drop-shadow-[0_2px_14px_rgba(0,0,0,0.95)]">
-              Telemetría en tiempo real y análisis de vueltas desde el navegador. Sin software pesado ni configuraciones.
+              Mirá tus datos en vivo y analizá cada vuelta desde el navegador, sin configuraciones complejas.
             </p>
 
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -448,7 +508,7 @@ export default function PaginaInicio() {
                 className="hero-cta-btn w-full sm:w-auto h-[48px] px-8 rounded-none bg-[#141414]/90 backdrop-blur-md hover:bg-[#1f1f1f] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#3c3c3c] hover:border-[#e22718] cursor-pointer"
               >
                 <Gauge className="w-4 h-4 text-[#bbbbbb]" />
-                VER ENTORNO DE BOXES
+                VER PANEL DE BOXES
               </Link>
             </div>
           </div>
@@ -459,7 +519,7 @@ export default function PaginaInicio() {
           style={{ opacity: 0, pointerEvents: "none", transform: "translateY(-24px)" }}
         >
           <p className="hero-subtitle text-sm text-[#cccccc] leading-relaxed drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)]">
-            Telemetría en tiempo real y análisis de vueltas desde el navegador. Sin software pesado ni configuraciones.
+            Mirá tus datos en vivo y analizá cada vuelta desde el navegador, sin configuraciones complejas.
           </p>
 
           <div className="mt-4 flex flex-col items-center justify-center gap-3">
@@ -476,7 +536,7 @@ export default function PaginaInicio() {
               className="hero-cta-btn w-full h-[46px] px-6 rounded-none bg-[#141414]/90 backdrop-blur-md hover:bg-[#1f1f1f] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-2.5 transition-all border border-[#3c3c3c] hover:border-[#e22718] cursor-pointer"
             >
               <Gauge className="w-3.5 h-3.5 text-[#bbbbbb]" />
-              VER ENTORNO DE BOXES
+              VER PANEL DE BOXES
             </Link>
           </div>
         </div>
@@ -567,7 +627,7 @@ export default function PaginaInicio() {
                 Simulador Soportado
               </div>
               <p>
-                Diseñado para Assetto Corsa con adquisición directa en tiempo real. Próximamente disponible para otros títulos líderes de simracing.
+                Diseñado para Assetto Corsa con lectura directa de memoria. Próximamente disponible para más simuladores.
               </p>
             </div>
 
@@ -576,7 +636,7 @@ export default function PaginaInicio() {
                 Compatibilidad de Volantes y Pantallas
               </div>
               <p>
-                Compatible con bases y aros Logitech, Thrustmaster, Fanatec y Direct Drive (Moza, Simagic, Simucube). Visualizable en monitores, tablets o teléfonos móviles.
+                Compatible con bases Logitech, Thrustmaster, Fanatec y Direct Drive (Moza, Simagic, Simucube). Abrí la interfaz en monitores, tablets o celulares.
               </p>
             </div>
           </div>

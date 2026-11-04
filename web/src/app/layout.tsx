@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ApexLink | Ecosistema de Telemetría SimRacing & Live Pitwall",
+  title: "ApexLink | Telemetría para Assetto Corsa en Tiempo Real",
   description:
-    "Ecosistema integral de telemetría para simracing: instrumental digital de cabina, Live Pitwall a 60 Hz en boxes, laboratorio analítico 2D y plataforma SaaS de competición para Assetto Corsa.",
+    "Telemetría en tiempo real y análisis de vueltas para Assetto Corsa: pantalla para volante, muro de boxes a 60 Hz y comparación de curvas desde el navegador.",
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },

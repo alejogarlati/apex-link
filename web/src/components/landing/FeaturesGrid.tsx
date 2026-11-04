@@ -20,9 +20,9 @@ const CARACTERISTICAS = [
     etiqueta: "En Cabina · Volante",
     titulo: "Instrumental Digital DDU",
     descripcion:
-      "Cuadro de instrumentos para el aro del volante: marcha gigante central para lectura inmediata, 15 luces de corte estroboscópicas progresivas, barra dinámica de delta y temperaturas térmicas de cubiertas.",
+      "Tablero para el volante o el celular con marcha en grande, barra de delta en vivo contra tu vuelta rápida, luces de corte progresivas y temperatura de cada neumático.",
     especificacion:
-      "Latencia sub-16ms. Visualización optimizada para pantallas dedicadas o celulares montados con refresco a 60 Hz.",
+      "Refresco continuo a 60 Hz con latencia menor a 16 ms en celulares, tablets o displays dedicados.",
     imagen: "/landing/features/feature-01-ddu.webp",
     imagenAlt: "Instrumental Digital DDU en volante de competición",
     hudTag: "DDU-01 // COCKPIT TELEMETRY",
@@ -35,11 +35,11 @@ const CARACTERISTICAS = [
     numero: "02",
     icono: Activity,
     etiqueta: "En Vivo · Boxes",
-    titulo: "Live Pitwall en Tiempo Real",
+    titulo: "Live Pitwall",
     descripcion:
-      "Monitoreo a 60 Hz desde el navegador: barras de acelerador y freno con retención de picos, fuerzas de aceleración lateral y longitudinal (Círculo de Kamm), presiones de inflado y cronometraje de stint con mapa en vivo.",
+      "Seguí la tanda desde el navegador con telemetría de boxes en vivo: barras de acelerador y freno con picos de presión, fuerzas G, presiones de neumáticos y ubicación del auto en el mapa.",
     especificacion:
-      "Adquisición continua por websocket local. Cálculo dinámico de fuerzas centrífugas y vector de agarre en tiempo real.",
+      "Transmisión por websocket local a 60 Hz. Calcula transferencias de carga y vector de agarre en tiempo real.",
     imagen: "/landing/features/feature-02-pitwall.webp",
     imagenAlt: "Pantalla de Live Pitwall en tiempo real con telemetría de boxes",
     hudTag: "PIT-02 // LIVE STREAM 60HZ",
@@ -52,11 +52,11 @@ const CARACTERISTICAS = [
     numero: "03",
     icono: LineChart,
     etiqueta: "Post-Sesión · Datos",
-    titulo: "Laboratorio Analítico 2D",
+    titulo: "Telemetría 2D",
     descripcion:
-      "Telemetría normalizada en dominio de distancia métrica (0 a L metros de pista). Compará tu vuelta rápida contra tu referencia curva por curva, con trazada 2D y mapas de color continuos de aceleración y frenada.",
+      "Compará tu mejor vuelta contra tu referencia metro a metro en lugar de por tiempo. Superponé velocidad, aceleración y frenada sobre el trazado para ver con exactitud dónde perdiste tiempo.",
     especificacion:
-      "Alineación métrica exacta punto a punto. Elimina el desfase temporal para comparar el metro exacto de frenada.",
+      "Alineación por distancia en pista. Muestra si frenaste antes o si abriste la dirección con menos tracción.",
     imagen: "/landing/features/feature-03-lab2d.webp",
     imagenAlt: "Gráficos de telemetría normalizada 2D y comparación de vueltas",
     hudTag: "LAB-03 // 2D TRACE MATRIX",
@@ -71,9 +71,9 @@ const CARACTERISTICAS = [
     etiqueta: "Post-Sesión · Curvas",
     titulo: "Inspector de Curvas",
     descripcion:
-      "Hacé clic en cualquier curva del trazado y mirá la velocidad de entrada, el metro exacto donde empezaste a frenar, la velocidad mínima en el ápice y cómo abriste el acelerador hacia la recta siguiente.",
+      "Hacé clic en cualquier curva del circuito para ver la velocidad de entrada, el metro exacto de frenada, la velocidad mínima en el ápice y el punto donde volviste a acelerar.",
     especificacion:
-      "Segmentación algorítmica de vértices. Desglose milimétrico de trail braking y punto de aplicación de potencia.",
+      "Detección automática de vértices con análisis de trail braking y salida de curva.",
     imagen: "/landing/features/feature-04-curvas.webp",
     imagenAlt: "Inspección detallada de curvas y telemetría de frenada",
     hudTag: "APEX-04 // CORNER TELEMETRY",
@@ -86,11 +86,11 @@ const CARACTERISTICAS = [
     numero: "05",
     icono: Trophy,
     etiqueta: "Progreso · Historial",
-    titulo: "Métricas y Consistencia",
+    titulo: "Ritmo y Consistencia",
     descripcion:
-      "Registro ordenado de tus tandas en pista, clasificación de vueltas válidas e inválidas, y cálculo de consistencia vuelta a vuelta para identificar errores y evaluar tu evolución como piloto.",
+      "Historial completo de tus sesiones: vueltas limpias, tiempos anulados por límites de pista y dispersión de ritmo para verificar si sos constante en tandas largas.",
     especificacion:
-      "Índice de desviación de ritmo y sectorización automática. Registro persistente sin necesidad de exportar planillas.",
+      "Desviación estándar de ritmo por sector y registro automático sin exportar planillas de cálculo.",
     imagen: "/landing/features/feature-05-metricas.webp",
     imagenAlt: "Historial de vueltas, ritmo y consistencia por tanda",
     hudTag: "RACE-05 // CONSISTENCY INDEX",
@@ -103,11 +103,11 @@ const CARACTERISTICAS = [
     numero: "06",
     icono: Sliders,
     etiqueta: "Hardware · Pantallas",
-    titulo: "Compatibilidad Universal",
+    titulo: "Compatibilidad de Hardware",
     descripcion:
-      "Compatible con bases Logitech, Thrustmaster, Fanatec y Direct Drive (Moza, Simagic, Simucube). Podés ver el instrumental en cualquier celular, tablet o monitor secundario sin necesidad de adaptadores privativos.",
+      "Funciona con bases Logitech, Thrustmaster, Fanatec y Direct Drive (Moza, Simagic, Simucube). Abrí la interfaz en cualquier teléfono, tablet o monitor sin cables ni apps extras.",
     especificacion:
-      "Ecosistema abierto con protocolo estándar. Acceso inmediato desde Chrome, Safari o Firefox en cualquier red.",
+      "Funciona sobre el navegador web en tu red local, sin instalar software en las pantallas secundarias.",
     imagen: "/landing/features/feature-06-hardware.webp",
     imagenAlt: "Compatibilidad universal con hardware de simulación y pantallas",
     hudTag: "IO-06 // HARDWARE PROTOCOL",
@@ -395,13 +395,13 @@ export function FeaturesGrid() {
         {/* Encabezado libre de scroll */}
         <div className="max-w-3xl mb-14 sm:mb-16 text-left">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#141414] border border-[#3c3c3c] text-[#e22718] text-[11px] font-bold uppercase tracking-[0.2em] mb-4 glow-m-red-subtle">
-            Herramientas Concretas de Pista
+            Telemetría en Pista y Boxes
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold uppercase tracking-tight text-white leading-[1.12]">
-            Todo lo que necesitás para <span className="text-[#e22718]">mejorar tus vueltas</span>
+            Herramientas para <span className="text-[#e22718]">bajar tus tiempos</span>
           </h2>
           <p className="text-[#bbbbbb] text-sm sm:text-base mt-4 leading-relaxed max-w-2xl">
-            Datos claros y precisos organizados para ayudarte a entender qué hace tu auto y cómo optimizar cada sector del circuito.
+            Aceleración, frenada, presiones y tiempos por sector. Sin planillas ni rodeos: solo lo que necesitás ver para corregir tu trazada.
           </p>
         </div>
 

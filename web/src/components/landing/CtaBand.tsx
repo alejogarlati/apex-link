@@ -54,15 +54,15 @@ export function CtaBand() {
       <div className="cta-content relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#141414] border border-[#3c3c3c] text-xs font-bold uppercase tracking-[0.2em] text-[#bbbbbb] glow-m-red-subtle">
           <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
-          Probá el Sistema en Vivo
+          Demostración en Vivo
         </div>
 
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold uppercase tracking-tight text-white leading-tight">
-          Salí a girar con la <span className="text-[#e22718]">telemetría en tiempo real</span>
+          Probá el sistema con <span className="text-[#e22718]">datos reales de pista</span>
         </h2>
 
         <p className="text-[#bbbbbb] text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-          Iniciá la demostración interactiva con datos reales de Assetto Corsa y explorá el instrumental de cabina y el muro de boxes al instante.
+          Explorá el tablero de cabina y el muro de boxes con una vuelta grabada en Assetto Corsa, sin necesidad de tener el simulador abierto.
         </p>
 
         <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -79,7 +79,7 @@ export function CtaBand() {
             className="w-full sm:w-auto h-[52px] px-8 rounded-none bg-[#141414] hover:bg-[#1f1f1f] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#3c3c3c] hover:border-[#e22718] cursor-pointer"
           >
             <Gauge className="w-4 h-4 text-[#bbbbbb]" />
-            VER ENTORNO DE BOXES
+            VER PANEL DE BOXES
           </Link>
         </div>
       </div>
