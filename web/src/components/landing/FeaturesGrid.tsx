@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import {
   Activity,
   LineChart,
@@ -22,6 +23,9 @@ const CARACTERISTICAS = [
       "Cuadro de instrumentos para el aro del volante: marcha gigante central para lectura inmediata, 15 luces de corte estroboscópicas progresivas, barra dinámica de delta y temperaturas térmicas de cubiertas.",
     especificacion:
       "Latencia sub-16ms. Visualización optimizada para pantallas dedicadas o celulares montados con refresco a 60 Hz.",
+    imagen: "/landing/features/feature-01-ddu.webp",
+    imagenAlt: "Instrumental Digital DDU en volante de competición",
+    hudTag: "DDU-01 // COCKPIT TELEMETRY",
     color: "text-[#e22718]",
     bordeColor: "border-[#e22718]",
     glowColor: "rgba(226, 39, 24, 0.25)",
@@ -36,6 +40,9 @@ const CARACTERISTICAS = [
       "Monitoreo a 60 Hz desde el navegador: barras de acelerador y freno con retención de picos, fuerzas de aceleración lateral y longitudinal (Círculo de Kamm), presiones de inflado y cronometraje de stint con mapa en vivo.",
     especificacion:
       "Adquisición continua por websocket local. Cálculo dinámico de fuerzas centrífugas y vector de agarre en tiempo real.",
+    imagen: "/landing/features/feature-02-pitwall.webp",
+    imagenAlt: "Pantalla de Live Pitwall en tiempo real con telemetría de boxes",
+    hudTag: "PIT-02 // LIVE STREAM 60HZ",
     color: "text-[#0fa336]",
     bordeColor: "border-[#0fa336]",
     glowColor: "rgba(15, 163, 54, 0.25)",
@@ -50,6 +57,9 @@ const CARACTERISTICAS = [
       "Telemetría normalizada en dominio de distancia métrica (0 a L metros de pista). Compará tu vuelta rápida contra tu referencia curva por curva, con trazada 2D y mapas de color continuos de aceleración y frenada.",
     especificacion:
       "Alineación métrica exacta punto a punto. Elimina el desfase temporal para comparar el metro exacto de frenada.",
+    imagen: "/landing/features/feature-03-lab2d.webp",
+    imagenAlt: "Gráficos de telemetría normalizada 2D y comparación de vueltas",
+    hudTag: "LAB-03 // 2D TRACE MATRIX",
     color: "text-[#0066b1]",
     bordeColor: "border-[#0066b1]",
     glowColor: "rgba(0, 102, 177, 0.25)",
@@ -64,6 +74,9 @@ const CARACTERISTICAS = [
       "Hacé clic en cualquier curva del trazado y mirá la velocidad de entrada, el metro exacto donde empezaste a frenar, la velocidad mínima en el ápice y cómo abriste el acelerador hacia la recta siguiente.",
     especificacion:
       "Segmentación algorítmica de vértices. Desglose milimétrico de trail braking y punto de aplicación de potencia.",
+    imagen: "/landing/features/feature-04-curvas.webp",
+    imagenAlt: "Inspección detallada de curvas y telemetría de frenada",
+    hudTag: "APEX-04 // CORNER TELEMETRY",
     color: "text-[#1c69d4]",
     bordeColor: "border-[#1c69d4]",
     glowColor: "rgba(28, 105, 212, 0.25)",
@@ -78,6 +91,9 @@ const CARACTERISTICAS = [
       "Registro ordenado de tus tandas en pista, clasificación de vueltas válidas e inválidas, y cálculo de consistencia vuelta a vuelta para identificar errores y evaluar tu evolución como piloto.",
     especificacion:
       "Índice de desviación de ritmo y sectorización automática. Registro persistente sin necesidad de exportar planillas.",
+    imagen: "/landing/features/feature-05-metricas.webp",
+    imagenAlt: "Historial de vueltas, ritmo y consistencia por tanda",
+    hudTag: "RACE-05 // CONSISTENCY INDEX",
     color: "text-[#f4b400]",
     bordeColor: "border-[#f4b400]",
     glowColor: "rgba(244, 180, 0, 0.25)",
@@ -92,6 +108,9 @@ const CARACTERISTICAS = [
       "Compatible con bases Logitech, Thrustmaster, Fanatec y Direct Drive (Moza, Simagic, Simucube). Podés ver el instrumental en cualquier celular, tablet o monitor secundario sin necesidad de adaptadores privativos.",
     especificacion:
       "Ecosistema abierto con protocolo estándar. Acceso inmediato desde Chrome, Safari o Firefox en cualquier red.",
+    imagen: "/landing/features/feature-06-hardware.webp",
+    imagenAlt: "Compatibilidad universal con hardware de simulación y pantallas",
+    hudTag: "IO-06 // HARDWARE PROTOCOL",
     color: "text-white",
     bordeColor: "border-[#7e7e7e]",
     glowColor: "rgba(255, 255, 255, 0.2)",
@@ -104,6 +123,7 @@ export function FeaturesGrid() {
   const progressBarRef = useRef<HTMLDivElement>(null);
   const spotlightRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const imageItemsRef = useRef<(HTMLDivElement | null)[]>([]);
   const [activeStep, setActiveStep] = useState<number>(0);
 
   useEffect(() => {
@@ -116,9 +136,10 @@ export function FeaturesGrid() {
 
     const ctx = gsap.context(() => {
       const items = itemsRef.current.filter((el): el is HTMLDivElement => Boolean(el));
+      const images = imageItemsRef.current.filter((el): el is HTMLDivElement => Boolean(el));
       const totalSteps = CARACTERISTICAS.length;
 
-      // Estado inicial: primer ítem visible, siguientes ocultos abajo con blur
+      // Estado inicial de textos: primer ítem visible, siguientes ocultos abajo con blur
       items.forEach((item, i) => {
         if (!item) return;
         if (i === 0) {
@@ -135,6 +156,26 @@ export function FeaturesGrid() {
             y: 75,
             scale: 0.96,
             filter: "blur(6px)",
+            pointerEvents: "none",
+          });
+        }
+      });
+
+      // Estado inicial de imágenes: primera visible con escala 1, siguientes ocultas con blur y escala suave
+      images.forEach((img, i) => {
+        if (!img) return;
+        if (i === 0) {
+          gsap.set(img, {
+            opacity: 1,
+            scale: 1,
+            filter: "blur(0px)",
+            pointerEvents: "auto",
+          });
+        } else {
+          gsap.set(img, {
+            opacity: 0,
+            scale: 0.96,
+            filter: "blur(8px)",
             pointerEvents: "none",
           });
         }
@@ -252,14 +293,18 @@ export function FeaturesGrid() {
       // 1. Umbral inicial de descanso en la característica 0
       tl.to({}, { duration: DWELL_TIME });
 
-      // 2. Transiciones verticales tipo carrusel entre las 6 características con umbral
+      // 2. Transiciones verticales tipo carrusel sincronizadas entre texto e imagen con umbral
       for (let i = 0; i < totalSteps - 1; i++) {
         const currentItem = items[i];
         const nextItem = items[i + 1];
+        const currentImg = images[i];
+        const nextImg = images[i + 1];
+
         if (!currentItem || !nextItem) continue;
 
         tl.addLabel(`step-${i}-trans`);
 
+        // Animación de salida del texto actual hacia arriba
         tl.to(
           currentItem,
           {
@@ -274,6 +319,7 @@ export function FeaturesGrid() {
           `step-${i}-trans`
         );
 
+        // Animación de entrada del siguiente texto hacia el centro
         tl.to(
           nextItem,
           {
@@ -288,7 +334,39 @@ export function FeaturesGrid() {
           `step-${i}-trans`
         );
 
-        // Umbral de retención estática en el keyframe de la tarjeta que acaba de entrar
+        // Animación sincronizada de la imagen actual (fade out suave con blur)
+        if (currentImg) {
+          tl.to(
+            currentImg,
+            {
+              opacity: 0,
+              scale: 0.96,
+              filter: "blur(8px)",
+              pointerEvents: "none",
+              duration: TRANS_TIME,
+              ease: "power2.inOut",
+            },
+            `step-${i}-trans`
+          );
+        }
+
+        // Animación sincronizada de la imagen entrante (fade in nítido)
+        if (nextImg) {
+          tl.to(
+            nextImg,
+            {
+              opacity: 1,
+              scale: 1,
+              filter: "blur(0px)",
+              pointerEvents: "auto",
+              duration: TRANS_TIME,
+              ease: "power2.inOut",
+            },
+            `step-${i}-trans`
+          );
+        }
+
+        // Umbral de retención estática en el keyframe de la tarjeta y la imagen que acaban de entrar
         tl.to({}, { duration: DWELL_TIME });
       }
     }, pinWrapperRef);
@@ -313,7 +391,7 @@ export function FeaturesGrid() {
         aria-hidden="true"
       />
 
-      <div className="relative z-10 max-w-5xl mx-auto w-full">
+      <div className="relative z-10 max-w-6xl mx-auto w-full">
         {/* Encabezado libre de scroll */}
         <div className="max-w-3xl mb-14 sm:mb-16 text-left">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#141414] border border-[#3c3c3c] text-[#e22718] text-[11px] font-bold uppercase tracking-[0.2em] mb-4 glow-m-red-subtle">
@@ -330,7 +408,7 @@ export function FeaturesGrid() {
         {/* Contenedor Pinneado con Carrusel Vertical */}
         <div
           ref={pinWrapperRef}
-          className="relative max-w-4xl w-full py-4 flex flex-col items-start"
+          className="relative w-full py-4 flex flex-col items-start"
         >
           {/* Luz focal dinámica */}
           <div
@@ -344,7 +422,7 @@ export function FeaturesGrid() {
           />
 
           {/* Barra de progreso continua con 6 marcadores */}
-          <div className="w-full max-w-xl mb-12 sm:mb-14">
+          <div className="w-full max-w-xl mb-10 sm:mb-12">
             <div className="relative h-[3px] w-full bg-[#262626] rounded-full overflow-visible">
               <div
                 ref={progressBarRef}
@@ -374,64 +452,139 @@ export function FeaturesGrid() {
             </div>
           </div>
 
-          {/* Escenario del Carrusel Vertical */}
-          <div className="relative w-full h-[440px] sm:h-[340px] flex items-center justify-start">
-            {CARACTERISTICAS.map((item, index) => {
-              const Icono = item.icono;
-              return (
+          {/* Escenario del Carrusel: Columna de Texto a la izquierda y Columna de Imágenes en el margen derecho */}
+          <div className="relative w-full min-h-[460px] sm:min-h-[400px] lg:min-h-[380px] grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-center">
+            {/* Columna Izquierda: Tarjetas de texto apiladas */}
+            <div className="relative w-full h-[420px] sm:h-[340px] md:col-span-7 flex items-center justify-start">
+              {CARACTERISTICAS.map((item, index) => {
+                const Icono = item.icono;
+                return (
+                  <div
+                    key={item.numero}
+                    id={item.idAnchor}
+                    ref={(el) => {
+                      itemsRef.current[index] = el;
+                    }}
+                    style={{
+                      opacity: index === 0 ? 1 : 0,
+                      pointerEvents: index === 0 ? "auto" : "none",
+                    }}
+                    className="absolute inset-0 flex flex-col justify-center items-start text-left will-change-[transform,opacity,filter]"
+                  >
+                    {/* Ícono y Badge del Módulo */}
+                    <div className="flex items-center gap-4 mb-5">
+                      <div className="w-12 h-12 bg-black/80 border border-[#3c3c3c] shadow-[0_0_24px_rgba(226,39,24,0.25)] flex items-center justify-center shrink-0">
+                        <Icono className={`w-5 h-5 ${item.color}`} />
+                      </div>
+
+                      <div className="flex flex-col">
+                        <span className="text-xs font-mono uppercase tracking-widest text-[#e22718] font-bold">
+                          MÓDULO {item.numero} · {item.etiqueta}
+                        </span>
+                        <span className="text-[11px] text-[#7e7e7e] font-mono uppercase">
+                          HERRAMIENTA {index + 1} DE {CARACTERISTICAS.length}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Título Principal */}
+                    <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold uppercase tracking-tight text-white mb-3">
+                      {item.titulo}
+                    </h3>
+
+                    {/* Descripción */}
+                    <p className="text-sm sm:text-base text-[#bbbbbb] leading-relaxed max-w-xl mb-5">
+                      {item.descripcion}
+                    </p>
+
+                    {/* Bloque de Detalle Técnico */}
+                    <div className="relative border-l-2 border-[#e22718] pl-4 sm:pl-5 py-2.5 bg-gradient-to-r from-[#e22718]/12 via-[#e22718]/3 to-transparent rounded-r-xl max-w-xl">
+                      <div className="flex items-center gap-2 mb-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#0fa336]" />
+                        <span className="text-[11px] font-mono uppercase tracking-wider font-bold text-white">
+                          Especificación de Telemetría
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-[#bbbbbb] leading-relaxed">
+                        {item.especificacion}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Columna Derecha: Escenario de imágenes en el margen derecho sincronizadas con cada pin */}
+            <div className="relative w-full h-[280px] sm:h-[320px] lg:h-[360px] md:col-span-5 hidden md:flex items-center justify-center">
+              {CARACTERISTICAS.map((item, index) => (
                 <div
-                  key={item.numero}
-                  id={item.idAnchor}
+                  key={`img-${item.numero}`}
                   ref={(el) => {
-                    itemsRef.current[index] = el;
+                    imageItemsRef.current[index] = el;
                   }}
                   style={{
                     opacity: index === 0 ? 1 : 0,
                     pointerEvents: index === 0 ? "auto" : "none",
                   }}
-                  className="absolute inset-0 flex flex-col justify-center items-start text-left will-change-[transform,opacity,filter]"
+                  className="absolute inset-0 flex items-center justify-center will-change-[transform,opacity,filter]"
                 >
-                  {/* Ícono y Badge del Módulo */}
-                  <div className="flex items-center gap-4 mb-5">
-                    <div className="w-12 h-12 bg-black/80 border border-[#3c3c3c] shadow-[0_0_24px_rgba(226,39,24,0.25)] flex items-center justify-center shrink-0">
-                      <Icono className={`w-5 h-5 ${item.color}`} />
-                    </div>
+                  {/* Cockpit Card Container con marco de telemetría Porsche GT / BMW M */}
+                  <div className="relative w-full aspect-[16/10.4] rounded-2xl overflow-hidden border border-[#262626] bg-[#0d0d0d] shadow-[0_20px_50px_rgba(0,0,0,0.85)] group">
+                    {/* Resplandor ambiental interior del módulo */}
+                    <div
+                      className="absolute -top-10 -right-10 w-44 h-44 rounded-full blur-3xl pointer-events-none opacity-40 transition-opacity duration-500"
+                      style={{ background: item.glowColor }}
+                    />
 
-                    <div className="flex flex-col">
-                      <span className="text-xs font-mono uppercase tracking-widest text-[#e22718] font-bold">
-                        MÓDULO {item.numero} · {item.etiqueta}
-                      </span>
-                      <span className="text-[11px] text-[#7e7e7e] font-mono uppercase">
-                        HERRAMIENTA {index + 1} DE {CARACTERISTICAS.length}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Título Principal */}
-                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold uppercase tracking-tight text-white mb-3">
-                    {item.titulo}
-                  </h3>
-
-                  {/* Descripción */}
-                  <p className="text-sm sm:text-base text-[#bbbbbb] leading-relaxed max-w-2xl mb-5">
-                    {item.descripcion}
-                  </p>
-
-                  {/* Bloque de Detalle Técnico */}
-                  <div className="relative border-l-2 border-[#e22718] pl-4 sm:pl-5 py-2.5 bg-gradient-to-r from-[#e22718]/12 via-[#e22718]/3 to-transparent rounded-r-xl max-w-2xl">
-                    <div className="flex items-center gap-2 mb-1">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-[#0fa336]" />
-                      <span className="text-[11px] font-mono uppercase tracking-wider font-bold text-white">
-                        Especificación de Telemetría
+                    {/* Barra superior HUD del display */}
+                    <div className="absolute top-0 inset-x-0 z-20 flex items-center justify-between px-3.5 py-2 bg-gradient-to-b from-black/90 via-black/60 to-transparent border-b border-white/[0.06] backdrop-blur-[2px]">
+                      <div className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#e22718] animate-pulse" />
+                        <span className="text-[10px] font-mono tracking-widest text-[#bbbbbb] font-bold uppercase">
+                          {item.hudTag}
+                        </span>
+                      </div>
+                      <span className="text-[9px] font-mono tracking-wider text-[#7e7e7e] font-semibold">
+                        60 FPS · REC
                       </span>
                     </div>
-                    <p className="text-xs sm:text-sm text-[#bbbbbb] leading-relaxed">
-                      {item.especificacion}
-                    </p>
+
+                    {/* Imagen Optimizada de la Característica */}
+                    <div className="relative w-full h-full">
+                      <Image
+                        src={item.imagen}
+                        alt={item.imagenAlt}
+                        fill
+                        sizes="(max-width: 1024px) 380px, 480px"
+                        priority={index === 0}
+                        className="object-cover object-center filter brightness-[0.92] contrast-[1.05] transition-transform duration-700 group-hover:scale-105"
+                      />
+                      {/* Degradados sutiles de viñeta para lectura e inmersión */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/25 pointer-events-none" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/20 pointer-events-none" />
+                    </div>
+
+                    {/* Barra inferior HUD con identificador y estado de enlace */}
+                    <div className="absolute bottom-0 inset-x-0 z-20 flex items-center justify-between px-3.5 py-2 bg-gradient-to-t from-black/95 via-black/70 to-transparent border-t border-white/[0.04]">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-bold text-white uppercase tracking-wider">
+                          {item.titulo}
+                        </span>
+                      </div>
+                      <span className="text-[9px] font-mono text-[#0fa336] bg-[#0fa336]/15 border border-[#0fa336]/30 px-1.5 py-0.5 rounded uppercase font-semibold">
+                        TELEMETRY LINK
+                      </span>
+                    </div>
+
+                    {/* Brackets angulares de cabina de telemetría */}
+                    <div className="absolute top-2 left-2 w-2 h-2 border-t border-l border-white/30 pointer-events-none z-30" />
+                    <div className="absolute top-2 right-2 w-2 h-2 border-t border-r border-white/30 pointer-events-none z-30" />
+                    <div className="absolute bottom-2 left-2 w-2 h-2 border-b border-l border-white/30 pointer-events-none z-30" />
+                    <div className="absolute bottom-2 right-2 w-2 h-2 border-b border-r border-white/30 pointer-events-none z-30" />
                   </div>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
         </div>
       </div>
