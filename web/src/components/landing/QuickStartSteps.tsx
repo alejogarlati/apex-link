@@ -178,9 +178,9 @@ export function QuickStartSteps() {
       id="como-funciona"
       className="relative py-24 sm:py-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-black via-[#080808] to-black overflow-visible"
     >
-      {/* Resplandor ambiental de fondo */}
+      {/* Resplandor ambiental de fondo a la derecha */}
       <div
-        className="absolute top-1/3 left-10 w-[550px] h-[550px] rounded-full blur-[150px] pointer-events-none"
+        className="absolute top-1/3 right-10 w-[550px] h-[550px] rounded-full blur-[150px] pointer-events-none"
         style={{
           background:
             "radial-gradient(circle, rgba(226,39,24,0.12) 0%, rgba(0,102,177,0.06) 50%, transparent 75%)",
@@ -189,28 +189,28 @@ export function QuickStartSteps() {
       />
 
       <div className="relative z-10 max-w-5xl mx-auto w-full">
-        {/* Encabezado libre de scroll */}
-        <div className="max-w-3xl mb-14 sm:mb-16 text-left">
+        {/* Encabezado libre de scroll alineado a la derecha */}
+        <div className="max-w-3xl mb-14 sm:mb-16 text-right ml-auto flex flex-col items-end">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#141414] border border-[#3c3c3c] text-[#e22718] text-[11px] font-bold uppercase tracking-[0.2em] mb-4 glow-m-red-subtle">
             Simplicidad Operativa
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold uppercase tracking-tight text-white leading-[1.12]">
             Cómo empezar en <span className="text-[#e22718]">tres pasos</span>
           </h2>
-          <p className="text-[#bbbbbb] text-sm sm:text-base mt-4 leading-relaxed max-w-2xl">
+          <p className="text-[#bbbbbb] text-sm sm:text-base mt-4 leading-relaxed max-w-2xl text-right">
             Sin configuraciones engorrosas ni exportaciones manuales de archivos. Todo está pensado para que salgas a girar de inmediato.
           </p>
         </div>
 
-        {/* Contenedor Pinneado con Carrusel Vertical */}
+        {/* Contenedor Pinneado con Carrusel Vertical alineado a la derecha */}
         <div
           ref={pinWrapperRef}
-          className="relative max-w-4xl w-full py-4 flex flex-col items-start"
+          className="relative max-w-4xl w-full py-4 flex flex-col items-end ml-auto"
         >
           {/* Luz focal dinámica */}
           <div
             ref={spotlightRef}
-            className="absolute -left-20 top-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[130px] pointer-events-none transition-all duration-700 ease-out"
+            className="absolute -right-20 top-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[130px] pointer-events-none transition-all duration-700 ease-out"
             style={{
               background:
                 "radial-gradient(circle, rgba(226,39,24,0.2) 0%, rgba(28,105,212,0.1) 45%, transparent 70%)",
@@ -219,7 +219,7 @@ export function QuickStartSteps() {
           />
 
           {/* Barra de progreso continua con marcadores */}
-          <div className="w-full max-w-xl mb-12 sm:mb-14">
+          <div className="w-full max-w-xl mb-12 sm:mb-14 ml-auto">
             <div className="relative h-[3px] w-full bg-[#262626] rounded-full overflow-visible">
               <div
                 ref={progressBarRef}
@@ -247,7 +247,7 @@ export function QuickStartSteps() {
           </div>
 
           {/* Escenario del Carrusel Vertical */}
-          <div className="relative w-full h-[400px] sm:h-[320px] flex items-center justify-start">
+          <div className="relative w-full h-[400px] sm:h-[320px] flex items-center justify-end">
             {PASOS.map((item, index) => {
               const Icono = item.icono;
               return (
@@ -260,15 +260,15 @@ export function QuickStartSteps() {
                     opacity: index === 0 ? 1 : 0,
                     pointerEvents: index === 0 ? "auto" : "none",
                   }}
-                  className="absolute inset-0 flex flex-col justify-center items-start text-left will-change-[transform,opacity,filter]"
+                  className="absolute inset-0 flex flex-col justify-center items-end text-right will-change-[transform,opacity,filter]"
                 >
-                  {/* Ícono y Badge del Paso */}
-                  <div className="flex items-center gap-4 mb-5">
+                  {/* Ícono y Badge del Paso invertidos para alineación a la derecha */}
+                  <div className="flex flex-row-reverse items-center gap-4 mb-5">
                     <div className="w-12 h-12 bg-black/80 border border-[#3c3c3c] shadow-[0_0_24px_rgba(226,39,24,0.25)] flex items-center justify-center shrink-0">
                       <Icono className="w-5 h-5 text-[#e22718]" />
                     </div>
 
-                    <div className="flex flex-col">
+                    <div className="flex flex-col items-end text-right">
                       <span className="text-xs font-mono uppercase tracking-widest text-[#e22718] font-bold">
                         PASO {item.numero} · {item.etiqueta}
                       </span>
@@ -279,24 +279,24 @@ export function QuickStartSteps() {
                   </div>
 
                   {/* Título Principal */}
-                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold uppercase tracking-tight text-white mb-3">
+                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold uppercase tracking-tight text-white mb-3 text-right">
                     {item.titulo}
                   </h3>
 
                   {/* Descripción */}
-                  <p className="text-sm sm:text-base text-[#bbbbbb] leading-relaxed max-w-2xl mb-5">
+                  <p className="text-sm sm:text-base text-[#bbbbbb] leading-relaxed max-w-2xl mb-5 text-right">
                     {item.descripcion}
                   </p>
 
-                  {/* Bloque de Detalle Técnico con Rayo de Acento M */}
-                  <div className="relative border-l-2 border-[#e22718] pl-4 sm:pl-5 py-2.5 bg-gradient-to-r from-[#e22718]/12 via-[#e22718]/3 to-transparent rounded-r-xl max-w-2xl">
-                    <div className="flex items-center gap-2 mb-1">
+                  {/* Bloque de Detalle Técnico con Rayo de Acento M hacia la derecha */}
+                  <div className="relative border-r-2 border-[#e22718] pr-4 sm:pr-5 py-2.5 bg-gradient-to-l from-[#e22718]/12 via-[#e22718]/3 to-transparent rounded-l-xl max-w-2xl text-right flex flex-col items-end">
+                    <div className="flex flex-row-reverse items-center gap-2 mb-1">
                       <CheckCircle2 className="w-3.5 h-3.5 text-[#0fa336]" />
                       <span className="text-[11px] font-mono uppercase tracking-wider font-bold text-white">
                         Ejecución en Cabina
                       </span>
                     </div>
-                    <p className="text-xs sm:text-sm text-[#bbbbbb] leading-relaxed">
+                    <p className="text-xs sm:text-sm text-[#bbbbbb] leading-relaxed text-right">
                       {item.detalleTecnico}
                     </p>
                   </div>
