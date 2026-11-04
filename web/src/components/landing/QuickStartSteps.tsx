@@ -38,7 +38,7 @@ export function QuickStartSteps() {
       // Encabezado
       gsap.fromTo(
         ".steps-header",
-        { opacity: 0, y: 30 },
+        { opacity: 0, y: 35 },
         {
           opacity: 1,
           y: 0,
@@ -53,10 +53,10 @@ export function QuickStartSteps() {
         }
       );
 
-      // Tarjetas de pasos
+      // Tarjetas de pasos con leve stagger
       gsap.fromTo(
         ".step-card",
-        { opacity: 0, y: 35 },
+        { opacity: 0, y: 40 },
         {
           opacity: 1,
           y: 0,
@@ -66,8 +66,25 @@ export function QuickStartSteps() {
           clearProps: "opacity,transform",
           scrollTrigger: {
             trigger: containerRef.current,
-            start: "top 80%",
+            start: "top 78%",
             once: true,
+          },
+        }
+      );
+
+      // Línea de progreso interactiva que se dibuja al scrollear
+      gsap.fromTo(
+        ".steps-progress-bar",
+        { scaleX: 0 },
+        {
+          scaleX: 1,
+          ease: "none",
+          transformOrigin: "left center",
+          scrollTrigger: {
+            trigger: ".steps-cards-container",
+            start: "top 80%",
+            end: "bottom 70%",
+            scrub: 0.6,
           },
         }
       );
@@ -97,13 +114,20 @@ export function QuickStartSteps() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Línea conectora entre pasos (visible en pantallas medianas y grandes) */}
+        <div className="hidden md:block relative mb-6 px-12">
+          <div className="h-[2px] w-full bg-[#262626] overflow-hidden">
+            <div className="steps-progress-bar h-full w-full bg-gradient-to-r from-[#0066b1] via-[#1c69d4] to-[#e22718]" />
+          </div>
+        </div>
+
+        <div className="steps-cards-container grid grid-cols-1 md:grid-cols-3 gap-6">
           {pasos.map((paso, idx) => {
             const Icono = paso.icono;
             return (
               <div
                 key={idx}
-                className="step-card card-cockpit-gradient border-sheen p-8 flex flex-col justify-between relative group hover:glow-m-red-subtle"
+                className="step-card card-cockpit-gradient border-sheen p-8 flex flex-col justify-between relative group hover:glow-m-red-subtle transition-transform duration-300 hover:-translate-y-1"
               >
                 {/* Acento superior en hover */}
                 <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#e22718] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
