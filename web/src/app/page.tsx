@@ -1,13 +1,102 @@
+"use client";
+
+import { useRef } from "react";
 import Link from "next/link";
 import { Zap, Play, Gauge } from "lucide-react";
 import { MSlantedBadge } from "@/components/landing/MSlantedBadge";
 import { FeaturesGrid } from "@/components/landing/FeaturesGrid";
 import { QuickStartSteps } from "@/components/landing/QuickStartSteps";
 import { CtaBand } from "@/components/landing/CtaBand";
+import { gsap, useGSAP } from "@/lib/gsap";
 
 export default function PaginaInicio() {
+  const pageRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      // Timeline de entrada para el Hero al cargar
+      const heroTl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+      heroTl
+        .from(".hero-badge", {
+          y: -25,
+          opacity: 0,
+          duration: 0.7,
+        })
+        .from(
+          ".hero-title",
+          {
+            y: 45,
+            opacity: 0,
+            duration: 1,
+            ease: "power4.out",
+          },
+          "-=0.4"
+        )
+        .from(
+          ".hero-subtitle",
+          {
+            y: 25,
+            opacity: 0,
+            duration: 0.8,
+          },
+          "-=0.6"
+        )
+        .from(
+          ".hero-cta-btn",
+          {
+            y: 20,
+            opacity: 0,
+            duration: 0.6,
+            stagger: 0.12,
+          },
+          "-=0.5"
+        )
+        .from(
+          ".hero-spec-card",
+          {
+            y: 35,
+            opacity: 0,
+            duration: 0.75,
+            stagger: 0.1,
+            ease: "power2.out",
+          },
+          "-=0.4"
+        );
+
+      // Efecto Parallax en el resplandor de fondo del Hero al hacer scroll
+      gsap.to(".hero-parallax-glow", {
+        yPercent: 40,
+        opacity: 0.05,
+        ease: "none",
+        scrollTrigger: {
+          trigger: ".hero-section",
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
+
+      // Parallax sutil sobre la barra de especificaciones
+      gsap.to(".hero-specs-bar", {
+        y: -20,
+        ease: "none",
+        scrollTrigger: {
+          trigger: ".hero-section",
+          start: "center center",
+          end: "bottom top",
+          scrub: 1,
+        },
+      });
+    },
+    { scope: pageRef }
+  );
+
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col selection:bg-[#e22718] selection:text-white">
+    <div
+      ref={pageRef}
+      className="min-h-screen bg-canvas-radial text-white flex flex-col selection:bg-[#e22718] selection:text-white"
+    >
       {/* Franja Tricolor BMW M Superior (4px) */}
       <div className="w-full h-1 flex shrink-0 sticky top-0 z-50">
         <div className="flex-1 bg-[#0066b1]" />
@@ -16,7 +105,7 @@ export default function PaginaInicio() {
       </div>
 
       {/* Barra de Navegación (TopNav) */}
-      <header className="border-b border-[#262626] bg-black/95 backdrop-blur sticky top-1 z-40">
+      <header className="border-b border-[#262626] bg-black/85 backdrop-blur-md sticky top-1 z-40 border-sheen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <MSlantedBadge className="h-5" />
@@ -58,36 +147,36 @@ export default function PaginaInicio() {
         </div>
       </header>
 
-      {/* Hero Section Principal */}
-      <section className="relative pt-20 pb-24 overflow-hidden border-b border-[#262626] bg-gradient-to-b from-black via-[#0d0d0d] to-black">
-        {/* Resplandor sutil rojo M de fondo */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-[#e22718]/10 blur-3xl pointer-events-none" />
+      {/* Hero Section Principal con Degradé de Fondo y Parallax */}
+      <section className="hero-section relative pt-20 pb-24 overflow-hidden border-b border-[#262626] bg-[radial-gradient(ellipse_90%_65%_at_50%_-15%,rgba(226,39,24,0.14),rgba(0,102,177,0.05),transparent)]">
+        {/* Halo de luz con parallax controlado por GSAP */}
+        <div className="hero-parallax-glow absolute top-1/4 left-1/2 -translate-x-1/2 w-[750px] h-[350px] bg-gradient-to-r from-[#0066b1]/15 via-[#e22718]/15 to-[#0066b1]/10 blur-3xl pointer-events-none rounded-full" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {/* Baliza de Estado */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#141414] border border-[#3c3c3c] text-xs font-bold uppercase tracking-[0.2em] text-[#bbbbbb] mb-8">
+          {/* Baliza de Estado Animada */}
+          <div className="hero-badge inline-flex items-center gap-2 px-3 py-1.5 bg-[#141414] border border-[#3c3c3c] text-xs font-bold uppercase tracking-[0.2em] text-[#bbbbbb] mb-8 glow-m-red-subtle">
             <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
             Sistema Activo · Telemetría en Tiempo Real para Assetto Corsa
           </div>
 
-          {/* Titular Principal */}
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold uppercase tracking-tight text-white max-w-5xl mx-auto leading-[1.05]">
+          {/* Titular Principal Animado */}
+          <h1 className="hero-title text-4xl sm:text-6xl lg:text-7xl font-bold uppercase tracking-tight text-white max-w-5xl mx-auto leading-[1.05]">
             Telemetría accesible{" "}
-            <span className="text-[#e22718] block sm:inline">
+            <span className="text-[#e22718] block sm:inline drop-shadow-[0_0_25px_rgba(226,39,24,0.3)]">
               para todo simracer
             </span>
           </h1>
 
-          {/* Bajada */}
-          <p className="mt-6 text-base sm:text-lg text-[#bbbbbb] max-w-3xl mx-auto leading-relaxed">
+          {/* Bajada Animada */}
+          <p className="hero-subtitle mt-6 text-base sm:text-lg text-[#bbbbbb] max-w-3xl mx-auto leading-relaxed">
             Conectá tu volante, mirá los datos de tu auto en tiempo real y analizá tus vueltas desde cualquier navegador web. Sin configuraciones complicadas, sin software pesado y compatible con tu equipamiento actual.
           </p>
 
-          {/* Botonera de Acción */}
+          {/* Botonera de Acción Animada */}
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/login"
-              className="w-full sm:w-auto h-[52px] px-8 rounded-none bg-[#e22718] hover:bg-[#c91f12] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#e22718] shadow-[0_0_25px_rgba(226,39,24,0.35)] cursor-pointer"
+              className="hero-cta-btn w-full sm:w-auto h-[52px] px-8 rounded-none bg-[#e22718] hover:bg-[#c91f12] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#e22718] shadow-[0_0_25px_rgba(226,39,24,0.35)] cursor-pointer"
             >
               <Play className="w-4 h-4 fill-current" />
               PROBAR DEMO EN VIVO
@@ -95,16 +184,16 @@ export default function PaginaInicio() {
 
             <Link
               href="/hub"
-              className="w-full sm:w-auto h-[52px] px-8 rounded-none bg-[#141414] hover:bg-[#1f1f1f] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#3c3c3c] hover:border-[#e22718] cursor-pointer"
+              className="hero-cta-btn w-full sm:w-auto h-[52px] px-8 rounded-none bg-[#141414] hover:bg-[#1f1f1f] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#3c3c3c] hover:border-[#e22718] cursor-pointer"
             >
               <Gauge className="w-4 h-4 text-[#bbbbbb]" />
               VER ENTORNO DE BOXES
             </Link>
           </div>
 
-          {/* Barra de Especificaciones Reales */}
-          <div className="mt-16 pt-10 border-t border-[#262626] grid grid-cols-2 md:grid-cols-4 gap-6 text-left">
-            <div className="p-4 bg-black/60 border border-[#262626]">
+          {/* Barra de Especificaciones Reales en Degradé con Parallax */}
+          <div className="hero-specs-bar mt-16 pt-10 border-t border-[#262626] grid grid-cols-2 md:grid-cols-4 gap-6 text-left">
+            <div className="hero-spec-card card-cockpit-gradient border-sheen p-5 hover:glow-m-red-subtle">
               <div className="text-xl font-bold font-mono text-white flex items-center gap-1.5">
                 60 <span className="text-xs text-[#0fa336] font-sans">HZ</span>
               </div>
@@ -116,7 +205,7 @@ export default function PaginaInicio() {
               </div>
             </div>
 
-            <div className="p-4 bg-black/60 border border-[#262626]">
+            <div className="hero-spec-card card-cockpit-gradient border-sheen p-5 hover:glow-m-red-subtle">
               <div className="text-xl font-bold font-mono text-white flex items-center gap-1.5">
                 ENLACE <span className="text-xs text-[#0066b1] font-sans">DIRECTO</span>
               </div>
@@ -128,7 +217,7 @@ export default function PaginaInicio() {
               </div>
             </div>
 
-            <div className="p-4 bg-black/60 border border-[#262626]">
+            <div className="hero-spec-card card-cockpit-gradient border-sheen p-5 hover:glow-m-red-subtle">
               <div className="text-xl font-bold font-mono text-white flex items-center gap-1.5">
                 NAVEGADOR <span className="text-xs text-[#1c69d4] font-sans">WEB</span>
               </div>
@@ -140,7 +229,7 @@ export default function PaginaInicio() {
               </div>
             </div>
 
-            <div className="p-4 bg-black/60 border border-[#262626]">
+            <div className="hero-spec-card card-cockpit-gradient border-sheen p-5 hover:glow-m-red-subtle">
               <div className="text-xl font-bold font-mono text-[#0fa336] flex items-center gap-1.5">
                 CERO <span className="text-xs text-[#bbbbbb] font-sans">PLUGINS</span>
               </div>
@@ -162,7 +251,7 @@ export default function PaginaInicio() {
         <div className="flex-1 bg-[#e22718]" />
       </div>
 
-      {/* Grilla de Características Concretas */}
+      {/* Grilla de Características Concretas Animada con ScrollTrigger */}
       <FeaturesGrid />
 
       {/* Franja Tricolor M Divisoria */}
@@ -172,7 +261,7 @@ export default function PaginaInicio() {
         <div className="flex-1 bg-[#e22718]" />
       </div>
 
-      {/* Cómo Empezar en Tres Pasos */}
+      {/* Cómo Empezar en Tres Pasos con Animación Escalonada */}
       <QuickStartSteps />
 
       {/* Franja Tricolor M Divisoria */}
@@ -182,7 +271,7 @@ export default function PaginaInicio() {
         <div className="flex-1 bg-[#e22718]" />
       </div>
 
-      {/* Llamado a Probar Demo */}
+      {/* Llamado a Probar Demo con Animación y Pulso de Brillo */}
       <CtaBand />
 
       {/* Franja Tricolor M Divisoria */}
@@ -193,7 +282,7 @@ export default function PaginaInicio() {
       </div>
 
       {/* Pie de Página Oficial (Footer) */}
-      <footer className="border-t border-[#262626] bg-black py-16 text-[#7e7e7e]">
+      <footer className="border-t border-[#262626] bg-black py-16 text-[#7e7e7e] relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 border-b border-[#262626]">
             <div className="flex items-center gap-3">

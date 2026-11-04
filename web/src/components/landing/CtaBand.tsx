@@ -1,19 +1,56 @@
+"use client";
+
+import { useRef } from "react";
 import Link from "next/link";
 import { Play, Gauge } from "lucide-react";
+import { gsap, useGSAP } from "@/lib/gsap";
 
 export function CtaBand() {
-  return (
-    <section className="py-20 bg-[#0d0d0d] border-t border-[#262626] relative overflow-hidden">
-      {/* Resplandor sutil rojo M en el fondo */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[200px] bg-[#e22718]/10 blur-3xl pointer-events-none" />
+  const containerRef = useRef<HTMLDivElement>(null);
 
-      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-black border border-[#3c3c3c] text-xs font-bold uppercase tracking-[0.2em] text-[#bbbbbb]">
+  useGSAP(
+    () => {
+      // Entrada del bloque principal con suave escala y fade
+      gsap.from(".cta-content", {
+        scale: 0.94,
+        y: 30,
+        opacity: 0,
+        duration: 0.9,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top 85%",
+        },
+      });
+
+      // Pulso suave y continuo del brillo de fondo
+      gsap.to(".cta-ambient-glow", {
+        scale: 1.15,
+        opacity: 0.18,
+        duration: 3,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+      });
+    },
+    { scope: containerRef }
+  );
+
+  return (
+    <section
+      ref={containerRef}
+      className="py-24 bg-gradient-to-b from-black via-[#0d0d0d] to-black border-t border-[#262626] relative overflow-hidden"
+    >
+      {/* Resplandor ambiental rojo M con respiración continua */}
+      <div className="cta-ambient-glow absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[250px] bg-gradient-to-r from-[#0066b1]/10 via-[#e22718]/15 to-[#0066b1]/10 blur-3xl pointer-events-none rounded-full opacity-10" />
+
+      <div className="cta-content relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#141414] border border-[#3c3c3c] text-xs font-bold uppercase tracking-[0.2em] text-[#bbbbbb] glow-m-red-subtle">
           <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
           Probá el Sistema en Vivo
         </div>
 
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold uppercase tracking-tight text-white">
+        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold uppercase tracking-tight text-white leading-tight">
           Salí a girar con la <span className="text-[#e22718]">telemetría en tiempo real</span>
         </h2>
 
