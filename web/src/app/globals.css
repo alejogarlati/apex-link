@@ -7,8 +7,8 @@
 
   /* Paleta Oficial BMW M Motorsport */
   --canvas: #000000;
-  --surface-card: #1a1a1a;
-  --surface-elevated: #262626;
+  --surface-card: #141414;
+  --surface-elevated: #1f1f1f;
   --surface-soft: #0d0d0d;
   --hairline: #3c3c3c;
   --hairline-strong: #262626;
@@ -54,4 +54,57 @@ body {
   font-feature-settings: "tnum" 1;
   font-variant-numeric: tabular-nums;
   min-height: 100vh;
+}
+
+/* ==========================================================================
+   DEGRADÉS Y BRILLOS SUTILES DE CABINA (MOTORSPORT AESTHETIC)
+   ========================================================================== */
+
+/* Fondo general con degradé radial profundo y halo superior */
+.bg-canvas-radial {
+  background: radial-gradient(circle at 50% -10%, rgba(226, 39, 24, 0.08) 0%, rgba(13, 13, 13, 0.7) 45%, #000000 85%);
+}
+
+/* Degradé para superficies secundarias con transición suave */
+.bg-section-gradient {
+  background: linear-gradient(180deg, #000000 0%, #0a0a0a 25%, #0d0d0d 50%, #0a0a0a 75%, #000000 100%);
+}
+
+/* Tarjeta con degradé oscuro, bisel de luz superior y profundidad */
+.card-cockpit-gradient {
+  background: linear-gradient(145deg, rgba(24, 24, 24, 0.85) 0%, rgba(10, 10, 10, 0.95) 100%);
+  border: 1px solid #262626;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.07), 0 4px 20px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-cockpit-gradient:hover {
+  background: linear-gradient(145deg, rgba(32, 32, 32, 0.95) 0%, rgba(14, 14, 14, 0.98) 100%);
+  border-color: #3c3c3c;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.12), 0 12px 30px -10px rgba(0, 0, 0, 0.8);
+}
+
+/* Bisel de brillo sutil en el borde superior */
+.border-sheen {
+  position: relative;
+}
+
+.border-sheen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.18) 50%, transparent 100%);
+  pointer-events: none;
+}
+
+/* Resplandor sutil rojo M */
+.glow-m-red {
+  box-shadow: 0 0 35px -5px rgba(226, 39, 24, 0.28);
+}
+
+.glow-m-red-subtle {
+  box-shadow: 0 0 20px -2px rgba(226, 39, 24, 0.14);
 }

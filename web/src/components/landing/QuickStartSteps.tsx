@@ -1,6 +1,12 @@
+"use client";
+
+import { useRef } from "react";
 import { Play, Laptop, Gauge } from "lucide-react";
+import { gsap, useGSAP } from "@/lib/gsap";
 
 export function QuickStartSteps() {
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const pasos = [
     {
       numero: "01",
@@ -25,11 +31,61 @@ export function QuickStartSteps() {
     },
   ];
 
+  useGSAP(
+    () => {
+      // Entrada del encabezado con fade y desplazamiento
+      gsap.from(".steps-header", {
+        y: 40,
+        opacity: 0,
+        duration: 0.9,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top 80%",
+        },
+      });
+
+      // Entrada escalonada de las tarjetas de pasos
+      gsap.from(".step-card", {
+        y: 50,
+        opacity: 0,
+        duration: 0.85,
+        stagger: 0.18,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: ".steps-cards-container",
+          start: "top 82%",
+        },
+      });
+
+      // Animación de los números de los pasos (efecto de brillo sutil en el texto)
+      gsap.from(".step-number", {
+        scale: 0.8,
+        opacity: 0,
+        duration: 0.6,
+        stagger: 0.18,
+        ease: "back.out(1.7)",
+        scrollTrigger: {
+          trigger: ".steps-cards-container",
+          start: "top 80%",
+        },
+      });
+    },
+    { scope: containerRef }
+  );
+
   return (
-    <section id="como-funciona" className="py-20 bg-black">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#141414] border border-[#3c3c3c] text-[#e22718] text-[11px] font-bold uppercase tracking-[0.2em] mb-4">
+    <section
+      id="como-funciona"
+      ref={containerRef}
+      className="py-24 bg-gradient-to-b from-black via-[#080808] to-black relative overflow-hidden"
+    >
+      {/* Luz difusa de fondo */}
+      <div className="absolute top-1/3 left-1/4 w-[500px] h-[300px] bg-[#e22718]/5 blur-3xl pointer-events-none" />
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="steps-header text-center max-w-3xl mx-auto mb-16">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#141414] border border-[#3c3c3c] text-[#e22718] text-[11px] font-bold uppercase tracking-[0.2em] mb-4 glow-m-red-subtle">
             Simplicidad Operativa
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold uppercase tracking-tight text-white">
@@ -40,23 +96,23 @@ export function QuickStartSteps() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="steps-cards-container grid grid-cols-1 md:grid-cols-3 gap-6">
           {pasos.map((paso, idx) => {
             const Icono = paso.icono;
             return (
               <div
                 key={idx}
-                className="bg-[#0d0d0d] border border-[#262626] hover:border-[#3c3c3c] p-8 flex flex-col justify-between transition-colors relative group"
+                className="step-card card-cockpit-gradient border-sheen p-8 flex flex-col justify-between relative group hover:glow-m-red-subtle"
               >
                 {/* Acento superior en hover */}
-                <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#e22718] opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#e22718] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                 <div>
                   <div className="flex items-center justify-between mb-6">
-                    <span className="text-2xl font-mono font-bold text-[#e22718]">
+                    <span className="step-number text-3xl font-mono font-bold text-[#e22718] drop-shadow-[0_0_12px_rgba(226,39,24,0.4)]">
                       {paso.numero}
                     </span>
-                    <div className="w-10 h-10 bg-[#141414] border border-[#3c3c3c] flex items-center justify-center">
+                    <div className="w-10 h-10 bg-black/70 border border-[#3c3c3c] group-hover:border-[#e22718]/50 flex items-center justify-center transition-colors">
                       <Icono className="w-5 h-5 text-white" />
                     </div>
                   </div>
@@ -70,7 +126,7 @@ export function QuickStartSteps() {
                   </p>
                 </div>
 
-                <div className="mt-8 pt-4 border-t border-[#1f1f1f] text-[10px] uppercase font-bold tracking-wider text-[#7e7e7e]">
+                <div className="mt-8 pt-4 border-t border-[#262626] text-[10px] uppercase font-bold tracking-wider text-[#7e7e7e]">
                   Paso {paso.numero} de 03
                 </div>
               </div>
