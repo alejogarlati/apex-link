@@ -33,43 +33,44 @@ export function QuickStartSteps() {
 
   useGSAP(
     () => {
-      // Entrada del encabezado con fade y desplazamiento
-      gsap.from(".steps-header", {
-        y: 40,
-        opacity: 0,
-        duration: 0.9,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top 80%",
-        },
-      });
+      if (!containerRef.current) return;
 
-      // Entrada escalonada de las tarjetas de pasos
-      gsap.from(".step-card", {
-        y: 50,
-        opacity: 0,
-        duration: 0.85,
-        stagger: 0.18,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: ".steps-cards-container",
-          start: "top 82%",
-        },
-      });
+      // Encabezado
+      gsap.fromTo(
+        ".steps-header",
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.7,
+          ease: "power2.out",
+          clearProps: "opacity,transform",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 85%",
+            once: true,
+          },
+        }
+      );
 
-      // Animación de los números de los pasos (efecto de brillo sutil en el texto)
-      gsap.from(".step-number", {
-        scale: 0.8,
-        opacity: 0,
-        duration: 0.6,
-        stagger: 0.18,
-        ease: "back.out(1.7)",
-        scrollTrigger: {
-          trigger: ".steps-cards-container",
-          start: "top 80%",
-        },
-      });
+      // Tarjetas de pasos
+      gsap.fromTo(
+        ".step-card",
+        { opacity: 0, y: 35 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.65,
+          stagger: 0.12,
+          ease: "power2.out",
+          clearProps: "opacity,transform",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 80%",
+            once: true,
+          },
+        }
+      );
     },
     { scope: containerRef }
   );
@@ -96,7 +97,7 @@ export function QuickStartSteps() {
           </p>
         </div>
 
-        <div className="steps-cards-container grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {pasos.map((paso, idx) => {
             const Icono = paso.icono;
             return (

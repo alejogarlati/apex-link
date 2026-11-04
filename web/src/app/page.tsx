@@ -1,16 +1,24 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import Link from "next/link";
 import { Zap, Play, Gauge } from "lucide-react";
 import { MSlantedBadge } from "@/components/landing/MSlantedBadge";
 import { FeaturesGrid } from "@/components/landing/FeaturesGrid";
 import { QuickStartSteps } from "@/components/landing/QuickStartSteps";
 import { CtaBand } from "@/components/landing/CtaBand";
-import { gsap, useGSAP } from "@/lib/gsap";
+import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 
 export default function PaginaInicio() {
   const pageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Asegurar que ScrollTrigger recalcule las alturas una vez montado el DOM
+    const timer = setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 150);
+    return () => clearTimeout(timer);
+  }, []);
 
   useGSAP(
     () => {
@@ -19,54 +27,59 @@ export default function PaginaInicio() {
 
       heroTl
         .from(".hero-badge", {
-          y: -25,
+          y: -20,
           opacity: 0,
-          duration: 0.7,
+          duration: 0.6,
+          clearProps: "opacity,transform",
         })
         .from(
           ".hero-title",
           {
-            y: 45,
+            y: 40,
             opacity: 0,
-            duration: 1,
+            duration: 0.8,
             ease: "power4.out",
+            clearProps: "opacity,transform",
           },
-          "-=0.4"
+          "-=0.3"
         )
         .from(
           ".hero-subtitle",
           {
-            y: 25,
+            y: 20,
             opacity: 0,
-            duration: 0.8,
+            duration: 0.7,
+            clearProps: "opacity,transform",
           },
-          "-=0.6"
+          "-=0.5"
         )
         .from(
           ".hero-cta-btn",
           {
             y: 20,
             opacity: 0,
-            duration: 0.6,
-            stagger: 0.12,
+            duration: 0.5,
+            stagger: 0.1,
+            clearProps: "opacity,transform",
           },
-          "-=0.5"
+          "-=0.4"
         )
         .from(
           ".hero-spec-card",
           {
-            y: 35,
+            y: 30,
             opacity: 0,
-            duration: 0.75,
-            stagger: 0.1,
+            duration: 0.65,
+            stagger: 0.08,
             ease: "power2.out",
+            clearProps: "opacity,transform",
           },
-          "-=0.4"
+          "-=0.3"
         );
 
       // Efecto Parallax en el resplandor de fondo del Hero al hacer scroll
       gsap.to(".hero-parallax-glow", {
-        yPercent: 40,
+        yPercent: 35,
         opacity: 0.05,
         ease: "none",
         scrollTrigger: {
@@ -74,18 +87,6 @@ export default function PaginaInicio() {
           start: "top top",
           end: "bottom top",
           scrub: true,
-        },
-      });
-
-      // Parallax sutil sobre la barra de especificaciones
-      gsap.to(".hero-specs-bar", {
-        y: -20,
-        ease: "none",
-        scrollTrigger: {
-          trigger: ".hero-section",
-          start: "center center",
-          end: "bottom top",
-          scrub: 1,
         },
       });
     },
@@ -191,8 +192,8 @@ export default function PaginaInicio() {
             </Link>
           </div>
 
-          {/* Barra de Especificaciones Reales en Degradé con Parallax */}
-          <div className="hero-specs-bar mt-16 pt-10 border-t border-[#262626] grid grid-cols-2 md:grid-cols-4 gap-6 text-left">
+          {/* Barra de Especificaciones Reales en Degradé */}
+          <div className="mt-16 pt-10 border-t border-[#262626] grid grid-cols-2 md:grid-cols-4 gap-6 text-left">
             <div className="hero-spec-card card-cockpit-gradient border-sheen p-5 hover:glow-m-red-subtle">
               <div className="text-xl font-bold font-mono text-white flex items-center gap-1.5">
                 60 <span className="text-xs text-[#0fa336] font-sans">HZ</span>
