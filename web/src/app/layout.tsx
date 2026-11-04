@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "ApexLink | Telemetría para Assetto Corsa en Tiempo Real",
   description:
-    "Telemetría en tiempo real y análisis de vueltas para Assetto Corsa: pantalla para volante, muro de boxes a 60 Hz y comparación de curvas desde el navegador.",
+    "Telemetría en tiempo real y análisis de vueltas para Assetto Corsa: pantalla para volante, muro de boxes a 60 Hz y comparación de telemetría 2D desde el navegador.",
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
