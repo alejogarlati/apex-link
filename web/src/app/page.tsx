@@ -13,7 +13,7 @@ export default function PaginaInicio() {
   const pageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Asegurar que ScrollTrigger recalcule las alturas una vez montado el DOM
+    // Asegurar recálculo de alturas exactas de ScrollTrigger
     const timer = setTimeout(() => {
       ScrollTrigger.refresh();
     }, 150);
@@ -22,7 +22,7 @@ export default function PaginaInicio() {
 
   useGSAP(
     () => {
-      // Timeline de entrada para el Hero al cargar
+      // 1. Timeline de entrada del Hero
       const heroTl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
       heroTl
@@ -77,10 +77,10 @@ export default function PaginaInicio() {
           "-=0.3"
         );
 
-      // Efecto Parallax en el resplandor de fondo del Hero al hacer scroll
+      // 2. Efecto Parallax en el resplandor ambiental del Hero
       gsap.to(".hero-parallax-glow", {
         yPercent: 35,
-        opacity: 0.05,
+        opacity: 0.04,
         ease: "none",
         scrollTrigger: {
           trigger: ".hero-section",
@@ -89,6 +89,57 @@ export default function PaginaInicio() {
           scrub: true,
         },
       });
+
+      // 3. Parallax suave en el texto del Hero al scrollear hacia abajo
+      gsap.to(".hero-text-container", {
+        yPercent: 12,
+        opacity: 0.45,
+        ease: "none",
+        scrollTrigger: {
+          trigger: ".hero-section",
+          start: "center center",
+          end: "bottom top",
+          scrub: 1,
+        },
+      });
+
+      // 4. Franjas Tricolor M divisoras que se expanden al scrollear
+      gsap.utils.toArray<HTMLElement>(".m-stripe-expand").forEach((stripe) => {
+        gsap.fromTo(
+          stripe,
+          { scaleX: 0, opacity: 0.4 },
+          {
+            scaleX: 1,
+            opacity: 1,
+            duration: 0.75,
+            ease: "power3.out",
+            transformOrigin: "center center",
+            scrollTrigger: {
+              trigger: stripe,
+              start: "top 92%",
+              once: true,
+            },
+          }
+        );
+      });
+
+      // 5. Animación de entrada del Footer
+      gsap.fromTo(
+        ".footer-container",
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.75,
+          ease: "power2.out",
+          clearProps: "opacity,transform",
+          scrollTrigger: {
+            trigger: "footer",
+            start: "top 92%",
+            once: true,
+          },
+        }
+      );
     },
     { scope: pageRef }
   );
@@ -98,7 +149,7 @@ export default function PaginaInicio() {
       ref={pageRef}
       className="min-h-screen bg-canvas-radial text-white flex flex-col selection:bg-[#e22718] selection:text-white"
     >
-      {/* Franja Tricolor BMW M Superior (4px) */}
+      {/* Franja Tricolor BMW M Superior Fija (4px) */}
       <div className="w-full h-1 flex shrink-0 sticky top-0 z-50">
         <div className="flex-1 bg-[#0066b1]" />
         <div className="flex-1 bg-[#1c69d4]" />
@@ -106,7 +157,7 @@ export default function PaginaInicio() {
       </div>
 
       {/* Barra de Navegación (TopNav) */}
-      <header className="border-b border-[#262626] bg-black/85 backdrop-blur-md sticky top-1 z-40 border-sheen">
+      <header className="border-b border-[#262626] bg-black/85 backdrop-blur-md sticky top-1 z-40 border-sheen transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <MSlantedBadge className="h-5" />
@@ -153,48 +204,50 @@ export default function PaginaInicio() {
         {/* Halo de luz con parallax controlado por GSAP */}
         <div className="hero-parallax-glow absolute top-1/4 left-1/2 -translate-x-1/2 w-[750px] h-[350px] bg-gradient-to-r from-[#0066b1]/15 via-[#e22718]/15 to-[#0066b1]/10 blur-3xl pointer-events-none rounded-full" />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {/* Baliza de Estado Animada */}
-          <div className="hero-badge inline-flex items-center gap-2 px-3 py-1.5 bg-[#141414] border border-[#3c3c3c] text-xs font-bold uppercase tracking-[0.2em] text-[#bbbbbb] mb-8 glow-m-red-subtle">
-            <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
-            Sistema Activo · Telemetría en Tiempo Real para Assetto Corsa
-          </div>
+        <div className="hero-content-wrapper relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="hero-text-container">
+            {/* Baliza de Estado Animada */}
+            <div className="hero-badge inline-flex items-center gap-2 px-3 py-1.5 bg-[#141414] border border-[#3c3c3c] text-xs font-bold uppercase tracking-[0.2em] text-[#bbbbbb] mb-8 glow-m-red-subtle">
+              <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
+              Sistema Activo · Telemetría en Tiempo Real para Assetto Corsa
+            </div>
 
-          {/* Titular Principal Animado */}
-          <h1 className="hero-title text-4xl sm:text-6xl lg:text-7xl font-bold uppercase tracking-tight text-white max-w-5xl mx-auto leading-[1.05]">
-            Telemetría accesible{" "}
-            <span className="text-[#e22718] block sm:inline drop-shadow-[0_0_25px_rgba(226,39,24,0.3)]">
-              para todo simracer
-            </span>
-          </h1>
+            {/* Titular Principal Animado */}
+            <h1 className="hero-title text-4xl sm:text-6xl lg:text-7xl font-bold uppercase tracking-tight text-white max-w-5xl mx-auto leading-[1.05]">
+              Telemetría accesible{" "}
+              <span className="text-[#e22718] block sm:inline drop-shadow-[0_0_25px_rgba(226,39,24,0.3)]">
+                para todo simracer
+              </span>
+            </h1>
 
-          {/* Bajada Animada */}
-          <p className="hero-subtitle mt-6 text-base sm:text-lg text-[#bbbbbb] max-w-3xl mx-auto leading-relaxed">
-            Conectá tu volante, mirá los datos de tu auto en tiempo real y analizá tus vueltas desde cualquier navegador web. Sin configuraciones complicadas, sin software pesado y compatible con tu equipamiento actual.
-          </p>
+            {/* Bajada Animada */}
+            <p className="hero-subtitle mt-6 text-base sm:text-lg text-[#bbbbbb] max-w-3xl mx-auto leading-relaxed">
+              Conectá tu volante, mirá los datos de tu auto en tiempo real y analizá tus vueltas desde cualquier navegador web. Sin configuraciones complicadas, sin software pesado y compatible con tu equipamiento actual.
+            </p>
 
-          {/* Botonera de Acción Animada */}
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/login"
-              className="hero-cta-btn w-full sm:w-auto h-[52px] px-8 rounded-none bg-[#e22718] hover:bg-[#c91f12] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#e22718] shadow-[0_0_25px_rgba(226,39,24,0.35)] cursor-pointer"
-            >
-              <Play className="w-4 h-4 fill-current" />
-              PROBAR DEMO EN VIVO
-            </Link>
+            {/* Botonera de Acción Animada */}
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                href="/login"
+                className="hero-cta-btn w-full sm:w-auto h-[52px] px-8 rounded-none bg-[#e22718] hover:bg-[#c91f12] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#e22718] shadow-[0_0_25px_rgba(226,39,24,0.35)] cursor-pointer"
+              >
+                <Play className="w-4 h-4 fill-current" />
+                PROBAR DEMO EN VIVO
+              </Link>
 
-            <Link
-              href="/hub"
-              className="hero-cta-btn w-full sm:w-auto h-[52px] px-8 rounded-none bg-[#141414] hover:bg-[#1f1f1f] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#3c3c3c] hover:border-[#e22718] cursor-pointer"
-            >
-              <Gauge className="w-4 h-4 text-[#bbbbbb]" />
-              VER ENTORNO DE BOXES
-            </Link>
+              <Link
+                href="/hub"
+                className="hero-cta-btn w-full sm:w-auto h-[52px] px-8 rounded-none bg-[#141414] hover:bg-[#1f1f1f] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#3c3c3c] hover:border-[#e22718] cursor-pointer"
+              >
+                <Gauge className="w-4 h-4 text-[#bbbbbb]" />
+                VER ENTORNO DE BOXES
+              </Link>
+            </div>
           </div>
 
           {/* Barra de Especificaciones Reales en Degradé */}
           <div className="mt-16 pt-10 border-t border-[#262626] grid grid-cols-2 md:grid-cols-4 gap-6 text-left">
-            <div className="hero-spec-card card-cockpit-gradient border-sheen p-5 hover:glow-m-red-subtle">
+            <div className="hero-spec-card card-cockpit-gradient border-sheen p-5 hover:glow-m-red-subtle transition-transform duration-300 hover:-translate-y-1">
               <div className="text-xl font-bold font-mono text-white flex items-center gap-1.5">
                 60 <span className="text-xs text-[#0fa336] font-sans">HZ</span>
               </div>
@@ -206,7 +259,7 @@ export default function PaginaInicio() {
               </div>
             </div>
 
-            <div className="hero-spec-card card-cockpit-gradient border-sheen p-5 hover:glow-m-red-subtle">
+            <div className="hero-spec-card card-cockpit-gradient border-sheen p-5 hover:glow-m-red-subtle transition-transform duration-300 hover:-translate-y-1">
               <div className="text-xl font-bold font-mono text-white flex items-center gap-1.5">
                 ENLACE <span className="text-xs text-[#0066b1] font-sans">DIRECTO</span>
               </div>
@@ -218,7 +271,7 @@ export default function PaginaInicio() {
               </div>
             </div>
 
-            <div className="hero-spec-card card-cockpit-gradient border-sheen p-5 hover:glow-m-red-subtle">
+            <div className="hero-spec-card card-cockpit-gradient border-sheen p-5 hover:glow-m-red-subtle transition-transform duration-300 hover:-translate-y-1">
               <div className="text-xl font-bold font-mono text-white flex items-center gap-1.5">
                 NAVEGADOR <span className="text-xs text-[#1c69d4] font-sans">WEB</span>
               </div>
@@ -230,7 +283,7 @@ export default function PaginaInicio() {
               </div>
             </div>
 
-            <div className="hero-spec-card card-cockpit-gradient border-sheen p-5 hover:glow-m-red-subtle">
+            <div className="hero-spec-card card-cockpit-gradient border-sheen p-5 hover:glow-m-red-subtle transition-transform duration-300 hover:-translate-y-1">
               <div className="text-xl font-bold font-mono text-[#0fa336] flex items-center gap-1.5">
                 CERO <span className="text-xs text-[#bbbbbb] font-sans">PLUGINS</span>
               </div>
@@ -245,8 +298,8 @@ export default function PaginaInicio() {
         </div>
       </section>
 
-      {/* Franja Tricolor M Divisoria */}
-      <div className="w-full h-1 flex shrink-0">
+      {/* Franja Tricolor M Divisoria con Expansión por Scroll */}
+      <div className="m-stripe-expand w-full h-1 flex shrink-0">
         <div className="flex-1 bg-[#0066b1]" />
         <div className="flex-1 bg-[#1c69d4]" />
         <div className="flex-1 bg-[#e22718]" />
@@ -255,18 +308,18 @@ export default function PaginaInicio() {
       {/* Grilla de Características Concretas Animada con ScrollTrigger */}
       <FeaturesGrid />
 
-      {/* Franja Tricolor M Divisoria */}
-      <div className="w-full h-1 flex shrink-0">
+      {/* Franja Tricolor M Divisoria con Expansión por Scroll */}
+      <div className="m-stripe-expand w-full h-1 flex shrink-0">
         <div className="flex-1 bg-[#0066b1]" />
         <div className="flex-1 bg-[#1c69d4]" />
         <div className="flex-1 bg-[#e22718]" />
       </div>
 
-      {/* Cómo Empezar en Tres Pasos con Animación Escalonada */}
+      {/* Cómo Empezar en Tres Pasos con Barra de Progreso y ScrollTrigger */}
       <QuickStartSteps />
 
-      {/* Franja Tricolor M Divisoria */}
-      <div className="w-full h-1 flex shrink-0">
+      {/* Franja Tricolor M Divisoria con Expansión por Scroll */}
+      <div className="m-stripe-expand w-full h-1 flex shrink-0">
         <div className="flex-1 bg-[#0066b1]" />
         <div className="flex-1 bg-[#1c69d4]" />
         <div className="flex-1 bg-[#e22718]" />
@@ -275,8 +328,8 @@ export default function PaginaInicio() {
       {/* Llamado a Probar Demo con Animación y Pulso de Brillo */}
       <CtaBand />
 
-      {/* Franja Tricolor M Divisoria */}
-      <div className="w-full h-1 flex shrink-0">
+      {/* Franja Tricolor M Divisoria con Expansión por Scroll */}
+      <div className="m-stripe-expand w-full h-1 flex shrink-0">
         <div className="flex-1 bg-[#0066b1]" />
         <div className="flex-1 bg-[#1c69d4]" />
         <div className="flex-1 bg-[#e22718]" />
@@ -284,7 +337,7 @@ export default function PaginaInicio() {
 
       {/* Pie de Página Oficial (Footer) */}
       <footer className="border-t border-[#262626] bg-black py-16 text-[#7e7e7e] relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+        <div className="footer-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 border-b border-[#262626]">
             <div className="flex items-center gap-3">
               <MSlantedBadge className="h-4" />
