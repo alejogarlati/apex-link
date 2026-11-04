@@ -41,7 +41,7 @@ export default function PaginaInicio() {
 
   useGSAP(
     () => {
-      // 1. Timeline de entrada del Hero
+      // 1. Timeline de entrada inicial del Hero (Badge, H1 y Prompt de scroll)
       const heroTl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
       heroTl
@@ -63,59 +63,22 @@ export default function PaginaInicio() {
           "-=0.3"
         )
         .from(
-          ".hero-subtitle",
+          ".hero-scroll-prompt",
           {
-            y: 20,
+            y: 15,
             opacity: 0,
-            duration: 0.7,
-            clearProps: "opacity,transform",
-          },
-          "-=0.5"
-        )
-        .from(
-          ".hero-cta-btn",
-          {
-            y: 20,
-            opacity: 0,
-            duration: 0.5,
-            stagger: 0.1,
-            clearProps: "opacity,transform",
-          },
-          "-=0.4"
-        )
-        .from(
-          ".hero-spec-card",
-          {
-            y: 30,
-            opacity: 0,
-            duration: 0.65,
-            stagger: 0.08,
+            duration: 0.6,
             ease: "power2.out",
-            clearProps: "opacity,transform",
           },
-          "-=0.3"
+          "-=0.2"
         );
 
-      // 2. Efecto Parallax en el resplandor ambiental del Hero
-      gsap.to(".hero-parallax-glow", {
-        yPercent: 35,
-        opacity: 0.04,
-        ease: "none",
-        scrollTrigger: {
-          trigger: ".hero-section",
-          start: "top top",
-          end: "bottom top",
-          scrub: true,
-        },
-      });
-
-      // 3. Control de giro del auto en el video de fondo con GSAP ScrollTrigger
-      // El auto comienza a girar al scrollear desde el Hero y se frena en la próxima sección
-      // exactamente en el frame 7 antes del segundo 00:05:00 (frame 113 / 4.7083s).
+      // 2. Control de giro de video (scrub) + Bloqueo de scroll 500px + Fade in de hero-subtitle & CTAs
       const video = heroVideoRef.current;
+      const stage = heroStageRef.current;
       let cleanupVideoListeners: (() => void) | undefined;
 
-      if (video) {
+      if (stage && video) {
         video.pause();
         video.currentTime = 0;
 
@@ -124,32 +87,37 @@ export default function PaginaInicio() {
 
         const syncVideoFrame = () => {
           if (!video) return;
-          if (!video.seeking && Math.abs(video.currentTime - desiredTime) > 0.004) {
+          const duration = video.duration || HERO_VIDEO_STOP_TIME;
+          const target = Math.min(Math.max(0, desiredTime), duration);
+          if (!video.seeking && Math.abs(video.currentTime - target) > 0.004) {
             try {
-              video.currentTime = desiredTime;
+              video.currentTime = target;
             } catch {
-              // Ignorar si el buffer del navegador aún no está disponible
+              // Ignorar buffers transitorios
             }
           }
         };
 
         const handleSeeked = () => {
           if (!video) return;
-          if (Math.abs(video.currentTime - desiredTime) > 0.004) {
+          const duration = video.duration || HERO_VIDEO_STOP_TIME;
+          const target = Math.min(Math.max(0, desiredTime), duration);
+          if (Math.abs(video.currentTime - target) > 0.004) {
             try {
-              video.currentTime = desiredTime;
+              video.currentTime = target;
             } catch {
-              // Ignorar si el buffer del navegador aún no está disponible
+              // Ignorar buffers transitorios
             }
           }
         };
 
         const handleLoadedMetadata = () => {
           video.pause();
-          desiredTime = Math.min(
-            HERO_VIDEO_STOP_TIME,
-            Math.max(0, Math.round(playhead.frame) / HERO_VIDEO_FPS)
+          const targetFrame = Math.min(
+            HERO_VIDEO_STOP_FRAME,
+            Math.max(0, Math.round(playhead.frame))
           );
+          desiredTime = targetFrame / HERO_VIDEO_FPS;
           syncVideoFrame();
           ScrollTrigger.refresh();
         };
@@ -163,31 +131,80 @@ export default function PaginaInicio() {
           video.load();
         }
 
-        gsap.fromTo(
-          playhead,
-          { frame: 0 },
+        // Timeline ScrollTrigger principal que pinnea el Hero
+        // Total scroll: HERO_TOTAL_PIN_PX (1300px video + 500px bloqueo/lectura)
+        const stageTl = gsap.timeline({
+          scrollTrigger: {
+            trigger: stage,
+            start: "top top",
+            end: `+=${HERO_TOTAL_PIN_PX}`,
+            pin: true,
+            pinSpacing: true,
+            scrub: 0.35,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+            refreshPriority: 3,
+          },
+        });
+
+        // Fase 1 (0 -> 1.3s del TL ~ 1300px): Girar auto hasta frame 300 y aplicar zoom de hasta el 30% (scale 1.30)
+        stageTl.to(playhead, {
+          frame: HERO_VIDEO_STOP_FRAME,
+          duration: 1.3,
+          ease: "none",
+          onUpdate: () => {
+            const clampedFrame = Math.min(
+              HERO_VIDEO_STOP_FRAME,
+              Math.max(0, Math.round(playhead.frame))
+            );
+            desiredTime = clampedFrame / HERO_VIDEO_FPS;
+            syncVideoFrame();
+          },
+        }, 0);
+
+        // Zoom progresivo de hasta el 30% (scale: 1.3) a medida que avanza el scroll del auto
+        stageTl.fromTo(
+          video,
+          { scale: 1 },
           {
-            frame: HERO_VIDEO_STOP_FRAME,
-            ease: "none",
-            scrollTrigger: {
-              trigger: ".hero-section",
-              start: "top top",
-              endTrigger: "#caracteristicas",
-              end: "top 22%",
-              scrub: 0.35,
-              invalidateOnRefresh: true,
-              refreshPriority: 1,
-            },
-            onUpdate: () => {
-              const clampedFrame = Math.min(
-                HERO_VIDEO_STOP_FRAME,
-                Math.max(0, Math.round(playhead.frame))
-              );
-              desiredTime = clampedFrame / HERO_VIDEO_FPS;
-              syncVideoFrame();
-            },
-          }
+            scale: 1.3,
+            duration: 1.3,
+            ease: "power1.out",
+          },
+          0
         );
+
+        // Desvanecer el prompt inicial de scroll
+        stageTl.to(".hero-scroll-prompt", {
+          opacity: 0,
+          y: 8,
+          duration: 0.15,
+          ease: "power1.in",
+        }, 0);
+
+        // Fase 2 (1.3s -> 1.8s del TL ~ 500px): Bloqueo en frame 300 con Fade in SUPERIOR del hero-subtitle y CTAs
+        stageTl.fromTo(
+          ".hero-interactive-cta",
+          {
+            opacity: 0,
+            y: -24,
+            filter: "blur(5px)",
+            pointerEvents: "none",
+          },
+          {
+            opacity: 1,
+            y: 0,
+            filter: "blur(0px)",
+            pointerEvents: "auto",
+            duration: 0.2,
+            ease: "power2.out",
+          },
+          1.3
+        );
+
+
+        // Hold para los 300px restantes de bloqueo en estado estático
+        stageTl.to({}, { duration: 0.3 }, 1.5);
 
         cleanupVideoListeners = () => {
           video.removeEventListener("seeked", handleSeeked);
@@ -195,20 +212,7 @@ export default function PaginaInicio() {
         };
       }
 
-      // 4. Parallax suave en el texto del Hero al scrollear hacia abajo
-      gsap.to(".hero-text-container", {
-        yPercent: 10,
-        opacity: 0.45,
-        ease: "none",
-        scrollTrigger: {
-          trigger: ".hero-section",
-          start: "center center",
-          end: "bottom top",
-          scrub: 1,
-        },
-      });
-
-      // 5. Franjas Tricolor M divisoras que se expanden al scrollear
+      // 3. Franjas Tricolor M divisoras que se expanden al scrollear
       gsap.utils.toArray<HTMLElement>(".m-stripe-expand").forEach((stripe) => {
         gsap.fromTo(
           stripe,
@@ -228,7 +232,7 @@ export default function PaginaInicio() {
         );
       });
 
-      // 6. Animación de entrada del Footer
+      // 4. Animación de entrada del Footer
       gsap.fromTo(
         ".footer-container",
         { opacity: 0, y: 30 },
@@ -355,156 +359,138 @@ export default function PaginaInicio() {
         </div>
       </header>
 
-      {/* Escenario Continuo: Hero (Video debajo del H1 como fondo de página) -> Próxima Sección */}
-      <div className="hero-turntable-stage relative">
-        {/* Hero Header Superior (Baliza + H1) */}
-        <div className="hero-section relative pt-16 sm:pt-20 bg-[radial-gradient(ellipse_90%_65%_at_50%_-15%,rgba(226,39,24,0.14),rgba(0,102,177,0.05),transparent)]">
-          {/* Halo de luz con parallax controlado por GSAP */}
-          <div className="hero-parallax-glow absolute top-1/4 left-1/2 -translate-x-1/2 w-[750px] h-[350px] bg-gradient-to-r from-[#0066b1]/15 via-[#e22718]/15 to-[#0066b1]/10 blur-3xl pointer-events-none rounded-full" />
+      {/* Escenario Continuo: Hero Pinneado con Rotación de Auto y Bloqueo de 500px */}
+      <div
+        ref={heroStageRef}
+        className="hero-turntable-stage relative w-full h-[calc(100vh-4.25rem)] min-h-[580px] max-h-[1050px] overflow-hidden flex flex-col justify-between sm:justify-start bg-canvas-radial border-b border-[#262626]"
+      >
+        {/* Halo de luz ambiental M Motorsport */}
+        <div className="hero-parallax-glow absolute top-1/4 left-1/2 -translate-x-1/2 w-[850px] h-[360px] bg-gradient-to-r from-[#0066b1]/15 via-[#e22718]/15 to-[#0066b1]/10 blur-3xl pointer-events-none rounded-full z-0" />
 
-          <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            {/* Baliza de Estado Animada */}
-            <div className="hero-badge inline-flex items-center gap-2 px-3 py-1.5 bg-[#141414]/90 backdrop-blur-sm border border-[#3c3c3c] text-xs font-bold uppercase tracking-[0.2em] text-[#bbbbbb] mb-6 glow-m-red-subtle">
-              <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
-              Sistema Activo · Telemetría en Tiempo Real para Assetto Corsa
-            </div>
-
-            {/* Titular Principal Animado (H1) */}
-            <h1 className="hero-title text-4xl sm:text-6xl lg:text-7xl font-bold uppercase tracking-tight text-white max-w-5xl mx-auto leading-[1.05] drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
-              Telemetría accesible{" "}
-              <span className="text-[#e22718] block sm:inline drop-shadow-[0_0_25px_rgba(226,39,24,0.3)]">
-                para todo simracer
-              </span>
-            </h1>
-          </div>
-        </div>
-
-        {/* Video de Fondo de la Página ubicado debajo del H1 (Sticky hasta la próxima sección) */}
+        {/* Video de Fondo con margen superior oscuro para continuar el fondo hacia arriba */}
         <div
-          className="hero-video-sticky sticky top-16 h-[calc(100vh-4rem)] -mb-[calc(100vh-4rem)] w-full pointer-events-none z-0 overflow-hidden flex items-start justify-center"
+          className="absolute inset-0 pointer-events-none z-0 overflow-hidden flex items-center justify-center bg-[#06070e]"
           aria-hidden="true"
         >
-          <div className="relative w-full max-w-[1500px] h-full flex items-center justify-center -mt-6 sm:-mt-10">
+          {/* Margen superior oscuro que continúa el fondo hacia arriba detrás del navbar y el titular */}
+          <div className="absolute inset-x-0 top-0 h-28 sm:h-96 bg-gradient-to-b from-black via-[#06070e] to-transparent z-10 pointer-events-none" />
+
+          {/* Contenedor del video con ligero desplazamiento hacia abajo para darle aire al titular */}
+          <div className="relative w-full max-w-[1550px] h-full flex items-center justify-center sm:translate-y-12">
             <video
               ref={heroVideoRef}
-              src="landing\videos\gemini_generated_video_c76c6af4.mp4 "
+              src="/landing/videos/gemini_generated_video_c76c6af4.mp4"
               muted
               playsInline
               preload="auto"
               disablePictureInPicture
-              className="w-full h-full object-contain sm:object-cover object-center select-none"
+              className="w-full h-full object-contain sm:object-cover object-center select-none opacity-90 will-change-transform transform-gpu origin-center"
             />
 
-            {/* Fundidos perimetrales para integrar el video como fondo puro de la página */}
-            <div className="absolute inset-x-0 top-0 h-28 sm:h-36 bg-gradient-to-b from-black via-black/60 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 h-36 sm:h-48 bg-gradient-to-t from-black via-black/75 to-transparent" />
-            <div className="absolute inset-y-0 left-0 w-16 sm:w-32 bg-gradient-to-r from-black to-transparent" />
-            <div className="absolute inset-y-0 right-0 w-16 sm:w-32 bg-gradient-to-l from-black to-transparent" />
+            {/* Fundido degradé superior para fundir el borde del video con el fondo oscuro superior */}
+            <div className="absolute inset-x-0 top-0 h-20 sm:h-64 bg-gradient-to-b from-[#06070e] via-[#06070e]/85 to-transparent z-10 pointer-events-none" />
+            {/* Fundidos laterales e inferiores */}
+            <div className="absolute inset-x-0 bottom-0 h-16 sm:h-56 bg-gradient-to-t from-black via-black/85 to-transparent z-10" />
+            <div className="absolute inset-y-0 left-0 w-24 sm:w-44 bg-gradient-to-r from-black/90 to-transparent z-10" />
+            <div className="absolute inset-y-0 right-0 w-24 sm:w-44 bg-gradient-to-l from-black/90 to-transparent z-10" />
             <div
-              className="absolute inset-0"
+              className="absolute inset-0 z-10"
               style={{
                 background:
-                  "radial-gradient(ellipse 75% 65% at 50% 50%, transparent 45%, rgba(0,0,0,0.85) 100%)",
+                  "radial-gradient(ellipse 75% 65% at 50% 50%, transparent 40%, rgba(0,0,0,0.85) 100%)",
               }}
             />
           </div>
         </div>
 
-        {/* Contenido Inferior del Hero sobre el fondo del video */}
-        <section className="relative z-10 pb-24 border-b border-[#262626]">
-          <div className="hero-content-wrapper relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            {/* Ventana visual debajo del H1 para lucir el Porsche antes de la bajada */}
-            <div className="hero-text-container pt-[220px] sm:pt-[310px] lg:pt-[370px]">
-              {/* Bajada Animada */}
-              <p className="hero-subtitle text-base sm:text-lg text-[#bbbbbb] max-w-3xl mx-auto leading-relaxed drop-shadow-[0_2px_14px_rgba(0,0,0,0.95)]">
-                Conectá tu volante, mirá los datos de tu auto en tiempo real y analizá tus vueltas desde cualquier navegador web. Sin configuraciones complicadas, sin software pesado y compatible con tu equipamiento actual.
-              </p>
+        {/* Sección Superior: Badge + H1 + Prompt */}
+        <div className="hero-section relative z-20 pt-6 sm:pt-12 px-4 sm:px-6 lg:px-8 text-center max-w-7xl mx-auto w-full">
+          {/* Baliza de Estado Animada */}
+          <div className="hero-badge inline-flex items-center gap-2 px-3 py-1.5 bg-[#141414]/90 backdrop-blur-sm border border-[#3c3c3c] text-xs font-bold uppercase tracking-[0.2em] text-[#bbbbbb] mb-4 sm:mb-5 glow-m-red-subtle">
+            <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
+            Sistema Activo · Telemetría en Tiempo Real para Assetto Corsa
+          </div>
 
-              {/* Botonera de Acción Animada */}
-              <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link
-                  href="/login"
-                  className="hero-cta-btn w-full sm:w-auto h-[52px] px-8 rounded-none bg-[#e22718] hover:bg-[#c91f12] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#e22718] shadow-[0_0_25px_rgba(226,39,24,0.35)] cursor-pointer"
-                >
-                  <Play className="w-4 h-4 fill-current" />
-                  PROBAR DEMO EN VIVO
-                </Link>
+          {/* Titular Principal Animado (H1) */}
+          <h1 className="hero-title text-3xl sm:text-6xl lg:text-7xl font-bold uppercase tracking-tight text-white max-w-5xl mx-auto leading-[1.05] drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)]">
+            Telemetría accesible{" "}
+            <span className="text-[#e22718] block sm:inline drop-shadow-[0_0_25px_rgba(226,39,24,0.35)]">
+              para todo simracer
+            </span>
+          </h1>
 
-                <Link
-                  href="/hub"
-                  className="hero-cta-btn w-full sm:w-auto h-[52px] px-8 rounded-none bg-[#141414]/90 backdrop-blur-md hover:bg-[#1f1f1f] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#3c3c3c] hover:border-[#e22718] cursor-pointer"
-                >
-                  <Gauge className="w-4 h-4 text-[#bbbbbb]" />
-                  VER ENTORNO DE BOXES
-                </Link>
-              </div>
-            </div>
+          {/* Indicador de Scroll inicial que se desvanece al girar el auto */}
+          <div className="hero-scroll-prompt mt-3 sm:mt-4 flex items-center justify-center gap-2 text-xs font-mono uppercase tracking-[0.2em] text-[#7e7e7e]">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#0066b1] animate-ping" />
+            Scroll para girar el auto
+          </div>
 
-            {/* Barra de Especificaciones Reales en Degradé */}
-            <div className="mt-16 pt-10 border-t border-[#262626]/80 grid grid-cols-2 md:grid-cols-4 gap-6 text-left">
-              <div className="hero-spec-card card-cockpit-gradient backdrop-blur-md border-sheen p-5 hover:glow-m-red-subtle transition-transform duration-300 hover:-translate-y-1">
-                <div className="text-xl font-bold font-mono text-white flex items-center gap-1.5">
-                  60 <span className="text-xs text-[#0fa336] font-sans">HZ</span>
-                </div>
-                <div className="text-[11px] font-bold uppercase tracking-wider text-white mt-1">
-                  En Tiempo Real
-                </div>
-                <div className="text-[11px] text-[#7e7e7e] mt-0.5">
-                  Transmisión continua de físicas y chasis
-                </div>
-              </div>
+          {/* En DESKTOP (sm:block): Subtítulo y CTAs aparecen justo debajo del H1 */}
+          <div
+            className="hero-interactive-cta hidden sm:block max-w-3xl mx-auto mt-6 will-change-[transform,opacity,filter]"
+            style={{ opacity: 0, pointerEvents: "none", transform: "translateY(-24px)" }}
+          >
+            <p className="hero-subtitle text-base sm:text-lg text-[#bbbbbb] leading-relaxed drop-shadow-[0_2px_14px_rgba(0,0,0,0.95)]">
+              Telemetría en tiempo real y análisis de vueltas desde el navegador. Sin software pesado ni configuraciones.
+            </p>
 
-              <div className="hero-spec-card card-cockpit-gradient backdrop-blur-md border-sheen p-5 hover:glow-m-red-subtle transition-transform duration-300 hover:-translate-y-1">
-                <div className="text-xl font-bold font-mono text-white flex items-center gap-1.5">
-                  ENLACE <span className="text-xs text-[#0066b1] font-sans">DIRECTO</span>
-                </div>
-                <div className="text-[11px] font-bold uppercase tracking-wider text-white mt-1">
-                  USB o Red Local
-                </div>
-                <div className="text-[11px] text-[#7e7e7e] mt-0.5">
-                  Sin latencia perceptible en cabina
-                </div>
-              </div>
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                href="/login"
+                className="hero-cta-btn w-full sm:w-auto h-[48px] px-8 rounded-none bg-[#e22718] hover:bg-[#c91f12] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#e22718] shadow-[0_0_25px_rgba(226,39,24,0.35)] cursor-pointer"
+              >
+                <Play className="w-4 h-4 fill-current" />
+                PROBAR DEMO EN VIVO
+              </Link>
 
-              <div className="hero-spec-card card-cockpit-gradient backdrop-blur-md border-sheen p-5 hover:glow-m-red-subtle transition-transform duration-300 hover:-translate-y-1">
-                <div className="text-xl font-bold font-mono text-white flex items-center gap-1.5">
-                  NAVEGADOR <span className="text-xs text-[#1c69d4] font-sans">WEB</span>
-                </div>
-                <div className="text-[11px] font-bold uppercase tracking-wider text-white mt-1">
-                  Desde Cualquier Dispositivo
-                </div>
-                <div className="text-[11px] text-[#7e7e7e] mt-0.5">
-                  Acceso a boxes en PC, tablet o celular
-                </div>
-              </div>
-
-              <div className="hero-spec-card card-cockpit-gradient backdrop-blur-md border-sheen p-5 hover:glow-m-red-subtle transition-transform duration-300 hover:-translate-y-1">
-                <div className="text-xl font-bold font-mono text-[#0fa336] flex items-center gap-1.5">
-                  CERO <span className="text-xs text-[#bbbbbb] font-sans">PLUGINS</span>
-                </div>
-                <div className="text-[11px] font-bold uppercase tracking-wider text-white mt-1">
-                  Detección Automática
-                </div>
-                <div className="text-[11px] text-[#7e7e7e] mt-0.5">
-                  Listo para girar con Assetto Corsa
-                </div>
-              </div>
+              <Link
+                href="/hub"
+                className="hero-cta-btn w-full sm:w-auto h-[48px] px-8 rounded-none bg-[#141414]/90 backdrop-blur-md hover:bg-[#1f1f1f] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#3c3c3c] hover:border-[#e22718] cursor-pointer"
+              >
+                <Gauge className="w-4 h-4 text-[#bbbbbb]" />
+                VER ENTORNO DE BOXES
+              </Link>
             </div>
           </div>
-        </section>
-
-        {/* Franja Tricolor M Divisoria con Expansión por Scroll */}
-        <div className="m-stripe-expand relative z-10 w-full h-1 flex shrink-0">
-          <div className="flex-1 bg-[#0066b1]" />
-          <div className="flex-1 bg-[#1c69d4]" />
-          <div className="flex-1 bg-[#e22718]" />
         </div>
 
-        {/* Características de Pista con Carrusel Pinneado y ScrollTrigger (donde el auto se frena) */}
-        <div className="relative z-10">
-          <FeaturesGrid />
+        {/* En MOBILE (block sm:hidden): Subtítulo y CTAs ubicados al pie del escenario, justo debajo del auto */}
+        <div className="hero-interactive-cta block sm:hidden relative z-20 px-4 pb-4 sm:pb-8 text-center max-w-md mx-auto w-full will-change-[transform,opacity,filter]"
+          style={{ opacity: 0, pointerEvents: "none", transform: "translateY(-24px)" }}
+        >
+          <p className="hero-subtitle text-sm text-[#cccccc] leading-relaxed drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)]">
+            Telemetría en tiempo real y análisis de vueltas desde el navegador. Sin software pesado ni configuraciones.
+          </p>
+
+          <div className="mt-4 flex flex-col items-center justify-center gap-3">
+            <Link
+              href="/login"
+              className="hero-cta-btn w-full h-[46px] px-6 rounded-none bg-[#e22718] hover:bg-[#c91f12] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-2.5 transition-all border border-[#e22718] shadow-[0_0_20px_rgba(226,39,24,0.35)] cursor-pointer"
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              PROBAR DEMO EN VIVO
+            </Link>
+
+            <Link
+              href="/hub"
+              className="hero-cta-btn w-full h-[46px] px-6 rounded-none bg-[#141414]/90 backdrop-blur-md hover:bg-[#1f1f1f] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-2.5 transition-all border border-[#3c3c3c] hover:border-[#e22718] cursor-pointer"
+            >
+              <Gauge className="w-3.5 h-3.5 text-[#bbbbbb]" />
+              VER ENTORNO DE BOXES
+            </Link>
+          </div>
         </div>
       </div>
+
+      {/* Franja Tricolor M Divisoria con Expansión por Scroll */}
+      <div className="m-stripe-expand relative z-10 w-full h-1 flex shrink-0">
+        <div className="flex-1 bg-[#0066b1]" />
+        <div className="flex-1 bg-[#1c69d4]" />
+        <div className="flex-1 bg-[#e22718]" />
+      </div>
+
+      {/* Características de Pista con Carrusel Pinneado y ScrollTrigger (donde el auto se frena) */}
+      <FeaturesGrid />
 
       {/* Franja Tricolor M Divisoria con Expansión por Scroll */}
       <div className="m-stripe-expand w-full h-1 flex shrink-0">
