@@ -34,7 +34,7 @@ export default function PaginaAnalisis() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Encabezado de la Sesión */}
+      {/* 1. Encabezado de la Sesión de Telemetría */}
       <div className="flex flex-col justify-between gap-4 border-b border-[#262626] pb-4 sm:flex-row sm:items-end">
         <div>
           <div className="flex items-center gap-2">
@@ -69,52 +69,51 @@ export default function PaginaAnalisis() {
       </div>
 
       <div className="space-y-6">
-        {/* Fila Superior: Selector de Vueltas (4 cols) y Mapa 2D de Circuito (8 cols) */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-          <div className="lg:col-span-4">
-            <SelectorVueltas
-              vueltas={vueltas}
-              vueltaAId={vueltaAId}
-              vueltaBId={vueltaBId}
-              enSeleccionarVueltaA={setVueltaAId}
-              enSeleccionarVueltaB={setVueltaBId}
-            />
-          </div>
+        {/* 2. Selector de Vueltas Superior (Organizado horizontalmente con acceso rápido) */}
+        <section>
+          <SelectorVueltas
+            vueltas={vueltas}
+            vueltaAId={vueltaAId}
+            vueltaBId={vueltaBId}
+            enSeleccionarVueltaA={setVueltaAId}
+            enSeleccionarVueltaB={setVueltaBId}
+          />
+        </section>
 
-          <div className="lg:col-span-8">
-            <MapaCircuitoCanvas
-              muestras={muestrasMapa}
-              muestrasComparativas={muestrasVueltaB}
-              distanciaSeleccionada={distanciaActiva}
-              onSeleccionarDistancia={setDistanciaActiva}
-              nombreCircuito="Autodromo Nazionale Monza"
-              longitudMetros={5793}
-              vueltaAInfo={
-                vueltaA
-                  ? {
-                      ranura: "A",
-                      numeroVuelta: vueltaA.numeroVuelta,
-                      tiempoVueltaStr: vueltaA.tiempoVueltaStr,
-                    }
-                  : undefined
-              }
-              vueltaBInfo={
-                vueltaB
-                  ? {
-                      ranura: "B",
-                      numeroVuelta: vueltaB.numeroVuelta,
-                      tiempoVueltaStr: vueltaB.tiempoVueltaStr,
-                    }
-                  : undefined
-              }
-              ranuraActiva={ranuraEfectiva}
-              onCambiarRanura={setRanuraMapa}
-            />
-          </div>
-        </div>
+        {/* 3. Core Central de Análisis: Mapa de Trazadas 2D/3D a Ancho Completo */}
+        <section>
+          <MapaCircuitoCanvas
+            muestras={muestrasMapa}
+            muestrasComparativas={muestrasVueltaB}
+            distanciaSeleccionada={distanciaActiva}
+            onSeleccionarDistancia={setDistanciaActiva}
+            nombreCircuito="Autodromo Nazionale Monza"
+            longitudMetros={5793}
+            vueltaAInfo={
+              vueltaA
+                ? {
+                    ranura: "A",
+                    numeroVuelta: vueltaA.numeroVuelta,
+                    tiempoVueltaStr: vueltaA.tiempoVueltaStr,
+                  }
+                : undefined
+            }
+            vueltaBInfo={
+              vueltaB
+                ? {
+                    ranura: "B",
+                    numeroVuelta: vueltaB.numeroVuelta,
+                    tiempoVueltaStr: vueltaB.tiempoVueltaStr,
+                  }
+                : undefined
+            }
+            ranuraActiva={ranuraEfectiva}
+            onCambiarRanura={setRanuraMapa}
+          />
+        </section>
 
-        {/* Fila Inferior: Gráficos de Telemetría Sincronizados */}
-        <div>
+        {/* 4. Gráficos de Telemetría Sincronizados Multieje */}
+        <section>
           <GraficoTelemetria
             muestrasVueltaA={muestrasVueltaA}
             muestrasVueltaB={muestrasVueltaB}
@@ -127,7 +126,7 @@ export default function PaginaAnalisis() {
             distanciaActiva={distanciaActiva}
             onHoverDistancia={setDistanciaActiva}
           />
-        </div>
+        </section>
       </div>
     </div>
   );
