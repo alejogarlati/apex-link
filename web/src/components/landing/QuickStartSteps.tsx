@@ -83,30 +83,53 @@ export function QuickStartSteps() {
 
       let lastStep = -1;
 
-      // Timeline de Pin y Scroll con Snap fluido
+      const DWELL_TIME = 0.6; // Umbral de permanencia estática en cada keyframe (scroll threshold)
+      const TRANS_TIME = 1.0; // Duración de la transición vertical entre tarjetas
+      const cycleTime = TRANS_TIME + DWELL_TIME;
+      const totalDuration = DWELL_TIME + (totalSteps - 1) * cycleTime;
+
+      // Puntos de snap en el centro de descanso de cada tarjeta
+      const snapPoints = Array.from({ length: totalSteps }, (_, i) => {
+        if (i === 0) return 0;
+        if (i === totalSteps - 1) return 1;
+        return (DWELL_TIME / 2 + i * cycleTime) / totalDuration;
+      });
+
+      // Timeline de Pin y Scroll con Snap fluido y umbral de bloqueo
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: pinWrapper,
           start: "top 22%",
-          end: "+=1800",
+          end: "+=2200",
           pin: true,
           pinSpacing: true,
           scrub: 0.6,
           anticipatePin: 1,
           snap: {
             snapTo: (value) => {
-              const stepFraction = 1 / (totalSteps - 1);
-              return Math.round(value / stepFraction) * stepFraction;
+              return snapPoints.reduce((prev, curr) =>
+                Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
+              );
             },
-            duration: { min: 0.2, max: 0.4 },
+            duration: { min: 0.25, max: 0.45 }, // Bloqueo durante medio segundo o menos (estándar)
+            delay: 0.05,
             ease: "power2.out",
           },
           onUpdate: (self) => {
             const p = self.progress;
-            const stepIndex = Math.min(
-              totalSteps - 1,
-              Math.max(0, Math.round(p * (totalSteps - 1)))
-            );
+
+            // Determinar el paso activo más próximo al descanso
+            let stepIndex = 0;
+            const firstPoint = snapPoints[0] ?? 0;
+            let minDistance = Math.abs(p - firstPoint);
+            for (let i = 1; i < totalSteps; i++) {
+              const currentPoint = snapPoints[i] ?? 0;
+              const dist = Math.abs(p - currentPoint);
+              if (dist < minDistance) {
+                minDistance = dist;
+                stepIndex = i;
+              }
+            }
             setActiveStep(stepIndex);
 
             if (progressBarRef.current) {
@@ -132,11 +155,16 @@ export function QuickStartSteps() {
         },
       });
 
-      // Transiciones verticales sincronizadas entre pasos
+      // 1. Umbral de retención inicial en el paso 0
+      tl.to({}, { duration: DWELL_TIME });
+
+      // 2. Transiciones verticales sincronizadas entre pasos con umbrales de descanso
       for (let i = 0; i < totalSteps - 1; i++) {
         const currentItem = items[i];
         const nextItem = items[i + 1];
         if (!currentItem || !nextItem) continue;
+
+        tl.addLabel(`step-${i}-trans`);
 
         tl.to(
           currentItem,
@@ -146,10 +174,10 @@ export function QuickStartSteps() {
             scale: 0.96,
             filter: "blur(6px)",
             pointerEvents: "none",
-            duration: 1,
+            duration: TRANS_TIME,
             ease: "power2.inOut",
           },
-          `step-${i}`
+          `step-${i}-trans`
         );
 
         tl.to(
@@ -160,11 +188,14 @@ export function QuickStartSteps() {
             scale: 1,
             filter: "blur(0px)",
             pointerEvents: "auto",
-            duration: 1,
+            duration: TRANS_TIME,
             ease: "power2.inOut",
           },
-          `step-${i}`
+          `step-${i}-trans`
         );
+
+        // Umbral de retención estática en el keyframe de la tarjeta que acaba de entrar
+        tl.to({}, { duration: DWELL_TIME });
       }
     }, pinWrapperRef);
 
