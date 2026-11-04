@@ -5,7 +5,6 @@ import Image from "next/image";
 import {
   Activity,
   LineChart,
-  Target,
   Gauge,
   Sliders,
   Trophy,
@@ -40,7 +39,7 @@ const CARACTERISTICAS = [
       "Seguí la tanda desde el navegador con telemetría de boxes en vivo: barras de acelerador y freno con picos de presión, fuerzas G, presiones de neumáticos y ubicación del auto en el mapa.",
     especificacion:
       "Transmisión por websocket local a 60 Hz. Calcula transferencias de carga y vector de agarre en tiempo real.",
-    imagen: "/landing/features/feature-02-pitwall.webp",
+    imagen: "/landing/features/feature-02-pitwall.jpg",
     imagenAlt: "Pantalla de Live Pitwall en tiempo real con telemetría de boxes",
     hudTag: "PIT-02 // LIVE STREAM 60HZ",
     color: "text-[#0fa336]",
@@ -57,7 +56,7 @@ const CARACTERISTICAS = [
       "Compará tu mejor vuelta contra tu referencia metro a metro en lugar de por tiempo. Superponé velocidad, aceleración y frenada sobre el trazado para ver con exactitud dónde perdiste tiempo.",
     especificacion:
       "Alineación por distancia en pista. Muestra si frenaste antes o si abriste la dirección con menos tracción.",
-    imagen: "/landing/features/feature-03-lab2d.webp",
+    imagen: "/landing/features/feature-03-lab2d.jpg",
     imagenAlt: "Gráficos de telemetría normalizada 2D y comparación de vueltas",
     hudTag: "LAB-03 // 2D TRACE MATRIX",
     color: "text-[#0066b1]",
@@ -67,23 +66,6 @@ const CARACTERISTICAS = [
   },
   {
     numero: "04",
-    icono: Target,
-    etiqueta: "Post-Sesión · Curvas",
-    titulo: "Inspector de Curvas",
-    descripcion:
-      "Hacé clic en cualquier curva del circuito para ver la velocidad de entrada, el metro exacto de frenada, la velocidad mínima en el ápice y el punto donde volviste a acelerar.",
-    especificacion:
-      "Detección automática de vértices con análisis de trail braking y salida de curva.",
-    imagen: "/landing/features/feature-04-curvas.webp",
-    imagenAlt: "Inspección detallada de curvas y telemetría de frenada",
-    hudTag: "APEX-04 // CORNER TELEMETRY",
-    color: "text-[#1c69d4]",
-    bordeColor: "border-[#1c69d4]",
-    glowColor: "rgba(28, 105, 212, 0.25)",
-    idAnchor: "inspector",
-  },
-  {
-    numero: "05",
     icono: Trophy,
     etiqueta: "Progreso · Historial",
     titulo: "Ritmo y Consistencia",
@@ -91,16 +73,16 @@ const CARACTERISTICAS = [
       "Historial completo de tus sesiones: vueltas limpias, tiempos anulados por límites de pista y dispersión de ritmo para verificar si sos constante en tandas largas.",
     especificacion:
       "Desviación estándar de ritmo por sector y registro automático sin exportar planillas de cálculo.",
-    imagen: "/landing/features/feature-05-metricas.webp",
+    imagen: "/landing/features/feature-04-ritmo.jpg",
     imagenAlt: "Historial de vueltas, ritmo y consistencia por tanda",
-    hudTag: "RACE-05 // CONSISTENCY INDEX",
+    hudTag: "RACE-04 // CONSISTENCY INDEX",
     color: "text-[#f4b400]",
     bordeColor: "border-[#f4b400]",
     glowColor: "rgba(244, 180, 0, 0.25)",
     idAnchor: "metricas",
   },
   {
-    numero: "06",
+    numero: "05",
     icono: Sliders,
     etiqueta: "Hardware · Pantallas",
     titulo: "Compatibilidad de Hardware",
@@ -108,9 +90,9 @@ const CARACTERISTICAS = [
       "Funciona con bases Logitech, Thrustmaster, Fanatec y Direct Drive (Moza, Simagic, Simucube). Abrí la interfaz en cualquier teléfono, tablet o monitor sin cables ni apps extras.",
     especificacion:
       "Funciona sobre el navegador web en tu red local, sin instalar software en las pantallas secundarias.",
-    imagen: "/landing/features/feature-06-hardware.webp",
+    imagen: "/landing/features/feature-05-hardware.jpg",
     imagenAlt: "Compatibilidad universal con hardware de simulación y pantallas",
-    hudTag: "IO-06 // HARDWARE PROTOCOL",
+    hudTag: "IO-05 // HARDWARE PROTOCOL",
     color: "text-white",
     bordeColor: "border-[#7e7e7e]",
     glowColor: "rgba(255, 255, 255, 0.2)",
@@ -446,9 +428,8 @@ export function FeaturesGrid() {
               <span>01 <span className="hidden sm:inline">DDU</span></span>
               <span>02 <span className="hidden sm:inline">Pitwall</span></span>
               <span>03 <span className="hidden sm:inline">Lab 2D</span></span>
-              <span>04 <span className="hidden sm:inline">Curvas</span></span>
-              <span>05 <span className="hidden sm:inline">Métricas</span></span>
-              <span>06 <span className="hidden sm:inline">Hardware</span></span>
+              <span>04 <span className="hidden sm:inline">Consistencia</span></span>
+              <span>05 <span className="hidden sm:inline">Hardware</span></span>
             </div>
           </div>
 
@@ -535,14 +516,14 @@ export function FeaturesGrid() {
                       style={{ background: item.glowColor }}
                     />
 
-                    {/* Imagen de telemetría ocupando todo el alto y fundiéndose orgánicamente con el fondo negro */}
+                    {/* Imagen de telemetría con máscara de desvanecimiento total antes de los bordes */}
                     <div
                       className="relative w-full h-full"
                       style={{
                         maskImage:
-                          "radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, rgba(0,0,0,0.7) 65%, transparent 100%)",
+                          "radial-gradient(ellipse 55% 46% at 50% 50%, black 15%, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.45) 60%, rgba(0,0,0,0.12) 75%, transparent 88%)",
                         WebkitMaskImage:
-                          "radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, rgba(0,0,0,0.7) 65%, transparent 100%)",
+                          "radial-gradient(ellipse 48% 46% at 50% 50%, black 15%, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.45) 60%, rgba(0,0,0,0.12) 75%, transparent 88%)",
                       }}
                     >
                       <Image
@@ -554,12 +535,6 @@ export function FeaturesGrid() {
                         className="object-cover object-center filter brightness-[0.95] contrast-[1.08]"
                       />
                     </div>
-
-                    {/* Degradados lineales de fundido adicional para un acabado sin bordes duros */}
-                    <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-black via-black/70 to-transparent pointer-events-none" />
-                    <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-black via-black/50 to-transparent pointer-events-none" />
-                    <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black via-black/50 to-transparent pointer-events-none" />
-                    <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none" />
                   </div>
                 </div>
               ))}
