@@ -7,11 +7,10 @@ import { MSlantedBadge } from "@/components/landing/MSlantedBadge";
 import { FeaturesGrid } from "@/components/landing/FeaturesGrid";
 import { QuickStartSteps } from "@/components/landing/QuickStartSteps";
 import { CtaBand } from "@/components/landing/CtaBand";
-import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
+import { gsap, ScrollTrigger, ScrollToPlugin, useGSAP } from "@/lib/gsap";
 
 const HERO_VIDEO_FPS = 24;
-// Frame 7 antes del segundo 00:05:00 -> (5 * 24) - 7 = frame 113 (4.708333s)
-const HERO_VIDEO_STOP_FRAME = 5 * HERO_VIDEO_FPS - 7;
+const HERO_VIDEO_STOP_FRAME = 100;
 const HERO_VIDEO_STOP_TIME = HERO_VIDEO_STOP_FRAME / HERO_VIDEO_FPS;
 
 export default function PaginaInicio() {
@@ -250,6 +249,43 @@ export default function PaginaInicio() {
     { scope: pageRef }
   );
 
+  const scrollToSection = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    targetSelector: string
+  ) => {
+    e.preventDefault();
+
+    if (targetSelector === "#" || targetSelector === "") {
+      gsap.to(window, {
+        duration: 1.15,
+        scrollTo: { y: 0, autoKill: true },
+        ease: "power3.inOut",
+      });
+      return;
+    }
+
+    const target = document.querySelector(targetSelector);
+    if (!target) return;
+
+    // Margen superior de al menos el 15% del viewport para que los títulos respiren debajo del navbar
+    const viewportOffset = Math.max(Math.round(window.innerHeight * 0.15), 80);
+
+    gsap.to(window, {
+      duration: 1.15,
+      scrollTo: {
+        y: target,
+        offsetY: viewportOffset,
+        autoKill: true,
+      },
+      ease: "power3.inOut",
+      onComplete: () => {
+        if (window.history?.pushState) {
+          window.history.pushState(null, "", targetSelector);
+        }
+      },
+    });
+  };
+
   return (
     <div
       ref={pageRef}
@@ -265,7 +301,11 @@ export default function PaginaInicio() {
       {/* Barra de Navegación (TopNav) */}
       <header className="border-b border-[#262626] bg-black/85 backdrop-blur-md sticky top-1 z-40 border-sheen transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
+          <Link
+            href="/"
+            onClick={(e) => scrollToSection(e, "#")}
+            className="flex items-center gap-3 group"
+          >
             <MSlantedBadge className="h-5" />
             <span className="text-xl font-bold uppercase tracking-[0.15em] text-white font-mono">
               APEX<span className="text-[#e22718]">LINK</span>
@@ -275,13 +315,15 @@ export default function PaginaInicio() {
           <nav className="hidden md:flex items-center gap-8">
             <a
               href="#caracteristicas"
-              className="text-xs font-bold uppercase tracking-[0.15em] text-[#bbbbbb] hover:text-white transition-colors"
+              onClick={(e) => scrollToSection(e, "#caracteristicas")}
+              className="text-xs font-bold uppercase tracking-[0.15em] text-[#bbbbbb] hover:text-white transition-colors cursor-pointer"
             >
               Características
             </a>
             <a
               href="#como-funciona"
-              className="text-xs font-bold uppercase tracking-[0.15em] text-[#bbbbbb] hover:text-white transition-colors"
+              onClick={(e) => scrollToSection(e, "#como-funciona")}
+              className="text-xs font-bold uppercase tracking-[0.15em] text-[#bbbbbb] hover:text-white transition-colors cursor-pointer"
             >
               Cómo Funciona
             </a>
@@ -498,10 +540,18 @@ export default function PaginaInicio() {
             </div>
 
             <nav className="flex flex-wrap items-center gap-6 text-xs font-bold uppercase tracking-wider">
-              <a href="#caracteristicas" className="text-[#bbbbbb] hover:text-white transition-colors">
+              <a
+                href="#caracteristicas"
+                onClick={(e) => scrollToSection(e, "#caracteristicas")}
+                className="text-[#bbbbbb] hover:text-white transition-colors cursor-pointer"
+              >
                 Características
               </a>
-              <a href="#como-funciona" className="text-[#bbbbbb] hover:text-white transition-colors">
+              <a
+                href="#como-funciona"
+                onClick={(e) => scrollToSection(e, "#como-funciona")}
+                className="text-[#bbbbbb] hover:text-white transition-colors cursor-pointer"
+              >
                 Cómo Funciona
               </a>
               <Link href="/hub" className="text-[#bbbbbb] hover:text-white transition-colors">
