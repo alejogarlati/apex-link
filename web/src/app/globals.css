@@ -56,6 +56,14 @@ body {
   min-height: 100vh;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+section[id] {
+  scroll-margin-top: 15vh;
+}
+
 /* ==========================================================================
    DEGRADÉS Y BRILLOS SUTILES DE CABINA (MOTORSPORT AESTHETIC)
    ========================================================================== */
