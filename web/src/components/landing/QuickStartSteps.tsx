@@ -1,162 +1,301 @@
 "use client";
 
-import { useRef } from "react";
-import { Play, Laptop, Gauge } from "lucide-react";
-import { gsap, useGSAP } from "@/lib/gsap";
+import { useState, useRef, useEffect } from "react";
+import { Play, Laptop, Gauge, CheckCircle2 } from "lucide-react";
+import { gsap, ScrollTrigger } from "@/lib/gsap";
+
+const PASOS = [
+  {
+    numero: "01",
+    titulo: "Abrí ApexLink",
+    etiqueta: "Inicialización de Enlace",
+    descripcion:
+      "Iniciá la aplicación en tu computadora. No requiere instalar plugins complejos ni configurar puertos o canales manualmente.",
+    icono: Laptop,
+    detalleTecnico:
+      "Arranque nativo en segundo plano. Detecta automáticamente la memoria compartida de Assetto Corsa.",
+    acento: "#0066b1",
+  },
+  {
+    numero: "02",
+    titulo: "Salí a pista en el simulador",
+    etiqueta: "Acople Automático",
+    descripcion:
+      "Abrí Assetto Corsa y salí del pitlane. El enlace se acopla automáticamente y empieza a registrar los datos del auto desde la primera curva.",
+    icono: Play,
+    detalleTecnico:
+      "Adquisición continua a 60 Hz de físicas, neumáticos, suspensión y electrónica sin pérdida de paquetes.",
+    acento: "#1c69d4",
+  },
+  {
+    numero: "03",
+    titulo: "Mirá tu telemetría en tiempo real",
+    etiqueta: "Monitoreo en Vivo",
+    descripcion:
+      "Seguí tus tiempos y el estado del chasis en el display de cabina, o abrí el navegador para monitorear la tanda en vivo desde el muro de boxes.",
+    icono: Gauge,
+    detalleTecnico:
+      "Acceso instantáneo desde cualquier pantalla, tablet o navegador web con retención de picos y círculo de Kamm.",
+    acento: "#e22718",
+  },
+];
 
 export function QuickStartSteps() {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const pinWrapperRef = useRef<HTMLDivElement>(null);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const spotlightRef = useRef<HTMLDivElement>(null);
+  const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const [activeStep, setActiveStep] = useState<number>(0);
 
-  const pasos = [
-    {
-      numero: "01",
-      titulo: "Abrí ApexLink",
-      descripcion:
-        "Iniciá la aplicación en tu computadora. No requiere instalar plugins complejos ni configurar puertos o canales manualmente.",
-      icono: Laptop,
-    },
-    {
-      numero: "02",
-      titulo: "Salí a pista en el simulador",
-      descripcion:
-        "Abrí Assetto Corsa y salí del pitlane. El enlace se acopla automáticamente y empieza a registrar los datos del auto desde la primera curva.",
-      icono: Play,
-    },
-    {
-      numero: "03",
-      titulo: "Mirá tu telemetría en tiempo real",
-      descripcion:
-        "Seguí tus tiempos y el estado del chasis en el display de cabina, o abrí el navegador para monitorear la tanda en vivo desde el muro de boxes.",
-      icono: Gauge,
-    },
-  ];
+  useEffect(() => {
+    if (typeof window === "undefined") return;
 
-  useGSAP(
-    () => {
-      if (!containerRef.current) return;
+    gsap.registerPlugin(ScrollTrigger);
 
-      // Encabezado
-      gsap.fromTo(
-        ".steps-header",
-        { opacity: 0, y: 35 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.7,
-          ease: "power2.out",
-          clearProps: "opacity,transform",
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: "top 85%",
-            once: true,
-          },
+    const pinWrapper = pinWrapperRef.current;
+    if (!pinWrapper) return;
+
+    const ctx = gsap.context(() => {
+      const items = itemsRef.current.filter((el): el is HTMLDivElement => Boolean(el));
+      const totalSteps = PASOS.length;
+
+      // Estado inicial: primer ítem visible, siguientes ocultos abajo
+      items.forEach((item, i) => {
+        if (!item) return;
+        if (i === 0) {
+          gsap.set(item, {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            filter: "blur(0px)",
+            pointerEvents: "auto",
+          });
+        } else {
+          gsap.set(item, {
+            opacity: 0,
+            y: 75,
+            scale: 0.96,
+            filter: "blur(6px)",
+            pointerEvents: "none",
+          });
         }
-      );
+      });
 
-      // Tarjetas de pasos con leve stagger
-      gsap.fromTo(
-        ".step-card",
-        { opacity: 0, y: 40 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.65,
-          stagger: 0.12,
-          ease: "power2.out",
-          clearProps: "opacity,transform",
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: "top 78%",
-            once: true,
+      // Timeline de Pin y Scroll con Snap fluido
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: pinWrapper,
+          start: "top 22%",
+          end: "+=1800",
+          pin: true,
+          pinSpacing: true,
+          scrub: 0.6,
+          anticipatePin: 1,
+          snap: {
+            snapTo: (value) => {
+              const stepFraction = 1 / (totalSteps - 1);
+              return Math.round(value / stepFraction) * stepFraction;
+            },
+            duration: { min: 0.2, max: 0.4 },
+            ease: "power2.out",
           },
-        }
-      );
+          onUpdate: (self) => {
+            const p = self.progress;
+            const stepIndex = Math.min(
+              totalSteps - 1,
+              Math.max(0, Math.round(p * (totalSteps - 1)))
+            );
+            setActiveStep(stepIndex);
 
-      // Línea de progreso interactiva que se dibuja al scrollear
-      gsap.fromTo(
-        ".steps-progress-bar",
-        { scaleX: 0 },
-        {
-          scaleX: 1,
-          ease: "none",
-          transformOrigin: "left center",
-          scrollTrigger: {
-            trigger: ".steps-cards-container",
-            start: "top 80%",
-            end: "bottom 70%",
-            scrub: 0.6,
+            if (progressBarRef.current) {
+              progressBarRef.current.style.width = `${Math.min(
+                100,
+                Math.max(0, p * 100)
+              )}%`;
+            }
+
+            // Iluminación dinámica que se mueve suavemente con el paso
+            if (spotlightRef.current) {
+              const yOffset = (stepIndex - 1) * 45;
+              gsap.to(spotlightRef.current, {
+                y: yOffset,
+                opacity: 0.35 + (stepIndex % 2) * 0.15,
+                duration: 0.5,
+                ease: "power2.out",
+              });
+            }
           },
-        }
-      );
-    },
-    { scope: containerRef }
-  );
+        },
+      });
+
+      // Transiciones verticales sincronizadas entre pasos
+      for (let i = 0; i < totalSteps - 1; i++) {
+        const currentItem = items[i];
+        const nextItem = items[i + 1];
+        if (!currentItem || !nextItem) continue;
+
+        tl.to(
+          currentItem,
+          {
+            y: -75,
+            opacity: 0,
+            scale: 0.96,
+            filter: "blur(6px)",
+            pointerEvents: "none",
+            duration: 1,
+            ease: "power2.inOut",
+          },
+          `step-${i}`
+        );
+
+        tl.to(
+          nextItem,
+          {
+            y: 0,
+            opacity: 1,
+            scale: 1,
+            filter: "blur(0px)",
+            pointerEvents: "auto",
+            duration: 1,
+            ease: "power2.inOut",
+          },
+          `step-${i}`
+        );
+      }
+    }, pinWrapperRef);
+
+    return () => {
+      ctx.revert();
+    };
+  }, []);
 
   return (
     <section
       id="como-funciona"
-      ref={containerRef}
-      className="py-24 bg-gradient-to-b from-black via-[#080808] to-black relative overflow-hidden"
+      className="relative py-24 sm:py-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-black via-[#080808] to-black overflow-visible"
     >
-      {/* Luz difusa de fondo */}
-      <div className="absolute top-1/3 left-1/4 w-[500px] h-[300px] bg-[#e22718]/5 blur-3xl pointer-events-none" />
+      {/* Resplandor ambiental de fondo */}
+      <div
+        className="absolute top-1/3 left-10 w-[550px] h-[550px] rounded-full blur-[150px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(226,39,24,0.12) 0%, rgba(0,102,177,0.06) 50%, transparent 75%)",
+        }}
+        aria-hidden="true"
+      />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="steps-header text-center max-w-3xl mx-auto mb-16">
+      <div className="relative z-10 max-w-5xl mx-auto w-full">
+        {/* Encabezado libre de scroll */}
+        <div className="max-w-3xl mb-14 sm:mb-16 text-left">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#141414] border border-[#3c3c3c] text-[#e22718] text-[11px] font-bold uppercase tracking-[0.2em] mb-4 glow-m-red-subtle">
             Simplicidad Operativa
           </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold uppercase tracking-tight text-white">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold uppercase tracking-tight text-white leading-[1.12]">
             Cómo empezar en <span className="text-[#e22718]">tres pasos</span>
           </h2>
-          <p className="text-[#bbbbbb] text-sm sm:text-base mt-4 leading-relaxed">
+          <p className="text-[#bbbbbb] text-sm sm:text-base mt-4 leading-relaxed max-w-2xl">
             Sin configuraciones engorrosas ni exportaciones manuales de archivos. Todo está pensado para que salgas a girar de inmediato.
           </p>
         </div>
 
-        {/* Línea conectora entre pasos (visible en pantallas medianas y grandes) */}
-        <div className="hidden md:block relative mb-6 px-12">
-          <div className="h-[2px] w-full bg-[#262626] overflow-hidden">
-            <div className="steps-progress-bar h-full w-full bg-gradient-to-r from-[#0066b1] via-[#1c69d4] to-[#e22718]" />
-          </div>
-        </div>
+        {/* Contenedor Pinneado con Carrusel Vertical */}
+        <div
+          ref={pinWrapperRef}
+          className="relative max-w-4xl w-full py-4 flex flex-col items-start"
+        >
+          {/* Luz focal dinámica */}
+          <div
+            ref={spotlightRef}
+            className="absolute -left-20 top-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[130px] pointer-events-none transition-all duration-700 ease-out"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(226,39,24,0.2) 0%, rgba(28,105,212,0.1) 45%, transparent 70%)",
+            }}
+            aria-hidden="true"
+          />
 
-        <div className="steps-cards-container grid grid-cols-1 md:grid-cols-3 gap-6">
-          {pasos.map((paso, idx) => {
-            const Icono = paso.icono;
-            return (
+          {/* Barra de progreso continua con marcadores */}
+          <div className="w-full max-w-xl mb-12 sm:mb-14">
+            <div className="relative h-[3px] w-full bg-[#262626] rounded-full overflow-visible">
               <div
-                key={idx}
-                className="step-card card-cockpit-gradient border-sheen p-8 flex flex-col justify-between relative group hover:glow-m-red-subtle transition-transform duration-300 hover:-translate-y-1"
-              >
-                {/* Acento superior en hover */}
-                <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#e22718] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                ref={progressBarRef}
+                className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#0066b1] via-[#1c69d4] to-[#e22718] shadow-[0_0_15px_rgba(226,39,24,0.4)] rounded-full transition-all duration-150"
+                style={{ width: "0%" }}
+              />
+              <div className="absolute inset-0 flex justify-between items-center -top-[3px]">
+                {PASOS.map((paso, i) => (
+                  <span
+                    key={paso.numero}
+                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                      i <= activeStep
+                        ? "bg-[#e22718] shadow-[0_0_10px_#e22718] scale-125"
+                        : "bg-[#3c3c3c] scale-100"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-between text-[11px] font-mono text-[#7e7e7e] mt-2 font-bold tracking-wider uppercase">
+              <span>01 Inicialización</span>
+              <span>02 Enlace</span>
+              <span>03 Telemetría</span>
+            </div>
+          </div>
 
-                <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <span className="step-number text-3xl font-mono font-bold text-[#e22718] drop-shadow-[0_0_12px_rgba(226,39,24,0.4)]">
-                      {paso.numero}
-                    </span>
-                    <div className="w-10 h-10 bg-black/70 border border-[#3c3c3c] group-hover:border-[#e22718]/50 flex items-center justify-center transition-colors">
-                      <Icono className="w-5 h-5 text-white" />
+          {/* Escenario del Carrusel Vertical */}
+          <div className="relative w-full h-[380px] sm:h-[320px] flex items-center justify-start">
+            {PASOS.map((item, index) => {
+              const Icono = item.icono;
+              return (
+                <div
+                  key={item.numero}
+                  ref={(el) => {
+                    itemsRef.current[index] = el;
+                  }}
+                  className="absolute inset-0 flex flex-col justify-center items-start text-left will-change-[transform,opacity,filter]"
+                >
+                  {/* Ícono y Badge del Paso */}
+                  <div className="flex items-center gap-4 mb-5">
+                    <div className="w-12 h-12 bg-black/80 border border-[#3c3c3c] shadow-[0_0_24px_rgba(226,39,24,0.25)] flex items-center justify-center shrink-0">
+                      <Icono className="w-5 h-5 text-[#e22718]" />
+                    </div>
+
+                    <div className="flex flex-col">
+                      <span className="text-xs font-mono uppercase tracking-widest text-[#e22718] font-bold">
+                        PASO {item.numero} · {item.etiqueta}
+                      </span>
+                      <span className="text-[11px] text-[#7e7e7e] font-mono uppercase">
+                        FASE {index + 1} DE {PASOS.length}
+                      </span>
                     </div>
                   </div>
 
-                  <h3 className="text-lg font-bold uppercase text-white tracking-tight mb-3">
-                    {paso.titulo}
+                  {/* Título Principal */}
+                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold uppercase tracking-tight text-white mb-3">
+                    {item.titulo}
                   </h3>
 
-                  <p className="text-xs leading-relaxed text-[#bbbbbb]">
-                    {paso.descripcion}
+                  {/* Descripción */}
+                  <p className="text-sm sm:text-base text-[#bbbbbb] leading-relaxed max-w-2xl mb-5">
+                    {item.descripcion}
                   </p>
-                </div>
 
-                <div className="mt-8 pt-4 border-t border-[#262626] text-[10px] uppercase font-bold tracking-wider text-[#7e7e7e]">
-                  Paso {paso.numero} de 03
+                  {/* Bloque de Detalle Técnico con Rayo de Acento M */}
+                  <div className="relative border-l-2 border-[#e22718] pl-4 sm:pl-5 py-2.5 bg-gradient-to-r from-[#e22718]/12 via-[#e22718]/3 to-transparent rounded-r-xl max-w-2xl">
+                    <div className="flex items-center gap-2 mb-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#0fa336]" />
+                      <span className="text-[11px] font-mono uppercase tracking-wider font-bold text-white">
+                        Ejecución en Cabina
+                      </span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-[#bbbbbb] leading-relaxed">
+                      {item.detalleTecnico}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>
