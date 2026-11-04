@@ -174,7 +174,7 @@ export function FeaturesGrid() {
         } else {
           gsap.set(img, {
             opacity: 0,
-            scale: 0.96,
+            scale: 0.98,
             filter: "blur(8px)",
             pointerEvents: "none",
           });
@@ -334,13 +334,13 @@ export function FeaturesGrid() {
           `step-${i}-trans`
         );
 
-        // Animación sincronizada de la imagen actual (fade out suave con blur)
+        // Animación sincronizada de la imagen actual (fade out suave hacia el fondo negro)
         if (currentImg) {
           tl.to(
             currentImg,
             {
               opacity: 0,
-              scale: 0.96,
+              scale: 0.98,
               filter: "blur(8px)",
               pointerEvents: "none",
               duration: TRANS_TIME,
@@ -453,9 +453,9 @@ export function FeaturesGrid() {
           </div>
 
           {/* Escenario del Carrusel: Columna de Texto a la izquierda y Columna de Imágenes en el margen derecho */}
-          <div className="relative w-full min-h-[460px] sm:min-h-[400px] lg:min-h-[380px] grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-center">
+          <div className="relative w-full h-[460px] sm:h-[420px] lg:h-[440px] grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-center">
             {/* Columna Izquierda: Tarjetas de texto apiladas */}
-            <div className="relative w-full h-[420px] sm:h-[340px] md:col-span-7 flex items-center justify-start">
+            <div className="relative w-full h-full md:col-span-7 lg:col-span-6 flex items-center justify-start z-10">
               {CARACTERISTICAS.map((item, index) => {
                 const Icono = item.icono;
                 return (
@@ -514,8 +514,8 @@ export function FeaturesGrid() {
               })}
             </div>
 
-            {/* Columna Derecha: Escenario de imágenes en el margen derecho sincronizadas con cada pin */}
-            <div className="relative w-full h-[280px] sm:h-[320px] lg:h-[360px] md:col-span-5 hidden md:flex items-center justify-center">
+            {/* Columna Derecha: Imágenes sin caja que ocupan todo el alto del container y se funden con el fondo negro */}
+            <div className="relative w-full h-full md:col-span-5 lg:col-span-6 hidden md:flex items-center justify-center overflow-visible pointer-events-none">
               {CARACTERISTICAS.map((item, index) => (
                 <div
                   key={`img-${item.numero}`}
@@ -526,61 +526,40 @@ export function FeaturesGrid() {
                     opacity: index === 0 ? 1 : 0,
                     pointerEvents: index === 0 ? "auto" : "none",
                   }}
-                  className="absolute inset-0 flex items-center justify-center will-change-[transform,opacity,filter]"
+                  className="absolute inset-0 w-full h-full flex items-center justify-center will-change-[transform,opacity,filter]"
                 >
-                  {/* Cockpit Card Container con marco de telemetría Porsche GT / BMW M */}
-                  <div className="relative w-full aspect-[16/10.4] rounded-2xl overflow-hidden border border-[#262626] bg-[#0d0d0d] shadow-[0_20px_50px_rgba(0,0,0,0.85)] group">
-                    {/* Resplandor ambiental interior del módulo */}
+                  <div className="relative w-full h-full flex items-center justify-center">
+                    {/* Resplandor ambiental de color correspondiente a cada módulo */}
                     <div
-                      className="absolute -top-10 -right-10 w-44 h-44 rounded-full blur-3xl pointer-events-none opacity-40 transition-opacity duration-500"
+                      className="absolute inset-0 w-full h-full rounded-full blur-3xl pointer-events-none opacity-20"
                       style={{ background: item.glowColor }}
                     />
 
-                    {/* Barra superior HUD del display */}
-                    <div className="absolute top-0 inset-x-0 z-20 flex items-center justify-between px-3.5 py-2 bg-gradient-to-b from-black/90 via-black/60 to-transparent border-b border-white/[0.06] backdrop-blur-[2px]">
-                      <div className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#e22718] animate-pulse" />
-                        <span className="text-[10px] font-mono tracking-widest text-[#bbbbbb] font-bold uppercase">
-                          {item.hudTag}
-                        </span>
-                      </div>
-                      <span className="text-[9px] font-mono tracking-wider text-[#7e7e7e] font-semibold">
-                        60 FPS · REC
-                      </span>
-                    </div>
-
-                    {/* Imagen Optimizada de la Característica */}
-                    <div className="relative w-full h-full">
+                    {/* Imagen de telemetría ocupando todo el alto y fundiéndose orgánicamente con el fondo negro */}
+                    <div
+                      className="relative w-full h-full"
+                      style={{
+                        maskImage:
+                          "radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, rgba(0,0,0,0.7) 65%, transparent 100%)",
+                        WebkitMaskImage:
+                          "radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, rgba(0,0,0,0.7) 65%, transparent 100%)",
+                      }}
+                    >
                       <Image
                         src={item.imagen}
                         alt={item.imagenAlt}
                         fill
-                        sizes="(max-width: 1024px) 380px, 480px"
+                        sizes="(max-width: 1024px) 50vw, 650px"
                         priority={index === 0}
-                        className="object-cover object-center filter brightness-[0.92] contrast-[1.05] transition-transform duration-700 group-hover:scale-105"
+                        className="object-cover object-center filter brightness-[0.95] contrast-[1.08]"
                       />
-                      {/* Degradados sutiles de viñeta para lectura e inmersión */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/25 pointer-events-none" />
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/20 pointer-events-none" />
                     </div>
 
-                    {/* Barra inferior HUD con identificador y estado de enlace */}
-                    <div className="absolute bottom-0 inset-x-0 z-20 flex items-center justify-between px-3.5 py-2 bg-gradient-to-t from-black/95 via-black/70 to-transparent border-t border-white/[0.04]">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono font-bold text-white uppercase tracking-wider">
-                          {item.titulo}
-                        </span>
-                      </div>
-                      <span className="text-[9px] font-mono text-[#0fa336] bg-[#0fa336]/15 border border-[#0fa336]/30 px-1.5 py-0.5 rounded uppercase font-semibold">
-                        TELEMETRY LINK
-                      </span>
-                    </div>
-
-                    {/* Brackets angulares de cabina de telemetría */}
-                    <div className="absolute top-2 left-2 w-2 h-2 border-t border-l border-white/30 pointer-events-none z-30" />
-                    <div className="absolute top-2 right-2 w-2 h-2 border-t border-r border-white/30 pointer-events-none z-30" />
-                    <div className="absolute bottom-2 left-2 w-2 h-2 border-b border-l border-white/30 pointer-events-none z-30" />
-                    <div className="absolute bottom-2 right-2 w-2 h-2 border-b border-r border-white/30 pointer-events-none z-30" />
+                    {/* Degradados lineales de fundido adicional para un acabado sin bordes duros */}
+                    <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-black via-black/70 to-transparent pointer-events-none" />
+                    <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-black via-black/50 to-transparent pointer-events-none" />
+                    <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black via-black/50 to-transparent pointer-events-none" />
+                    <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none" />
                   </div>
                 </div>
               ))}
