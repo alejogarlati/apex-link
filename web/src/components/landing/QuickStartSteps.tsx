@@ -8,34 +8,34 @@ const PASOS = [
   {
     numero: "01",
     titulo: "Abrí ApexLink",
-    etiqueta: "Inicialización de Enlace",
+    etiqueta: "Conexión",
     descripcion:
-      "Iniciá la aplicación en tu computadora. No requiere instalar plugins complejos ni configurar puertos o canales manualmente.",
+      "Iniciá el programa en tu PC. Se conecta automáticamente en segundo plano sin pedirte puertos ni configuraciones complejas.",
     icono: Laptop,
     detalleTecnico:
-      "Arranque nativo en segundo plano. Detecta automáticamente la memoria compartida de Assetto Corsa.",
+      "Lectura directa de la memoria compartida oficial de Assetto Corsa, sin modificar archivos del juego.",
     acento: "#0066b1",
   },
   {
     numero: "02",
     titulo: "Salí a pista en el simulador",
-    etiqueta: "Acople Automático",
+    etiqueta: "En Pista",
     descripcion:
-      "Abrí Assetto Corsa y salí del pitlane. El enlace se acopla automáticamente y empieza a registrar los datos del auto desde la primera curva.",
+      "Entrá a cualquier sesión en Assetto Corsa. Apenas salís de boxes, el sistema empieza a registrar tus datos curva por curva.",
     icono: Play,
     detalleTecnico:
-      "Adquisición continua a 60 Hz de físicas, neumáticos, suspensión y electrónica sin pérdida de paquetes.",
+      "Captura continua a 60 Hz: acelerador, freno, dirección, suspensión y temperatura de cubiertas.",
     acento: "#1c69d4",
   },
   {
     numero: "03",
     titulo: "Mirá tu telemetría en tiempo real",
-    etiqueta: "Monitoreo en Vivo",
+    etiqueta: "Telemetría",
     descripcion:
-      "Seguí tus tiempos y el estado del chasis en el display de cabina, o abrí el navegador para monitorear la tanda en vivo desde el muro de boxes.",
+      "Montá el celular en el volante para ver el instrumental con delta en vivo, o abrí el navegador en otra pantalla para seguir la tanda desde boxes.",
     icono: Gauge,
     detalleTecnico:
-      "Acceso instantáneo desde cualquier pantalla, tablet o navegador web con retención de picos y círculo de Kamm.",
+      "Accesible desde cualquier dispositivo conectado a tu red local, con gráficos de fuerzas G y trazada 2D.",
     acento: "#e22718",
   },
 ];
@@ -258,13 +258,13 @@ export function QuickStartSteps() {
         {/* Encabezado libre de scroll alineado a la derecha */}
         <div className="max-w-3xl mb-14 sm:mb-16 text-right ml-auto flex flex-col items-end">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#141414] border border-[#3c3c3c] text-[#e22718] text-[11px] font-bold uppercase tracking-[0.2em] mb-4 glow-m-red-subtle">
-            Simplicidad Operativa
+            Puesta en Marcha
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold uppercase tracking-tight text-white leading-[1.12]">
             Cómo empezar en <span className="text-[#e22718]">tres pasos</span>
           </h2>
           <p className="text-[#bbbbbb] text-sm sm:text-base mt-4 leading-relaxed max-w-2xl text-right">
-            Sin configuraciones engorrosas ni exportaciones manuales de archivos. Todo está pensado para que salgas a girar de inmediato.
+            Abrís la app, salís a pista y mirás los datos en vivo. Sin tocar archivos ni lidiar con configuraciones raras.
           </p>
         </div>
 
@@ -306,8 +306,8 @@ export function QuickStartSteps() {
               </div>
             </div>
             <div className="flex justify-between text-[11px] font-mono text-[#7e7e7e] mt-2 font-bold tracking-wider uppercase">
-              <span>01 <span className="hidden sm:inline">Inicialización</span></span>
-              <span>02 <span className="hidden sm:inline">Enlace</span></span>
+              <span>01 <span className="hidden sm:inline">Conexión</span></span>
+              <span>02 <span className="hidden sm:inline">En pista</span></span>
               <span>03 <span className="hidden sm:inline">Telemetría</span></span>
             </div>
           </div>
