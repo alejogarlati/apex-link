@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Gauge, Zap, CheckCircle2, ArrowLeft, ShieldCheck, Lock } from "lucide-react";
 import { iniciarSesionInvitado, iniciarSesionCredenciales } from "@/lib/auth";
 import { solicitarGet } from "@/lib/apiClient";
@@ -75,11 +76,14 @@ export default function PaginaLogin() {
           Volver a Inicio
         </Link>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#141414] border border-[#3c3c3c]">
-            <MSlantedBadge className="h-3" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-white font-mono">
-              APEXLINK
-            </span>
+          <div className="flex items-center px-2 py-1 bg-[#141414] border border-[#3c3c3c]">
+            <Image
+              src="/logos/logo.webp"
+              alt="ApexLink"
+              width={100}
+              height={20}
+              className="h-4 w-auto object-contain"
+            />
           </div>
           {estadoBackend.verificado && (
             <span

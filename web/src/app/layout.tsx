@@ -5,6 +5,15 @@ export const metadata: Metadata = {
   title: "ApexLink | Ecosistema de Telemetría SimRacing & Live Pitwall",
   description:
     "Ecosistema integral de telemetría para simracing: instrumental digital de cabina, Live Pitwall a 60 Hz en boxes, laboratorio analítico 2D y plataforma SaaS de competición para Assetto Corsa.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "32x32" },
+    ],
+    apple: [
+      { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
 };
 
 export default function RootLayout({

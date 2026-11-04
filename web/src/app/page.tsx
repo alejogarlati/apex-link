@@ -2,19 +2,23 @@
 
 import { useRef, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Zap, Play, Gauge } from "lucide-react";
-import { MSlantedBadge } from "@/components/landing/MSlantedBadge";
 import { FeaturesGrid } from "@/components/landing/FeaturesGrid";
 import { QuickStartSteps } from "@/components/landing/QuickStartSteps";
 import { CtaBand } from "@/components/landing/CtaBand";
 import { gsap, ScrollTrigger, ScrollToPlugin, useGSAP } from "@/lib/gsap";
 
 const HERO_VIDEO_FPS = 24;
-const HERO_VIDEO_STOP_FRAME = 100;
+const HERO_VIDEO_STOP_FRAME = 300;
 const HERO_VIDEO_STOP_TIME = HERO_VIDEO_STOP_FRAME / HERO_VIDEO_FPS;
+const HERO_LOCK_SCROLL_PX = 500;   // Bloqueo de 500px tras finalizar el video
+const HERO_VIDEO_SCROLL_PX = 1300; // Scroll para el giro del auto
+const HERO_TOTAL_PIN_PX = HERO_VIDEO_SCROLL_PX + HERO_LOCK_SCROLL_PX; // 1800px
 
 export default function PaginaInicio() {
   const pageRef = useRef<HTMLDivElement>(null);
+  const heroStageRef = useRef<HTMLDivElement>(null);
   const heroVideoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -304,12 +308,16 @@ export default function PaginaInicio() {
           <Link
             href="/"
             onClick={(e) => scrollToSection(e, "#")}
-            className="flex items-center gap-3 group"
+            className="flex items-center group py-1"
           >
-            <MSlantedBadge className="h-5" />
-            <span className="text-xl font-bold uppercase tracking-[0.15em] text-white font-mono">
-              APEX<span className="text-[#e22718]">LINK</span>
-            </span>
+            <Image
+              src="/logos/logo.webp"
+              alt="ApexLink Logo"
+              width={160}
+              height={32}
+              priority
+              className="h-7 sm:h-8 w-auto object-contain transition-opacity group-hover:opacity-90"
+            />
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
@@ -379,7 +387,7 @@ export default function PaginaInicio() {
           <div className="relative w-full max-w-[1500px] h-full flex items-center justify-center -mt-6 sm:-mt-10">
             <video
               ref={heroVideoRef}
-              src="/landing/videos/gemini_generated_video_b60f0dca.mp4"
+              src="landing\videos\gemini_generated_video_c76c6af4.mp4 "
               muted
               playsInline
               preload="auto"
@@ -530,10 +538,13 @@ export default function PaginaInicio() {
         <div className="footer-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 border-b border-[#262626]">
             <div className="flex items-center gap-3">
-              <MSlantedBadge className="h-4" />
-              <span className="text-base font-bold uppercase text-white font-mono tracking-[0.15em]">
-                APEX<span className="text-[#e22718]">LINK</span>
-              </span>
+              <Image
+                src="/logos/logo.webp"
+                alt="ApexLink Logo"
+                width={130}
+                height={26}
+                className="h-6 w-auto object-contain opacity-90 hover:opacity-100 transition-opacity"
+              />
               <span className="text-xs text-[#7e7e7e]">
                 • Telemetría en Tiempo Real y Análisis de Vueltas
               </span>
