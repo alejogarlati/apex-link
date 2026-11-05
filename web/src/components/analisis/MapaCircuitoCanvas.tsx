@@ -10,6 +10,7 @@ import {
   MapPin,
   Radio,
   GitCompare,
+  Box,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CIRCUITS_DATA } from "@/lib/circuitsData";
@@ -39,11 +40,20 @@ type ModoRender = "map_png" | "isometric";
 type ModoHeatmap = "throttle_brake" | "speed";
 type CircuitoId = "monza" | "imola" | "rbr";
 
+function formatearTimestamp(msTotal: number): string {
+  const msSeguro = Math.max(0, Math.floor(msTotal));
+  const minutos = Math.floor(msSeguro / 60000);
+  const segundos = Math.floor((msSeguro % 60000) / 1000);
+  const milisegundos = msSeguro % 1000;
+  return `${String(minutos).padStart(2, "0")}:${String(segundos).padStart(2, "0")}:${String(milisegundos).padStart(3, "0")}`;
+}
+
 export function MapaCircuitoCanvas({
   muestras,
   muestrasComparativas,
   distanciaSeleccionada = null,
   onSeleccionarDistancia,
+  nombreCircuito,
   vueltaAInfo,
   vueltaBInfo,
   ranuraActiva = "A",
@@ -58,6 +68,13 @@ export function MapaCircuitoCanvas({
   const [modoRender, setModoRender] = useState<ModoRender>("map_png");
   const [modoHeatmap, setModoHeatmap] = useState<ModoHeatmap>("throttle_brake");
   const [estaReproduciendo, setEstaReproduciendo] = useState<boolean>(false);
+
+  // Sincronizar si cambia el circuito provisto externamente (ej: Live Pitwall)
+  useEffect(() => {
+    if (circuitoInicial && (circuitoInicial === "monza" || circuitoInicial === "imola" || circuitoInicial === "rbr")) {
+      setCircuitoActivoId((prev) => (prev === circuitoInicial ? prev : circuitoInicial));
+    }
+  }, [circuitoInicial]);
 
   // Determinar si hay comparativa activa de dos vueltas
   const tieneComparativa = Boolean(
@@ -75,8 +92,7 @@ export function MapaCircuitoCanvas({
   const hudSectionRef = useRef<HTMLSpanElement>(null);
   const hudDrsRef = useRef<HTMLSpanElement>(null);
   const hudElevRef = useRef<HTMLSpanElement>(null);
-  const rangeScrubberRef = useRef<HTMLInputElement>(null);
-  const distTextRef = useRef<HTMLSpanElement>(null);
+  const timestampRef = useRef<HTMLSpanElement>(null);
   const deltaBadgeRef = useRef<HTMLDivElement>(null);
   const deltaTextRef = useRef<HTMLSpanElement>(null);
 
@@ -84,6 +100,48 @@ export function MapaCircuitoCanvas({
   const circuitoActual = useMemo(() => {
     return CIRCUITS_DATA[circuitoActivoId] || CIRCUITS_DATA.monza;
   }, [circuitoActivoId]);
+
+  // Perfil temporal acumulado del circuito (dx / v a lo largo de cada segmento de pista)
+  const tiemposAcumuladosPista = useMemo(() => {
+    const track = circuitoActual?.track ?? [];
+    if (track.length === 0) return [];
+    const times: number[] = [0];
+    let acumSec = 0;
+    for (let i = 1; i < track.length; i++) {
+      const prev = track[i - 1];
+      const curr = track[i];
+      if (!prev || !curr) continue;
+      const dDist = Math.max(0.1, curr.dist - prev.dist);
+      const avgSpeedMs = Math.max(10, ((prev.speed + curr.speed) / 2) / 3.6);
+      acumSec += dDist / avgSpeedMs;
+      times.push(acumSec * 1000);
+    }
+    return times;
+  }, [circuitoActual]);
+
+  // Si se dispone del tiempo oficial de vuelta (ej. "01:21.042"), sincronizar escala exacta de meta
+  const duracionObjetivoMs = useMemo(() => {
+    if (!vueltaAInfo?.tiempoVueltaStr) return null;
+    const partes = vueltaAInfo.tiempoVueltaStr.split(/[:.]/);
+    if (partes.length >= 2) {
+      const min = parseInt(partes[0] ?? "0", 10) || 0;
+      const sec = parseInt(partes[1] ?? "0", 10) || 0;
+      const ms = partes[2] ? parseInt(partes[2].padEnd(3, "0").slice(0, 3), 10) || 0 : 0;
+      const total = (min * 60 + sec) * 1000 + ms;
+      return total > 10000 ? total : null;
+    }
+    return null;
+  }, [vueltaAInfo?.tiempoVueltaStr]);
+
+  const tiemposEscalados = useMemo(() => {
+    if (tiemposAcumuladosPista.length === 0) return [];
+    const ultimoTiempo = tiemposAcumuladosPista[tiemposAcumuladosPista.length - 1];
+    if (duracionObjetivoMs && ultimoTiempo && ultimoTiempo > 0) {
+      const factor = duracionObjetivoMs / ultimoTiempo;
+      return tiemposAcumuladosPista.map((t) => t * factor);
+    }
+    return tiemposAcumuladosPista;
+  }, [tiemposAcumuladosPista, duracionObjetivoMs]);
 
   // Variables de cámara y animación (persisten sin re-renderizar)
   const estadoCamara = useRef({
@@ -100,7 +158,6 @@ export function MapaCircuitoCanvas({
     carProgressA: 0, // Avance en coma flotante del Monoplaza A
     carProgressB: 0, // Avance en coma flotante del Monoplaza B (Ghost / Comparativo)
     reproduciendo: false,
-    estaArrastrandoScrubber: false,
     ultimoTiempoSync: 0,
   });
 
@@ -140,8 +197,8 @@ export function MapaCircuitoCanvas({
       estadoCamara.current.panY = 0;
       estadoCamara.current.carProgressA = 0;
       estadoCamara.current.carProgressB = 0;
-      if (rangeScrubberRef.current) {
-        rangeScrubberRef.current.value = "0";
+      if (timestampRef.current) {
+        timestampRef.current.textContent = "00:00:000";
       }
     }
   }, [circuitoActivoId]);
@@ -168,8 +225,18 @@ export function MapaCircuitoCanvas({
 
       // Si hay comparativa, desfasamos ligeramente el coche B según el factor de rendimiento
       estadoCamara.current.carProgressB = Math.max(0, targetPoint - 12);
+
+      if (timestampRef.current && tiemposEscalados.length > 0) {
+        const idx0 = Math.floor(targetPoint);
+        const idx1 = Math.min(tiemposEscalados.length - 1, idx0 + 1);
+        const frac = targetPoint - idx0;
+        const t0 = tiemposEscalados[idx0] ?? 0;
+        const t1 = tiemposEscalados[idx1] ?? t0;
+        const ms = t0 + (t1 - t0) * frac;
+        timestampRef.current.textContent = formatearTimestamp(ms);
+      }
     }
-  }, [distanciaSeleccionada, circuitoActual]);
+  }, [distanciaSeleccionada, circuitoActual, tiemposEscalados]);
 
   // 1. Manejo nativo de rueda de ratón con { passive: false } para EVITAR scroll de página
   useEffect(() => {
@@ -320,11 +387,14 @@ export function MapaCircuitoCanvas({
       if (hudBrakeTextRef.current) hudBrakeTextRef.current.textContent = `${Math.round(carFocoBrake * 100)}%`;
       if (hudSectionRef.current) hudSectionRef.current.textContent = carASection || "Pista Activa";
       if (hudElevRef.current) hudElevRef.current.textContent = `${carFocoElev.toFixed(1)} m`;
-      if (distTextRef.current) distTextRef.current.textContent = `${carADist} m`;
 
-      if (rangeScrubberRef.current && cam.reproduciendo && !cam.estaArrastrandoScrubber) {
-        rangeScrubberRef.current.value = String(idxA0);
+      if (timestampRef.current && tiemposEscalados.length > 0) {
+        const t0 = tiemposEscalados[idxA0] ?? 0;
+        const t1 = tiemposEscalados[idxA1] ?? t0;
+        const msActual = t0 + (t1 - t0) * fracA;
+        timestampRef.current.textContent = formatearTimestamp(msActual);
       }
+
       if (hudDrsRef.current) {
         hudDrsRef.current.style.display = carADrs ? "inline-block" : "none";
       }
@@ -614,7 +684,7 @@ export function MapaCircuitoCanvas({
 
     animId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animId);
-  }, [circuitoActual, modoRender, modoHeatmap, tieneComparativa, ranuraActiva, onSeleccionarDistancia]);
+  }, [circuitoActual, modoRender, modoHeatmap, tieneComparativa, ranuraActiva, onSeleccionarDistancia, tiemposEscalados]);
 
   // Función auxiliar de pintado de Laser Puck
   function dibujarPuck(
@@ -705,7 +775,7 @@ export function MapaCircuitoCanvas({
   return (
     <div
       ref={contenedorRef}
-      className="relative flex flex-col rounded-none border border-[#262626] bg-[#0a0a0a] overflow-hidden shadow-2xl border-sheen card-cockpit-gradient"
+      className="relative flex flex-col rounded-xl border border-[#262626] bg-[#0a0a0a] overflow-hidden shadow-2xl"
     >
       {/* 1. Barra de Acento Tricolor BMW M */}
       <div className="h-1 w-full flex">
@@ -715,35 +785,32 @@ export function MapaCircuitoCanvas({
       </div>
 
       {/* 2. Barra Superior de Control de Ingeniería */}
-      <div className="p-3 sm:p-4 border-b border-[#262626] bg-[#0a0a0a] flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
-        {/* Selector de Circuito Oficial */}
+      <div className="p-3 sm:p-4 border-b border-[#262626] bg-[#0d0d0d]/90 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+        {/* Identificación del Circuito (El circuito viene del módulo live pitwall) */}
         <div className="flex items-center gap-2">
           <MapPin className="w-4 h-4 text-[#0066b1]" />
-          <select
-            value={circuitoActivoId}
-            onChange={(e) => setCircuitoActivoId(e.target.value as CircuitoId)}
-            className="bg-[#141414] border border-[#3c3c3c] text-white px-3 py-1.5 rounded-none font-bold uppercase tracking-[0.12em] text-xs focus:outline-none focus:border-[#0066b1] cursor-pointer"
-          >
-            <option value="monza">Autodromo Nazionale Monza (5.757 m)</option>
-            <option value="imola">Autodromo Enzo e Dino Ferrari (4.867 m)</option>
-            <option value="rbr">Red Bull Ring GP (4.285 m)</option>
-          </select>
+          <span className="text-white font-bold uppercase tracking-wider text-xs">
+            {nombreCircuito || circuitoActual.displayName}
+          </span>
+          <span className="text-[10px] text-[#7e7e7e]">
+            ({circuitoActual.lengthMeters} m)
+          </span>
         </div>
 
-        {/* Pestañas de Comparativa Dual Vuelta A vs Vuelta B */}
+        {/* Pestañas de Comparativa Dual Vuelta A vs Vuelta B (Sin píldora) */}
         {tieneComparativa && (
-          <div className="flex items-center gap-1.5 bg-[#141414] border border-[#262626] rounded-none p-0.5">
+          <div className="flex items-center gap-1">
             <button
               onClick={() => onCambiarRanura?.("A")}
               title="Activar telemetría y mapa de calor de Vuelta A"
               className={cn(
-                "px-2.5 py-1 rounded-none text-[11px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer",
+                "px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer border",
                 ranuraActiva === "A"
-                  ? "bg-[#0066b1] text-white shadow-md shadow-[#0066b1]/30"
-                  : "text-[#7e7e7e] hover:text-white"
+                  ? "bg-[#0066b1] border-[#0066b1] text-white"
+                  : "bg-[#141414] border-[#262626] text-[#7e7e7e] hover:text-white"
               )}
             >
-              <span className="w-3.5 h-3.5 rounded-none bg-white text-black text-[9px] flex items-center justify-center font-black">
+              <span className="w-3.5 h-3.5 rounded-xs bg-white text-black text-[9px] flex items-center justify-center font-black">
                 A
               </span>
               <span>
@@ -757,13 +824,13 @@ export function MapaCircuitoCanvas({
               onClick={() => onCambiarRanura?.("B")}
               title="Activar telemetría y mapa de calor de Vuelta B"
               className={cn(
-                "px-2.5 py-1 rounded-none text-[11px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer",
+                "px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer border",
                 ranuraActiva === "B"
-                  ? "bg-[#1c69d4] text-white shadow-md shadow-[#1c69d4]/30"
-                  : "text-[#7e7e7e] hover:text-white"
+                  ? "bg-[#1c69d4] border-[#1c69d4] text-white"
+                  : "bg-[#141414] border-[#262626] text-[#7e7e7e] hover:text-white"
               )}
             >
-              <span className="w-3.5 h-3.5 rounded-none bg-[#93c5fd] text-black text-[9px] flex items-center justify-center font-black">
+              <span className="w-3.5 h-3.5 rounded-xs bg-[#93c5fd] text-black text-[9px] flex items-center justify-center font-black">
                 B
               </span>
               <span>
@@ -775,40 +842,17 @@ export function MapaCircuitoCanvas({
           </div>
         )}
 
-        {/* Conmutador de Modos Duales (Kunos vs Isométrico 3D) */}
+        {/* Margen Derecho: Selector de Heatmap + Switch 2D/3D con botón cubo + Reset */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center bg-[#141414] border border-[#262626] rounded p-0.5">
-            <button
-              onClick={() => setModoRender("map_png")}
-              className={`px-3 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
-                modoRender === "map_png"
-                  ? "bg-[#0066b1] text-white shadow-md shadow-[#0066b1]/30"
-                  : "text-[#7e7e7e] hover:text-white"
-              }`}
-            >
-              Broadcast (map.png)
-            </button>
-            <button
-              onClick={() => setModoRender("isometric")}
-              className={`px-3 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
-                modoRender === "isometric"
-                  ? "bg-[#0066b1] text-white shadow-md shadow-[#0066b1]/30"
-                  : "text-[#7e7e7e] hover:text-white"
-              }`}
-            >
-              Isométrico 3D
-            </button>
-          </div>
-
-          {/* Selector de Heatmap */}
-          <div className="flex items-center bg-[#141414] border border-[#262626] rounded p-0.5">
+          {/* Selector de Heatmap (Sin píldora) */}
+          <div className="flex items-center gap-1">
             <button
               onClick={() => setModoHeatmap("throttle_brake")}
               title="Colorear por Aceleración y Freno"
-              className={`px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 transition-colors cursor-pointer ${
+              className={`px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 transition-colors cursor-pointer border ${
                 modoHeatmap === "throttle_brake"
-                  ? "bg-[#1c69d4] text-white"
-                  : "text-[#7e7e7e] hover:text-white"
+                  ? "bg-[#1c69d4] border-[#1c69d4] text-white"
+                  : "bg-[#141414] border-[#262626] text-[#7e7e7e] hover:text-white"
               }`}
             >
               <Flame className="w-3 h-3 text-[#e22718]" />
@@ -817,10 +861,10 @@ export function MapaCircuitoCanvas({
             <button
               onClick={() => setModoHeatmap("speed")}
               title="Colorear por Gradiente de Velocidad"
-              className={`px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 transition-colors cursor-pointer ${
+              className={`px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 transition-colors cursor-pointer border ${
                 modoHeatmap === "speed"
-                  ? "bg-[#1c69d4] text-white"
-                  : "text-[#7e7e7e] hover:text-white"
+                  ? "bg-[#1c69d4] border-[#1c69d4] text-white"
+                  : "bg-[#141414] border-[#262626] text-[#7e7e7e] hover:text-white"
               }`}
             >
               <Activity className="w-3 h-3 text-[#0fa336]" />
@@ -828,11 +872,41 @@ export function MapaCircuitoCanvas({
             </button>
           </div>
 
-          {/* Botón Reset Cámara */}
+          {/* Switch 2D / 3D en el margen derecho (botón cubo, solo dice 2D y 3D) */}
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setModoRender("map_png")}
+              title="Vista 2D Broadcast"
+              className={`px-2.5 py-1 rounded text-xs font-mono font-bold flex items-center gap-1.5 border transition-colors cursor-pointer ${
+                modoRender === "map_png"
+                  ? "bg-[#0066b1] border-[#0066b1] text-white"
+                  : "bg-[#141414] border-[#262626] text-[#8e8e93] hover:text-white"
+              }`}
+            >
+              <Box className="w-3.5 h-3.5" />
+              <span>2D</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setModoRender("isometric")}
+              title="Vista 3D Isométrica"
+              className={`px-2.5 py-1 rounded text-xs font-mono font-bold flex items-center gap-1.5 border transition-colors cursor-pointer ${
+                modoRender === "isometric"
+                  ? "bg-[#0066b1] border-[#0066b1] text-white"
+                  : "bg-[#141414] border-[#262626] text-[#8e8e93] hover:text-white"
+              }`}
+            >
+              <Box className="w-3.5 h-3.5" />
+              <span>3D</span>
+            </button>
+          </div>
+
+          {/* Botón Reset Cámara (Sin píldora) */}
           <button
             onClick={restablecerVista}
             title="Restablecer Cámara"
-            className="p-1.5 bg-[#141414] border border-[#3c3c3c] hover:border-[#0066b1] text-[#bbbbbb] hover:text-white rounded-none transition-colors cursor-pointer"
+            className="p-1.5 bg-[#141414] border border-[#262626] hover:border-[#0066b1] text-[#bbbbbb] hover:text-white rounded transition-colors cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
@@ -855,16 +929,16 @@ export function MapaCircuitoCanvas({
         <div
           ref={deltaBadgeRef}
           style={{ display: "none" }}
-          className="absolute top-4 right-4 z-20 pointer-events-none bg-[#0a0e14]/90 backdrop-blur-md border border-[#262626] rounded-none px-3.5 py-2 text-white font-mono shadow-xl items-center gap-2 border-sheen"
+          className="absolute top-4 right-4 z-20 pointer-events-none bg-[#0a0e14]/90 backdrop-blur-md border border-[#262626] rounded-lg px-3 py-2 text-white font-mono shadow-xl items-center gap-2"
         >
           <GitCompare className="w-4 h-4 text-[#0066b1]" />
           <div>
-            <span className="text-[10px] text-[#7e7e7e] block uppercase tracking-wider leading-none">
+            <span className="text-[10px] text-[#7e7e7e] block uppercase leading-none">
               Brecha Temporal (A vs B)
             </span>
             <span
               ref={deltaTextRef}
-              className="text-sm font-black text-[#0066b1] leading-tight block mt-0.5 tabular-nums"
+              className="text-sm font-black text-[#0066b1] leading-tight block mt-0.5"
             >
               +0.000 s
             </span>
@@ -872,10 +946,10 @@ export function MapaCircuitoCanvas({
         </div>
 
         {/* Guía de Controles Inferior Izquierda */}
-        <div className="absolute bottom-4 left-4 z-20 pointer-events-none hidden sm:block bg-black/85 backdrop-blur px-3 py-1.5 rounded-none border border-[#262626] text-[10px] font-mono text-[#7e7e7e] tracking-wider uppercase">
+        <div className="absolute bottom-4 left-4 z-20 pointer-events-none hidden sm:block bg-black/75 backdrop-blur px-2.5 py-1.5 rounded border border-[#262626] text-[10px] font-mono text-[#7e7e7e]">
           {modoRender === "isometric"
-            ? "Clic Izq: Orbitar 3D • Clic Der: Desplazar • Rueda: Zoom"
-            : "Clic Izq / Der: Desplazar • Rueda: Zoom"}
+            ? "Clic Izq: Orbitar 3D • Clic Der: Desplazar • Rueda: Zoom (sin scroll)"
+            : "Clic Izq / Der: Desplazar • Rueda: Zoom (sin scroll)"}
         </div>
       </div>
 
@@ -947,85 +1021,22 @@ export function MapaCircuitoCanvas({
         </div>
       </div>
 
-      {/* 5. Barra Inferior de Reproducción & Scrubbing */}
-      <div className="p-3 border-t border-[#262626] bg-[#0a0a0a] flex items-center gap-4">
+      {/* 5. Barra Inferior: Solo Botón Play y Timestamp */}
+      <div className="p-3 border-t border-[#262626] bg-[#0d0d0d] flex items-center gap-3">
         <button
           onClick={() => setEstaReproduciendo(!estaReproduciendo)}
           title={estaReproduciendo ? "Pausar" : "Reproducir Demostración Simultánea"}
-          className="p-2.5 rounded-none bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-all cursor-pointer shadow-[0_0_15px_rgba(0,102,177,0.3)] active:scale-[0.98]"
+          className="p-2 rounded bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-colors cursor-pointer"
         >
           {estaReproduciendo ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-white" />}
         </button>
 
-        <div className="flex-1 flex items-center gap-3">
-          <input
-            ref={rangeScrubberRef}
-            type="range"
-            min={0}
-            max={circuitoActual.track.length - 1}
-            defaultValue={0}
-            onPointerDown={() => {
-              // Pausar y congelar inmediatamente la reproducción al tocar o hacer clic en el scrubber
-              setEstaReproduciendo(false);
-              estadoCamara.current.reproduciendo = false;
-              estadoCamara.current.estaArrastrandoScrubber = true;
-            }}
-            onPointerUp={() => {
-              estadoCamara.current.estaArrastrandoScrubber = false;
-            }}
-            onInput={(e) => {
-              // Congelar la animación para permitir manipulación manual 100% libre
-              setEstaReproduciendo(false);
-              estadoCamara.current.reproduciendo = false;
-
-              const idx = parseInt(e.currentTarget.value, 10);
-              if (Number.isFinite(idx) && circuitoActual.track.length > 0) {
-                const safeIdx = Math.max(0, Math.min(circuitoActual.track.length - 1, idx));
-                estadoCamara.current.carProgressA = safeIdx;
-                estadoCamara.current.carProgressB = Math.max(0, safeIdx - 12);
-                if (onSeleccionarDistancia) {
-                  const punto = circuitoActual.track[safeIdx];
-                  if (punto) onSeleccionarDistancia(punto.dist);
-                }
-              }
-            }}
-            onChange={(e) => {
-              const idx = parseInt(e.currentTarget.value, 10);
-              if (Number.isFinite(idx) && circuitoActual.track.length > 0) {
-                const safeIdx = Math.max(0, Math.min(circuitoActual.track.length - 1, idx));
-                estadoCamara.current.carProgressA = safeIdx;
-                estadoCamara.current.carProgressB = Math.max(0, safeIdx - 12);
-                if (onSeleccionarDistancia) {
-                  const punto = circuitoActual.track[safeIdx];
-                  if (punto) onSeleccionarDistancia(punto.dist);
-                }
-              }
-            }}
-            className="w-full h-2 bg-[#262626] rounded-lg appearance-none cursor-grab active:cursor-grabbing accent-[#0066b1]
-              [&::-webkit-slider-thumb]:appearance-none
-              [&::-webkit-slider-thumb]:w-4.5
-              [&::-webkit-slider-thumb]:h-4.5
-              [&::-webkit-slider-thumb]:rounded-full
-              [&::-webkit-slider-thumb]:bg-white
-              [&::-webkit-slider-thumb]:border-2
-              [&::-webkit-slider-thumb]:border-[#0066b1]
-              [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(0,102,177,0.8)]
-              [&::-webkit-slider-thumb]:transition-transform
-              [&::-webkit-slider-thumb]:hover:scale-125
-              [&::-moz-range-thumb]:w-4.5
-              [&::-moz-range-thumb]:h-4.5
-              [&::-moz-range-thumb]:rounded-full
-              [&::-moz-range-thumb]:bg-white
-              [&::-moz-range-thumb]:border-2
-              [&::-moz-range-thumb]:border-[#0066b1]
-              [&::-moz-range-thumb]:shadow-[0_0_10px_rgba(0,102,177,0.8)]"
-          />
-        </div>
-
-        <div className="text-xs font-mono text-white shrink-0">
-          <span ref={distTextRef}>0 m</span>
-          <span className="text-[#7e7e7e]"> / {circuitoActual.lengthMeters} m</span>
-        </div>
+        <span
+          ref={timestampRef}
+          className="text-sm font-mono font-bold text-white tracking-wider tabular-nums select-none"
+        >
+          00:00:000
+        </span>
       </div>
     </div>
   );
