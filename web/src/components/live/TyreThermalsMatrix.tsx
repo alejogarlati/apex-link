@@ -37,15 +37,10 @@ function obtenerColorTemperatura(temp: number): { texto: string; fondo: string; 
 
 export function TyreThermalsMatrix({ tyres }: TyreThermalsMatrixProps) {
   return (
-    <div className="bg-[#141414] border border-[#262626] rounded-lg p-5 flex flex-col justify-between">
+    <div className="bg-[#141414] border border-[#262626] rounded-xl p-5 flex flex-col justify-between shadow-md">
       <div className="flex items-center justify-between border-b border-[#262626] pb-3 mb-4">
-        <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#7e7e7e]">
-            Compuestos & Térmica
-          </span>
-          <h3 className="text-sm font-bold uppercase text-white">Matriz de 4 Neumáticos</h3>
-        </div>
-        <span className="text-xs font-mono text-[#bbbbbb] bg-black/60 px-2 py-0.5 rounded border border-[#262626]">
+        <h3 className="text-sm font-bold uppercase text-white tracking-tight">Matriz de 4 Neumáticos</h3>
+        <span className="text-[10px] font-mono text-[#bbbbbb] bg-black/60 px-2 py-0.5 rounded border border-[#262626]">
           4 Canales
         </span>
       </div>

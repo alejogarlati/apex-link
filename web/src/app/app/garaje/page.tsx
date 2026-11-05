@@ -121,11 +121,13 @@ export default function PaginaGaraje() {
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#262626] pb-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 bg-[#0066b1] animate-pulse" />
-            <h1 className="text-xl font-bold tracking-tight text-white uppercase sm:text-2xl">
-              Garaje Virtual & Odómetro de Monoplazas
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
+              Garaje Virtual
             </h1>
+            <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#0066b1]/15 text-[#81c4ff] border border-[#0066b1]/30">
+              Odómetro & Suspensiones
+            </span>
           </div>
           <p className="mt-1 text-xs text-[#bbbbbb]">
             Vehículos calibrados con telemetría de suspensiones, odómetro en SQLite y corte de revoluciones.
@@ -134,12 +136,12 @@ export default function PaginaGaraje() {
 
         <div className="flex items-center gap-2 font-mono text-xs">
           {datosReales ? (
-            <span className="px-2.5 py-1 rounded bg-[#0fa336]/15 border border-[#0fa336]/30 text-[#0fa336] flex items-center gap-1.5 font-bold">
+            <span className="px-2.5 py-1 rounded-full bg-[#0fa336]/15 border border-[#0fa336]/30 text-[#0fa336] flex items-center gap-1.5 font-bold">
               <ShieldCheck className="w-3.5 h-3.5" />
               Odómetro Dinámico WAL
             </span>
           ) : (
-            <span className="px-2.5 py-1 rounded bg-[#1a1a1a] border border-[#3c3c3c] text-[#7e7e7e] flex items-center gap-1.5">
+            <span className="px-2.5 py-1 rounded-full bg-[#1a1a1a] border border-[#3c3c3c] text-[#7e7e7e] flex items-center gap-1.5">
               <RefreshCw className={`w-3.5 h-3.5 ${cargando ? "animate-spin text-[#0066b1]" : ""}`} />
               Telemetría Base
             </span>

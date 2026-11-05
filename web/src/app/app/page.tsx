@@ -159,25 +159,23 @@ export default function PaginaDashboardBoxes() {
             <Gauge className="w-8 h-8" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#0066b1]">
-                Dashboard de Ingeniería de Pista
-              </span>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-bold uppercase tracking-tight text-white">
+                Bienvenido, {usuario.nombre}
+              </h1>
               {enlaceActivo ? (
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#0fa336]/15 text-[#0fa336] border border-[#0fa336]/30 font-bold flex items-center gap-1">
+                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-[#0fa336]/15 text-[#0fa336] border border-[#0fa336]/30 font-bold flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#0fa336] animate-pulse" />
                   {esMock ? "Generador Mock @ 60 Hz" : "Enlace Win32 MMF Activo"}
                 </span>
               ) : (
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#f4b400]/15 text-[#f4b400] border border-[#f4b400]/30 font-bold">
+                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-[#f4b400]/15 text-[#f4b400] border border-[#f4b400]/30 font-bold flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#f4b400]" />
                   Standby • Esperando Sim
                 </span>
               )}
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold uppercase tracking-tight text-white mt-1">
-              Bienvenido, {usuario.nombre}
-            </h1>
-            <p className="text-xs sm:text-sm text-[#bbbbbb] mt-0.5 font-mono">
+            <p className="text-xs sm:text-sm text-[#bbbbbb] mt-1 font-mono">
               Sesión activa: <span className="text-white font-bold">{circuitoActual}</span> • <span className="text-[#0066b1]">{autoActual}</span>
             </p>
           </div>
@@ -186,7 +184,7 @@ export default function PaginaDashboardBoxes() {
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           <Link
             href="/app/live"
-            className="w-full sm:w-auto px-4 py-2.5 rounded-lg font-bold uppercase tracking-wider text-xs bg-[#1a1a1a] hover:bg-[#262626] border border-[#3c3c3c] text-white transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-lg font-bold uppercase tracking-wider text-xs bg-[#1a1a1a] hover:bg-[#262626] border border-[#3c3c3c] hover:border-[#0066b1] text-white transition-all flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1]"
           >
             <Radio className="w-4 h-4 text-[#00E676] animate-pulse" />
             Live Pitwall @ 60 Hz
@@ -194,7 +192,7 @@ export default function PaginaDashboardBoxes() {
 
           <Link
             href="/app/analysis"
-            className="w-full sm:w-auto px-5 py-2.5 rounded-lg font-bold uppercase tracking-wider text-xs bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-all shadow-lg shadow-[#0066b1]/20 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-lg font-bold uppercase tracking-wider text-xs bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-all shadow-lg shadow-[#0066b1]/20 flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#1c69d4]"
           >
             <LineChart className="w-4 h-4" />
             Laboratorio Analítico 2D
@@ -209,13 +207,13 @@ export default function PaginaDashboardBoxes() {
         <div className="lg:col-span-2 bg-[#141414] border border-[#262626] rounded-xl p-6 flex flex-col justify-between shadow-lg">
           <div>
             <div className="flex items-center justify-between pb-4 border-b border-[#262626]">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#7e7e7e]">
-                  Última Tanda Registrada en Base Local
-                </span>
-                <h2 className="text-lg font-bold uppercase text-white mt-0.5">
+              <div className="flex items-center gap-3">
+                <h2 className="text-base sm:text-lg font-bold uppercase text-white tracking-tight">
                   {ultimaSesion?.circuit || ultimaSesion?.circuito || "Autodromo Nazionale Monza"}
                 </h2>
+                <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-[#262626] text-[#bbbbbb] border border-[#3c3c3c]">
+                  Última Tanda
+                </span>
               </div>
               <span className="text-xs font-mono text-[#0066b1] bg-[#0066b1]/10 px-2.5 py-1 rounded border border-[#0066b1]/30 font-bold">
                 {totalVueltas} Vueltas
@@ -299,14 +297,9 @@ export default function PaginaDashboardBoxes() {
         <div className="bg-[#141414] border border-[#262626] rounded-xl p-6 flex flex-col justify-between shadow-lg">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-[#262626]">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#7e7e7e]">
-                  Evaluación de Conducción
-                </span>
-                <h3 className="text-lg font-bold uppercase text-white">
-                  Apex Rating {usuario.rating.paceRating}
-                </h3>
-              </div>
+              <h3 className="text-base font-bold uppercase text-white tracking-tight">
+                Apex Rating {usuario.rating.paceRating}
+              </h3>
               <span className="text-xs font-bold font-mono px-2 py-0.5 rounded bg-[#e22718]/15 text-[#e22718] border border-[#e22718]/30">
                 Cat. {usuario.rating.safetyRating}
               </span>

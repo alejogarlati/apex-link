@@ -34,16 +34,11 @@ export function PedalTelemetryBars({ car }: PedalTelemetryBarsProps) {
   const steerAngleDeg = car.steer * 90;
 
   return (
-    <div className="bg-[#141414] border border-[#262626] rounded-lg p-5 flex flex-col justify-between">
+    <div className="bg-[#141414] border border-[#262626] rounded-xl p-5 flex flex-col justify-between shadow-md">
       <div className="flex items-center justify-between border-b border-[#262626] pb-3 mb-4">
-        <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#7e7e7e]">
-            Telemetría de Pedales
-          </span>
-          <h3 className="text-sm font-bold uppercase text-white">Input Dinámico</h3>
-        </div>
-        <span className="text-xs font-mono text-[#0066b1] bg-[#0066b1]/10 px-2 py-0.5 rounded border border-[#0066b1]/30">
-          Sub-Píxel @ 60Hz
+        <h3 className="text-sm font-bold uppercase text-white tracking-tight">Telemetría de Pedales</h3>
+        <span className="text-[10px] font-mono font-bold text-[#0066b1] bg-[#0066b1]/10 px-2 py-0.5 rounded border border-[#0066b1]/30">
+          60 Hz
         </span>
       </div>
 

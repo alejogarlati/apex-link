@@ -191,11 +191,13 @@ export default function PaginaSesiones() {
       {/* Header */}
       <div className="flex flex-col justify-between gap-4 border-b border-[#262626] pb-4 sm:flex-row sm:items-end">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 bg-[#0066b1] animate-pulse" />
-            <h1 className="text-xl font-bold tracking-tight text-white uppercase sm:text-2xl">
-              Historial de Sesiones & Tandas Registradas
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
+              Historial de Sesiones
             </h1>
+            <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#0066b1]/15 text-[#81c4ff] border border-[#0066b1]/30">
+              SQLite WAL Sync
+            </span>
           </div>
           <p className="mt-1 text-xs text-[#bbbbbb]">
             Tandas de telemetría capturadas desde Assetto Corsa persistidas en SQLite WAL y sincronizadas con PostgreSQL.
@@ -206,7 +208,7 @@ export default function PaginaSesiones() {
           <button
             onClick={() => cargarSesiones(pagina)}
             disabled={cargando}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#1a1a1a] hover:bg-[#262626] text-xs font-mono text-[#bbbbbb] hover:text-white border border-[#3c3c3c] transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1a1a1a] hover:bg-[#262626] text-xs font-mono text-[#bbbbbb] hover:text-white border border-[#3c3c3c] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1]"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${cargando ? "animate-spin text-[#0066b1]" : ""}`} />
             Actualizar
@@ -265,7 +267,7 @@ export default function PaginaSesiones() {
           return (
             <div
               key={sesion.id}
-              className="border border-[#262626] bg-[#141414] rounded-lg p-5 flex flex-col justify-between hover:border-[#0066b1] transition-all group shadow-sm hover:shadow-md"
+              className="border border-[#262626] bg-[#141414] rounded-xl p-5 flex flex-col justify-between hover:border-[#0066b1] transition-all group shadow-sm hover:shadow-lg"
             >
               <div>
                 <div className="mb-3 flex items-center justify-between">
@@ -282,7 +284,7 @@ export default function PaginaSesiones() {
                   <span className="text-[11px] text-[#7e7e7e] font-mono">{fechaStr}</span>
                 </div>
 
-                <h3 className="text-base font-bold text-white uppercase mb-1">
+                <h3 className="text-base font-bold text-white uppercase mb-1 tracking-tight">
                   {circuitoNombre}
                 </h3>
                 <p className="text-xs text-[#7e7e7e] font-mono mb-4">{configNombre}</p>
@@ -301,7 +303,7 @@ export default function PaginaSesiones() {
                       <Trophy className="h-4 w-4 text-[#f4b400]" />
                       Mejor Vuelta:
                     </span>
-                    <span className="font-bold text-[#00E676]">{mejorVueltaStr}</span>
+                    <span className="font-bold text-[#00E676] tabular-nums tracking-tight">{mejorVueltaStr}</span>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -309,7 +311,7 @@ export default function PaginaSesiones() {
                       <Clock className="h-4 w-4 text-[#7e7e7e]" />
                       Vueltas:
                     </span>
-                    <span className="text-white">{totalV} registradas</span>
+                    <span className="text-white tabular-nums">{totalV} registradas</span>
                   </div>
                 </div>
               </div>
@@ -317,7 +319,7 @@ export default function PaginaSesiones() {
               <div className="mt-5 grid grid-cols-2 gap-2">
                 <button
                   onClick={() => abrirModalVueltas(sesion)}
-                  className="w-full py-2 rounded font-bold uppercase tracking-wider text-[11px] bg-[#1a1a1a] hover:bg-[#262626] border border-[#3c3c3c] text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="w-full py-2 rounded-lg font-bold uppercase tracking-wider text-[11px] bg-[#1a1a1a] hover:bg-[#262626] border border-[#3c3c3c] text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1]"
                 >
                   <ListFilter className="w-3.5 h-3.5 text-[#0066b1]" />
                   Vueltas ({totalV})
@@ -325,7 +327,7 @@ export default function PaginaSesiones() {
 
                 <Link
                   href={`/app/analysis?sesionId=${sesion.id}`}
-                  className="w-full py-2 rounded font-bold uppercase tracking-wider text-[11px] bg-[#0066b1] hover:bg-[#005291] text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-[#0066b1]/20"
+                  className="w-full py-2 rounded-lg font-bold uppercase tracking-wider text-[11px] bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-[#0066b1]/20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#1c69d4]"
                 >
                   Laboratorio 2D
                   <ArrowRight className="w-3.5 h-3.5" />

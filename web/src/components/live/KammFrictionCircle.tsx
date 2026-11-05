@@ -98,16 +98,11 @@ export function KammFrictionCircle({ dynamics }: KammFrictionCircleProps) {
   }, [gLat, gLon]);
 
   return (
-    <div className="bg-[#141414] border border-[#262626] rounded-lg p-5 flex flex-col justify-between">
+    <div className="bg-[#141414] border border-[#262626] rounded-xl p-5 flex flex-col justify-between shadow-md">
       <div className="flex items-center justify-between border-b border-[#262626] pb-3 mb-2">
-        <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#7e7e7e]">
-            Dinámica de Chasis
-          </span>
-          <h3 className="text-sm font-bold uppercase text-white">Círculo de Kamm (G-G)</h3>
-        </div>
+        <h3 className="text-sm font-bold uppercase text-white tracking-tight">Círculo de Kamm (G-G)</h3>
         <div className="text-right font-mono">
-          <span className="text-xs font-bold text-[#0fa336]">{gTotal.toFixed(2)} G</span>
+          <span className="text-xs font-bold text-[#0fa336] tabular-nums">{gTotal.toFixed(2)} G</span>
           <span className="text-[10px] text-[#7e7e7e] block">Total</span>
         </div>
       </div>
