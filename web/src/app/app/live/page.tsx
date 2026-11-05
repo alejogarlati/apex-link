@@ -19,7 +19,7 @@ import { useLiveTelemetryWebSocket } from "@/hooks/useLiveTelemetryWebSocket";
 import { PedalTelemetryBars } from "@/components/live/PedalTelemetryBars";
 import { KammFrictionCircle } from "@/components/live/KammFrictionCircle";
 import { TyreThermalsMatrix } from "@/components/live/TyreThermalsMatrix";
-import { MapaCircuitoCanvas } from "@/components/analisis/MapaCircuitoCanvas";
+import { LiveMapaCircuitoCanvas } from "@/components/live/LiveMapaCircuitoCanvas";
 import { LiveLapTimesList, type VueltaRegistrada } from "@/components/live/LiveLapTimesList";
 import { BotonColapsarSidebar } from "@/components/layout/BotonColapsarSidebar";
 import { generarTelemetriaMonza } from "@/lib/mockTelemetria";
@@ -328,19 +328,15 @@ export default function PaginaLivePitwall() {
 
         {/* COLUMNA DERECHA (50% Ancho hacia la derecha: Canvas 2D del Laboratorio Analítico + Tiempos de Vuelta) */}
         <div className="space-y-6">
-          {/* Canvas 2D del Laboratorio Analítico como Sección Principal */}
+          {/* Canvas 2D en Vivo como Sección Principal */}
           <div className="border border-[#222225] rounded-xl overflow-hidden bg-[#09090b]">
-            <MapaCircuitoCanvas
+            <LiveMapaCircuitoCanvas
               muestras={muestrasMonza}
               distanciaSeleccionada={distanciaEstimada}
               nombreCircuito={sesion.track.toUpperCase().includes("IMOLA") ? "Autodromo Enzo e Dino Ferrari" : sesion.track.toUpperCase().includes("RBR") ? "Red Bull Ring GP" : "Autodromo Nazionale Monza"}
               longitudMetros={longitudCircuito}
-              vueltaAInfo={{
-                ranura: "A",
-                numeroVuelta: timing.currentLap,
-                tiempoVueltaStr: timing.lapTimeStr,
-              }}
               circuitoInicial={circuitoIdEnVivo}
+              telemetriaAuto={auto}
             />
           </div>
 
