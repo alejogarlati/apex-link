@@ -40,6 +40,14 @@ type ModoRender = "map_png" | "isometric";
 type ModoHeatmap = "throttle_brake" | "speed";
 type CircuitoId = "monza" | "imola" | "rbr";
 
+function formatearTimestamp(msTotal: number): string {
+  const msSeguro = Math.max(0, Math.floor(msTotal));
+  const minutos = Math.floor(msSeguro / 60000);
+  const segundos = Math.floor((msSeguro % 60000) / 1000);
+  const milisegundos = msSeguro % 1000;
+  return `${String(minutos).padStart(2, "0")}:${String(segundos).padStart(2, "0")}:${String(milisegundos).padStart(3, "0")}`;
+}
+
 export function MapaCircuitoCanvas({
   muestras,
   muestrasComparativas,
@@ -84,8 +92,7 @@ export function MapaCircuitoCanvas({
   const hudSectionRef = useRef<HTMLSpanElement>(null);
   const hudDrsRef = useRef<HTMLSpanElement>(null);
   const hudElevRef = useRef<HTMLSpanElement>(null);
-  const rangeScrubberRef = useRef<HTMLInputElement>(null);
-  const distTextRef = useRef<HTMLSpanElement>(null);
+  const timestampRef = useRef<HTMLSpanElement>(null);
   const deltaBadgeRef = useRef<HTMLDivElement>(null);
   const deltaTextRef = useRef<HTMLSpanElement>(null);
 
@@ -93,6 +100,48 @@ export function MapaCircuitoCanvas({
   const circuitoActual = useMemo(() => {
     return CIRCUITS_DATA[circuitoActivoId] || CIRCUITS_DATA.monza;
   }, [circuitoActivoId]);
+
+  // Perfil temporal acumulado del circuito (dx / v a lo largo de cada segmento de pista)
+  const tiemposAcumuladosPista = useMemo(() => {
+    const track = circuitoActual?.track ?? [];
+    if (track.length === 0) return [];
+    const times: number[] = [0];
+    let acumSec = 0;
+    for (let i = 1; i < track.length; i++) {
+      const prev = track[i - 1];
+      const curr = track[i];
+      if (!prev || !curr) continue;
+      const dDist = Math.max(0.1, curr.dist - prev.dist);
+      const avgSpeedMs = Math.max(10, ((prev.speed + curr.speed) / 2) / 3.6);
+      acumSec += dDist / avgSpeedMs;
+      times.push(acumSec * 1000);
+    }
+    return times;
+  }, [circuitoActual]);
+
+  // Si se dispone del tiempo oficial de vuelta (ej. "01:21.042"), sincronizar escala exacta de meta
+  const duracionObjetivoMs = useMemo(() => {
+    if (!vueltaAInfo?.tiempoVueltaStr) return null;
+    const partes = vueltaAInfo.tiempoVueltaStr.split(/[:.]/);
+    if (partes.length >= 2) {
+      const min = parseInt(partes[0] ?? "0", 10) || 0;
+      const sec = parseInt(partes[1] ?? "0", 10) || 0;
+      const ms = partes[2] ? parseInt(partes[2].padEnd(3, "0").slice(0, 3), 10) || 0 : 0;
+      const total = (min * 60 + sec) * 1000 + ms;
+      return total > 10000 ? total : null;
+    }
+    return null;
+  }, [vueltaAInfo?.tiempoVueltaStr]);
+
+  const tiemposEscalados = useMemo(() => {
+    if (tiemposAcumuladosPista.length === 0) return [];
+    const ultimoTiempo = tiemposAcumuladosPista[tiemposAcumuladosPista.length - 1];
+    if (duracionObjetivoMs && ultimoTiempo && ultimoTiempo > 0) {
+      const factor = duracionObjetivoMs / ultimoTiempo;
+      return tiemposAcumuladosPista.map((t) => t * factor);
+    }
+    return tiemposAcumuladosPista;
+  }, [tiemposAcumuladosPista, duracionObjetivoMs]);
 
   // Variables de cámara y animación (persisten sin re-renderizar)
   const estadoCamara = useRef({
@@ -109,7 +158,6 @@ export function MapaCircuitoCanvas({
     carProgressA: 0, // Avance en coma flotante del Monoplaza A
     carProgressB: 0, // Avance en coma flotante del Monoplaza B (Ghost / Comparativo)
     reproduciendo: false,
-    estaArrastrandoScrubber: false,
     ultimoTiempoSync: 0,
   });
 
@@ -149,8 +197,8 @@ export function MapaCircuitoCanvas({
       estadoCamara.current.panY = 0;
       estadoCamara.current.carProgressA = 0;
       estadoCamara.current.carProgressB = 0;
-      if (rangeScrubberRef.current) {
-        rangeScrubberRef.current.value = "0";
+      if (timestampRef.current) {
+        timestampRef.current.textContent = "00:00:000";
       }
     }
   }, [circuitoActivoId]);
@@ -177,8 +225,18 @@ export function MapaCircuitoCanvas({
 
       // Si hay comparativa, desfasamos ligeramente el coche B según el factor de rendimiento
       estadoCamara.current.carProgressB = Math.max(0, targetPoint - 12);
+
+      if (timestampRef.current && tiemposEscalados.length > 0) {
+        const idx0 = Math.floor(targetPoint);
+        const idx1 = Math.min(tiemposEscalados.length - 1, idx0 + 1);
+        const frac = targetPoint - idx0;
+        const t0 = tiemposEscalados[idx0] ?? 0;
+        const t1 = tiemposEscalados[idx1] ?? t0;
+        const ms = t0 + (t1 - t0) * frac;
+        timestampRef.current.textContent = formatearTimestamp(ms);
+      }
     }
-  }, [distanciaSeleccionada, circuitoActual]);
+  }, [distanciaSeleccionada, circuitoActual, tiemposEscalados]);
 
   // 1. Manejo nativo de rueda de ratón con { passive: false } para EVITAR scroll de página
   useEffect(() => {
@@ -329,11 +387,14 @@ export function MapaCircuitoCanvas({
       if (hudBrakeTextRef.current) hudBrakeTextRef.current.textContent = `${Math.round(carFocoBrake * 100)}%`;
       if (hudSectionRef.current) hudSectionRef.current.textContent = carASection || "Pista Activa";
       if (hudElevRef.current) hudElevRef.current.textContent = `${carFocoElev.toFixed(1)} m`;
-      if (distTextRef.current) distTextRef.current.textContent = `${carADist} m`;
 
-      if (rangeScrubberRef.current && cam.reproduciendo && !cam.estaArrastrandoScrubber) {
-        rangeScrubberRef.current.value = String(idxA0);
+      if (timestampRef.current && tiemposEscalados.length > 0) {
+        const t0 = tiemposEscalados[idxA0] ?? 0;
+        const t1 = tiemposEscalados[idxA1] ?? t0;
+        const msActual = t0 + (t1 - t0) * fracA;
+        timestampRef.current.textContent = formatearTimestamp(msActual);
       }
+
       if (hudDrsRef.current) {
         hudDrsRef.current.style.display = carADrs ? "inline-block" : "none";
       }
@@ -623,7 +684,7 @@ export function MapaCircuitoCanvas({
 
     animId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animId);
-  }, [circuitoActual, modoRender, modoHeatmap, tieneComparativa, ranuraActiva, onSeleccionarDistancia]);
+  }, [circuitoActual, modoRender, modoHeatmap, tieneComparativa, ranuraActiva, onSeleccionarDistancia, tiemposEscalados]);
 
   // Función auxiliar de pintado de Laser Puck
   function dibujarPuck(
@@ -960,8 +1021,8 @@ export function MapaCircuitoCanvas({
         </div>
       </div>
 
-      {/* 5. Barra Inferior de Reproducción & Scrubbing */}
-      <div className="p-3 border-t border-[#262626] bg-[#0d0d0d] flex items-center gap-4">
+      {/* 5. Barra Inferior: Solo Botón Play y Timestamp */}
+      <div className="p-3 border-t border-[#262626] bg-[#0d0d0d] flex items-center gap-3">
         <button
           onClick={() => setEstaReproduciendo(!estaReproduciendo)}
           title={estaReproduciendo ? "Pausar" : "Reproducir Demostración Simultánea"}
@@ -970,75 +1031,12 @@ export function MapaCircuitoCanvas({
           {estaReproduciendo ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-white" />}
         </button>
 
-        <div className="flex-1 flex items-center gap-3">
-          <input
-            ref={rangeScrubberRef}
-            type="range"
-            min={0}
-            max={circuitoActual.track.length - 1}
-            defaultValue={0}
-            onPointerDown={() => {
-              // Pausar y congelar inmediatamente la reproducción al tocar o hacer clic en el scrubber
-              setEstaReproduciendo(false);
-              estadoCamara.current.reproduciendo = false;
-              estadoCamara.current.estaArrastrandoScrubber = true;
-            }}
-            onPointerUp={() => {
-              estadoCamara.current.estaArrastrandoScrubber = false;
-            }}
-            onInput={(e) => {
-              // Congelar la animación para permitir manipulación manual 100% libre
-              setEstaReproduciendo(false);
-              estadoCamara.current.reproduciendo = false;
-
-              const idx = parseInt(e.currentTarget.value, 10);
-              if (Number.isFinite(idx) && circuitoActual.track.length > 0) {
-                const safeIdx = Math.max(0, Math.min(circuitoActual.track.length - 1, idx));
-                estadoCamara.current.carProgressA = safeIdx;
-                estadoCamara.current.carProgressB = Math.max(0, safeIdx - 12);
-                if (onSeleccionarDistancia) {
-                  const punto = circuitoActual.track[safeIdx];
-                  if (punto) onSeleccionarDistancia(punto.dist);
-                }
-              }
-            }}
-            onChange={(e) => {
-              const idx = parseInt(e.currentTarget.value, 10);
-              if (Number.isFinite(idx) && circuitoActual.track.length > 0) {
-                const safeIdx = Math.max(0, Math.min(circuitoActual.track.length - 1, idx));
-                estadoCamara.current.carProgressA = safeIdx;
-                estadoCamara.current.carProgressB = Math.max(0, safeIdx - 12);
-                if (onSeleccionarDistancia) {
-                  const punto = circuitoActual.track[safeIdx];
-                  if (punto) onSeleccionarDistancia(punto.dist);
-                }
-              }
-            }}
-            className="w-full h-2 bg-[#262626] rounded-lg appearance-none cursor-grab active:cursor-grabbing accent-[#0066b1]
-              [&::-webkit-slider-thumb]:appearance-none
-              [&::-webkit-slider-thumb]:w-4.5
-              [&::-webkit-slider-thumb]:h-4.5
-              [&::-webkit-slider-thumb]:rounded-full
-              [&::-webkit-slider-thumb]:bg-white
-              [&::-webkit-slider-thumb]:border-2
-              [&::-webkit-slider-thumb]:border-[#0066b1]
-              [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(0,102,177,0.8)]
-              [&::-webkit-slider-thumb]:transition-transform
-              [&::-webkit-slider-thumb]:hover:scale-125
-              [&::-moz-range-thumb]:w-4.5
-              [&::-moz-range-thumb]:h-4.5
-              [&::-moz-range-thumb]:rounded-full
-              [&::-moz-range-thumb]:bg-white
-              [&::-moz-range-thumb]:border-2
-              [&::-moz-range-thumb]:border-[#0066b1]
-              [&::-moz-range-thumb]:shadow-[0_0_10px_rgba(0,102,177,0.8)]"
-          />
-        </div>
-
-        <div className="text-xs font-mono text-white shrink-0">
-          <span ref={distTextRef}>0 m</span>
-          <span className="text-[#7e7e7e]"> / {circuitoActual.lengthMeters} m</span>
-        </div>
+        <span
+          ref={timestampRef}
+          className="text-sm font-mono font-bold text-white tracking-wider tabular-nums select-none"
+        >
+          00:00:000
+        </span>
       </div>
     </div>
   );
