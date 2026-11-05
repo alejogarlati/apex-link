@@ -93,7 +93,7 @@ export default function PaginaCircuitos() {
           <Link
             key={pista.id}
             href={`/app/analysis?circuito=${pista.id}`}
-            className="surface-specular-interactive p-6 flex flex-col justify-between group cursor-pointer block"
+            className="border-t border-[#222225] pt-6 pb-4 flex flex-col justify-between group cursor-pointer block hover:bg-white/[0.015] transition-colors"
           >
             <div>
               <div className="flex items-center justify-between mb-4">

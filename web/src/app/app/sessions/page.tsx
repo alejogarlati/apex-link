@@ -262,7 +262,7 @@ export default function PaginaSesiones() {
             <Link
               key={sesion.id}
               href={`/app/analysis?sesionId=${sesion.id}`}
-              className="surface-specular-interactive p-6 flex flex-col justify-between group cursor-pointer block"
+              className="border-t border-[#222225] pt-6 pb-4 flex flex-col justify-between group cursor-pointer block hover:bg-white/[0.015] transition-colors"
             >
               <div>
                 <div className="mb-3 flex items-center justify-between text-xs font-mono">

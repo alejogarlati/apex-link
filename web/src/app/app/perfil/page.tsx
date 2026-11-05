@@ -190,10 +190,10 @@ function TarjetaPiloto({
     <div className="flex flex-col gap-4">
       <section
         aria-labelledby="titulo-piloto"
-        className="grid gap-px border border-[#3c3c3c] bg-[#3c3c3c] lg:grid-cols-[1fr_320px]"
+        className="grid gap-8 border-b border-[#222225] pb-8 lg:grid-cols-[1fr_320px]"
       >
         {/* Identidad */}
-        <div className="flex flex-col gap-6 bg-[#1a1a1a] p-6 sm:flex-row sm:items-center sm:p-8">
+        <div className="flex flex-col gap-6 bg-transparent sm:flex-row sm:items-center">
           <div
             className="h-28 w-28 shrink-0 p-[3px]"
             style={{
@@ -201,7 +201,7 @@ function TarjetaPiloto({
             }}
             aria-hidden
           >
-            <div className="flex h-full w-full items-center justify-center bg-[#262626]">
+            <div className="flex h-full w-full items-center justify-center bg-black">
               <span className="font-mono text-4xl font-bold tracking-wider text-white">
                 {iniciales}
               </span>
@@ -247,7 +247,7 @@ function TarjetaPiloto({
         </div>
 
         {/* Apex Rating */}
-        <div className="relative flex flex-col justify-between gap-6 bg-[#262626] p-6 sm:p-8">
+        <div className="relative flex flex-col justify-between gap-6 bg-transparent lg:border-l lg:border-[#222225] lg:pl-8">
           <FranjaM className="absolute inset-x-0 top-0 h-1.5" />
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-[0.3em] text-white">
@@ -333,10 +333,10 @@ function SeccionHabilidades({ habilidades }: { habilidades: HabilidadDetalle[] }
     <section aria-labelledby="titulo-habilidades">
       <TituloSeccion id="titulo-habilidades" etiqueta="Apex Rating" titulo="Perfil de habilidades" />
 
-      <div className="grid gap-px border border-[#3c3c3c] bg-[#3c3c3c] lg:grid-cols-[1.1fr_1fr]">
+      <div className="grid gap-8 border-b border-[#222225] pb-8 lg:grid-cols-[1.1fr_1fr]">
         {/* Radar */}
-        <div className="flex flex-col bg-[#1a1a1a]">
-          <div className="flex items-center justify-between border-b border-[#3c3c3c] px-5 py-3">
+        <div className="flex flex-col bg-transparent lg:border-r lg:border-[#222225] lg:pr-8">
+          <div className="flex items-center justify-between border-b border-[#222225] px-5 py-3">
             <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-white">
               Radar técnico
             </span>
@@ -388,7 +388,7 @@ function SeccionHabilidades({ habilidades }: { habilidades: HabilidadDetalle[] }
         </div>
 
         {/* Leyenda lateral */}
-        <ul className="flex flex-col divide-y divide-[#3c3c3c] bg-[#1a1a1a]">
+        <ul className="flex flex-col divide-y divide-[#222225] bg-transparent">
           {habilidades.map((habilidad) => {
             const Icono = iconoHabilidad(habilidad.id);
             const esActiva = habilidad.id === idActiva;

@@ -152,8 +152,8 @@ export default function PaginaDashboardBoxes() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
-      {/* Banner de Bienvenida y Diagnóstico Rápido */}
-      <div className="surface-specular p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-xl">
+      {/* Banner de Bienvenida y Diagnóstico Rápido (Fondo invisible con separador lineal) */}
+      <div className="pb-8 border-b border-[#222225] flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="flex items-start gap-4">
           <div className="text-[#0066b1] pt-1">
             <Gauge className="w-8 h-8" />
@@ -201,12 +201,12 @@ export default function PaginaDashboardBoxes() {
         </div>
       </div>
 
-      {/* Grid Central: Resumen de Tanda + Radar de Habilidades (Ambas tarjetas 100% interactivas) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Resumen de Última Tanda: Toda la superficie es clicable hacia el análisis */}
+      {/* Grid Central: Resumen de Tanda + Radar de Habilidades (Separador lineal vertical y horizontal, sin cards) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 py-8 border-b border-[#222225]">
+        {/* Resumen de Última Tanda */}
         <Link
           href={`/app/analysis?sesionId=${ultimaSesion?.id || ""}`}
-          className="lg:col-span-2 surface-specular-interactive p-6 flex flex-col justify-between group cursor-pointer"
+          className="lg:col-span-2 flex flex-col justify-between group cursor-pointer lg:pr-8 lg:border-r lg:border-[#222225]"
         >
           <div>
             <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
@@ -284,10 +284,10 @@ export default function PaginaDashboardBoxes() {
           </div>
         </Link>
 
-        {/* Radar de Habilidades del Piloto: Toda la tarjeta es clicable hacia el Perfil */}
+        {/* Radar de Habilidades del Piloto */}
         <Link
           href="/app/perfil"
-          className="surface-specular-interactive p-6 flex flex-col justify-between group cursor-pointer"
+          className="flex flex-col justify-between group cursor-pointer"
         >
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
@@ -354,8 +354,8 @@ export default function PaginaDashboardBoxes() {
         </Link>
       </div>
 
-      {/* AI Race Coach: Diagnóstico Heurístico de Telemetría (Sin cards de fondo internas) */}
-      <div className="surface-specular p-6 shadow-xl">
+      {/* AI Race Coach: Diagnóstico Heurístico de Telemetría (Separador lineal, sin card) */}
+      <div className="py-8 border-b border-[#222225]">
         <div className="flex items-center gap-3 mb-5">
           <Lightbulb className="w-5 h-5 text-[#f4b400]" />
           <div>
@@ -391,10 +391,10 @@ export default function PaginaDashboardBoxes() {
         </div>
       </div>
 
-      {/* Leaderboard Oficial: Tarjeta Especular Interactiva hacia la tabla completa */}
+      {/* Leaderboard Oficial: Separador lineal superior, sin card */}
       <Link
         href="/app/leaderboards"
-        className="surface-specular-interactive p-6 shadow-xl group cursor-pointer block"
+        className="pt-8 group cursor-pointer block"
       >
         <div className="flex items-center justify-between pb-4 border-b border-white/[0.06] mb-4">
           <div className="flex items-center gap-2.5">

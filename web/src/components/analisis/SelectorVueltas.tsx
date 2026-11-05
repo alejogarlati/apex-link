@@ -78,7 +78,7 @@ export function SelectorVueltas({
   };
 
   return (
-    <div className="surface-specular p-5 shadow-xl space-y-4">
+    <div className="pb-6 border-b border-[#222225] space-y-4">
       {/* Encabezado Superior: Título, Resumen de Comparación y Mejor Vuelta */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#262626]">
         <div className="flex items-center gap-3">
