@@ -22,6 +22,8 @@ import {
   Activity,
   Gamepad2,
   UserCircle,
+  PanelLeft,
+  PanelLeftClose,
 } from "lucide-react";
 import {
   obtenerSesionLocal,
@@ -146,6 +148,7 @@ export default function LayoutAppBoxes({
   const toast = useToast();
 
   const [sidebarAbierto, setSidebarAbierto] = useState(false);
+  const [sidebarColapsado, setSidebarColapsado] = useState(false);
   const [gruposAbiertos, setGruposAbiertos] = useState<Record<string, boolean>>({
     "live-telemetria": true,
     "simulador-juego": true,
@@ -156,6 +159,25 @@ export default function LayoutAppBoxes({
     const sesion = obtenerSesionLocal();
     return sesion?.usuario ?? USUARIO_ALEJO_GARLATI;
   });
+
+  useEffect(() => {
+    try {
+      const guardado = localStorage.getItem("apexlink_sidebar_colapsado");
+      if (guardado === "true") {
+        setSidebarColapsado(true);
+      }
+    } catch {}
+  }, []);
+
+  const alternarColapsoSidebar = () => {
+    setSidebarColapsado((prev) => {
+      const nuevo = !prev;
+      try {
+        localStorage.setItem("apexlink_sidebar_colapsado", String(nuevo));
+      } catch {}
+      return nuevo;
+    });
+  };
 
   const alternarGrupo = (grupoId: string) => {
     setGruposAbiertos((prev) => ({
@@ -228,6 +250,16 @@ export default function LayoutAppBoxes({
             {sidebarAbierto ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
+          <button
+            type="button"
+            onClick={alternarColapsoSidebar}
+            title={sidebarColapsado ? "Expandir barra lateral" : "Colapsar barra lateral en iconos"}
+            aria-label={sidebarColapsado ? "Expandir barra lateral" : "Colapsar barra lateral en iconos"}
+            className="hidden md:flex p-2 rounded-lg text-[#8e8e93] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer"
+          >
+            {sidebarColapsado ? <PanelLeft className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
+          </button>
+
           <Link href="/app" className="flex items-center gap-3 sm:gap-4 group">
             <Image
               src="/logos/logo.webp"
@@ -290,51 +322,143 @@ export default function LayoutAppBoxes({
         {/* Sidebar Lateral de Boxes */}
         <aside
           aria-label="Navegación principal de boxes"
-          className={`fixed inset-y-0 left-0 z-30 w-64 bg-[#0d0d0d] border-r border-[#262626] flex flex-col justify-between pt-20 md:pt-0 transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0 ${
-            sidebarAbierto ? "translate-x-0" : "-translate-x-full"
-          }`}
+          className={`fixed inset-y-0 left-0 z-30 bg-[#0d0d0d] border-r border-[#262626] flex flex-col justify-between pt-20 md:pt-0 transform transition-all duration-200 ease-in-out md:relative md:translate-x-0 ${
+            sidebarAbierto ? "translate-x-0 w-64" : "-translate-x-full"
+          } ${sidebarColapsado ? "md:w-16" : "md:w-64"}`}
         >
-          <div className="p-3 space-y-3 overflow-y-auto">
-            {GRUPOS_NAVEGACION.map((grupo, indiceGrupo) => {
-              const IconoGrupo = grupo.icono;
-              const estaAbierto = gruposAbiertos[grupo.id] ?? true;
-              const tieneEnlaceActivo = grupo.enlaces.some((e) => e.href === pathname);
+          {/* MODO EXPANDIDO: Se muestra en móviles cuando se abre el drawer, o en desktop si no está colapsado */}
+          <div
+            className={`flex-1 flex flex-col justify-between overflow-y-auto ${
+              sidebarColapsado ? "md:hidden" : ""
+            }`}
+          >
+            <div className="p-3 space-y-3">
+              {GRUPOS_NAVEGACION.map((grupo, indiceGrupo) => {
+                const IconoGrupo = grupo.icono;
+                const estaAbierto = gruposAbiertos[grupo.id] ?? true;
+                const tieneEnlaceActivo = grupo.enlaces.some((e) => e.href === pathname);
 
-              return (
-                <div key={grupo.id} className="space-y-1">
-                  {/* Agrupador genérico sin enrutado (dropdown toggle) */}
-                  <button
-                    type="button"
-                    onClick={() => alternarGrupo(grupo.id)}
-                    aria-expanded={estaAbierto}
-                    aria-controls={`subgrupo-${grupo.id}`}
-                    className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-mono font-bold uppercase tracking-wider transition-colors cursor-pointer select-none outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1] ${
-                      tieneEnlaceActivo
-                        ? "text-white bg-[#151518]"
-                        : "text-[#88888e] hover:text-[#e0e0e0] hover:bg-[#121214]"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <IconoGrupo
-                        className={`w-3.5 h-3.5 transition-colors ${
-                          tieneEnlaceActivo ? "text-[#0066b1]" : "text-[#5e5e66]"
+                return (
+                  <div key={grupo.id} className="space-y-1">
+                    {/* Agrupador genérico sin enrutado (dropdown toggle) */}
+                    <button
+                      type="button"
+                      onClick={() => alternarGrupo(grupo.id)}
+                      aria-expanded={estaAbierto}
+                      aria-controls={`subgrupo-${grupo.id}`}
+                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-mono font-bold uppercase tracking-wider transition-colors cursor-pointer select-none outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1] ${
+                        tieneEnlaceActivo
+                          ? "text-white bg-[#151518]"
+                          : "text-[#88888e] hover:text-[#e0e0e0] hover:bg-[#121214]"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <IconoGrupo
+                          className={`w-3.5 h-3.5 transition-colors ${
+                            tieneEnlaceActivo ? "text-[#0066b1]" : "text-[#5e5e66]"
+                          }`}
+                        />
+                        <span>{grupo.titulo}</span>
+                      </div>
+
+                      <ChevronDown
+                        className={`w-3.5 h-3.5 text-[#66666e] transition-transform duration-200 ${
+                          estaAbierto ? "rotate-0" : "-rotate-90"
                         }`}
                       />
-                      <span>{grupo.titulo}</span>
-                    </div>
+                    </button>
 
-                    <ChevronDown
-                      className={`w-3.5 h-3.5 text-[#66666e] transition-transform duration-200 ${
-                        estaAbierto ? "rotate-0" : "-rotate-90"
-                      }`}
-                    />
-                  </button>
+                    {/* Submenú desplegable con enlaces enrutados */}
+                    {estaAbierto && (
+                      <div
+                        id={`subgrupo-${grupo.id}`}
+                        className="space-y-0.5 pl-2 ml-2.5 border-l border-[#222226]"
+                      >
+                        {grupo.enlaces.map((enlace) => {
+                          const Icono = enlace.icono;
+                          const activo = pathname === enlace.href;
 
-                  {/* Submenú desplegable con enlaces enrutados */}
-                  {estaAbierto && (
+                          return (
+                            <Link
+                              key={enlace.href}
+                              href={enlace.href}
+                              aria-current={activo ? "page" : undefined}
+                              onClick={() => setSidebarAbierto(false)}
+                              className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all group outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1] ${
+                                activo
+                                  ? "bg-[#0066b1] text-white shadow-xs shadow-[#0066b1]/30"
+                                  : "text-[#a3a3a3] hover:text-white hover:bg-[#18181b]"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <Icono
+                                  className={`w-3.5 h-3.5 shrink-0 transition-colors ${
+                                    activo
+                                      ? "text-white"
+                                      : enlace.destacado
+                                      ? "text-[#0066b1] group-hover:text-white"
+                                      : "text-[#737373] group-hover:text-white"
+                                  }`}
+                                />
+                                <span className="truncate">{enlace.etiqueta}</span>
+                              </div>
+
+                              {enlace.href === "/app/live" && (
+                                <span
+                                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                    activo ? "bg-white" : "bg-[#00E676] animate-pulse"
+                                  }`}
+                                  title="Canal en vivo @ 60 Hz"
+                                />
+                              )}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {indiceGrupo < GRUPOS_NAVEGACION.length - 1 && (
+                      <div className="pt-2 border-b border-[#1c1c1f]" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Footer en Modo Expandido */}
+            <div className="p-3 border-t border-[#262626] bg-black/60 text-[11px] text-[#7e7e7e] font-mono space-y-2">
+              <button
+                type="button"
+                onClick={alternarColapsoSidebar}
+                title="Colapsar barra lateral en iconos"
+                className="hidden md:flex items-center justify-between w-full px-2 py-1.5 rounded-md text-[11px] text-[#8e8e93] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer"
+              >
+                <span className="flex items-center gap-2">
+                  <PanelLeftClose className="w-3.5 h-3.5" />
+                  <span>Colapsar barra</span>
+                </span>
+                <span className="text-[10px] text-[#555] font-mono">Iconos</span>
+              </button>
+
+              <div className="pt-1 border-t border-[#1c1c1f] flex items-center justify-between">
+                <span className="font-bold text-[#bbbbbb]">ApexLink Pitwall</span>
+                <span className="text-[10px] text-[#666666]">v2.4</span>
+              </div>
+              <div className="text-[10px] text-[#666666] truncate">
+                Licencia: {usuario.alias}
+              </div>
+            </div>
+          </div>
+
+          {/* MODO COLAPSADO: Solo se muestra en desktop cuando sidebarColapsado es true */}
+          {sidebarColapsado && (
+            <div className="hidden md:flex flex-1 flex-col justify-between overflow-y-auto overflow-x-hidden py-3 px-2">
+              <div className="flex flex-col items-center space-y-3">
+                {GRUPOS_NAVEGACION.map((grupo, indiceGrupo) => {
+                  return (
                     <div
-                      id={`subgrupo-${grupo.id}`}
-                      className="space-y-0.5 pl-2 ml-2.5 border-l border-[#222226]"
+                      key={grupo.id}
+                      className="w-full flex flex-col items-center space-y-1.5"
                     >
                       {grupo.enlaces.map((enlace) => {
                         const Icono = enlace.icono;
@@ -344,30 +468,28 @@ export default function LayoutAppBoxes({
                           <Link
                             key={enlace.href}
                             href={enlace.href}
+                            title={`${enlace.etiqueta} — ${enlace.descripcion}`}
+                            aria-label={enlace.etiqueta}
                             aria-current={activo ? "page" : undefined}
-                            onClick={() => setSidebarAbierto(false)}
-                            className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all group outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1] ${
+                            className={`relative w-10 h-10 rounded-lg flex items-center justify-center transition-all group outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1] ${
                               activo
                                 ? "bg-[#0066b1] text-white shadow-xs shadow-[#0066b1]/30"
-                                : "text-[#a3a3a3] hover:text-white hover:bg-[#18181b]"
+                                : "text-[#8e8e93] hover:text-white hover:bg-[#18181b]"
                             }`}
                           >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <Icono
-                                className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-                                  activo
-                                    ? "text-white"
-                                    : enlace.destacado
-                                    ? "text-[#0066b1] group-hover:text-white"
-                                    : "text-[#737373] group-hover:text-white"
-                                }`}
-                              />
-                              <span className="truncate">{enlace.etiqueta}</span>
-                            </div>
+                            <Icono
+                              className={`w-4 h-4 shrink-0 transition-colors ${
+                                activo
+                                  ? "text-white"
+                                  : enlace.destacado
+                                  ? "text-[#0066b1] group-hover:text-white"
+                                  : "text-[#737373] group-hover:text-white"
+                              }`}
+                            />
 
                             {enlace.href === "/app/live" && (
                               <span
-                                className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                className={`absolute top-2 right-2 w-1.5 h-1.5 rounded-full ${
                                   activo ? "bg-white" : "bg-[#00E676] animate-pulse"
                                 }`}
                                 title="Canal en vivo @ 60 Hz"
@@ -376,27 +498,29 @@ export default function LayoutAppBoxes({
                           </Link>
                         );
                       })}
+
+                      {indiceGrupo < GRUPOS_NAVEGACION.length - 1 && (
+                        <div className="w-6 border-b border-[#222226] my-1" />
+                      )}
                     </div>
-                  )}
+                  );
+                })}
+              </div>
 
-                  {indiceGrupo < GRUPOS_NAVEGACION.length - 1 && (
-                    <div className="pt-2 border-b border-[#1c1c1f]" />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Footer de Versión en Sidebar */}
-          <div className="p-3.5 border-t border-[#262626] bg-black/60 text-[11px] text-[#7e7e7e] font-mono">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-[#bbbbbb]">ApexLink Pitwall</span>
-              <span className="text-[10px] text-[#666666]">v2.4</span>
+              {/* Footer en Modo Colapsado */}
+              <div className="p-2 border-t border-[#262626] bg-black/60 flex flex-col items-center justify-center">
+                <button
+                  type="button"
+                  onClick={alternarColapsoSidebar}
+                  title="Expandir barra lateral"
+                  aria-label="Expandir barra lateral"
+                  className="w-10 h-10 rounded-lg flex items-center justify-center text-[#8e8e93] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer"
+                >
+                  <PanelLeft className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-            <div className="text-[10px] text-[#666666] mt-0.5 truncate">
-              Licencia: {usuario.alias}
-            </div>
-          </div>
+          )}
         </aside>
 
         {/* Contenido Dinámico */}
