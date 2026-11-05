@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -19,9 +19,49 @@ import { useLiveTelemetryWebSocket } from "@/hooks/useLiveTelemetryWebSocket";
 import { PedalTelemetryBars } from "@/components/live/PedalTelemetryBars";
 import { KammFrictionCircle } from "@/components/live/KammFrictionCircle";
 import { TyreThermalsMatrix } from "@/components/live/TyreThermalsMatrix";
-import { LiveTrackMinimap } from "@/components/live/LiveTrackMinimap";
+import { LiveTrackCanvas2D } from "@/components/live/LiveTrackCanvas2D";
+import { LiveLapTimesList, type VueltaRegistrada } from "@/components/live/LiveLapTimesList";
 import { solicitarPost } from "@/lib/apiClient";
 import type { EstadoMockDto } from "@/types/api";
+
+const VUELTAS_INICIALES_MONZA: VueltaRegistrada[] = [
+  {
+    lapNumber: 4,
+    lapTimeMs: 80912,
+    lapTimeStr: "1:20.912",
+    isPersonalBest: true,
+    isValidLap: true,
+    sectors: [27.712, 27.420, 25.780],
+    topSpeedKmh: 348,
+  },
+  {
+    lapNumber: 3,
+    lapTimeMs: 81345,
+    lapTimeStr: "1:21.345",
+    isPersonalBest: false,
+    isValidLap: true,
+    sectors: [27.910, 27.530, 25.905],
+    topSpeedKmh: 345,
+  },
+  {
+    lapNumber: 2,
+    lapTimeMs: 81890,
+    lapTimeStr: "1:21.890",
+    isPersonalBest: false,
+    isValidLap: true,
+    sectors: [28.120, 27.680, 26.090],
+    topSpeedKmh: 342,
+  },
+  {
+    lapNumber: 1,
+    lapTimeMs: 83204,
+    lapTimeStr: "1:23.204",
+    isPersonalBest: false,
+    isValidLap: true,
+    sectors: [28.650, 28.104, 26.450],
+    topSpeedKmh: 338,
+  },
+];
 
 export default function PaginaLivePitwall() {
   const {
@@ -35,6 +75,34 @@ export default function PaginaLivePitwall() {
   } = useLiveTelemetryWebSocket();
 
   const [conmutandoMock, setConmutandoMock] = useState(false);
+  const [vueltasSesion, setVueltasSesion] = useState<VueltaRegistrada[]>(VUELTAS_INICIALES_MONZA);
+
+  // Sincronizar automáticamente nuevas vueltas cruzadas por meta vía WebSocket
+  useEffect(() => {
+    if (!ultimoEventoVuelta) return;
+
+    setVueltasSesion((prev) => {
+      if (prev.some((v) => v.lapNumber === ultimoEventoVuelta.lapNumber)) {
+        return prev;
+      }
+
+      const nuevaVuelta: VueltaRegistrada = {
+        lapNumber: ultimoEventoVuelta.lapNumber,
+        lapTimeMs: ultimoEventoVuelta.lapTimeMs,
+        lapTimeStr: ultimoEventoVuelta.lapTimeStr,
+        isPersonalBest: ultimoEventoVuelta.isPersonalBest,
+        isValidLap: ultimoEventoVuelta.isValidLap,
+        sectors: ultimoEventoVuelta.sectors,
+        topSpeedKmh: Math.round(frame?.car.speedKmh ?? 340),
+      };
+
+      const listaBase = ultimoEventoVuelta.isPersonalBest
+        ? prev.map((v) => ({ ...v, isPersonalBest: false }))
+        : [...prev];
+
+      return [nuevaVuelta, ...listaBase];
+    });
+  }, [ultimoEventoVuelta, frame?.car.speedKmh]);
 
   const manejarAlternarMock = async () => {
     try {
@@ -96,144 +164,170 @@ export default function PaginaLivePitwall() {
   const deltaBorde = deltaNegativo ? "border-[#0fa336]/30" : "border-[#e22718]/30";
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* 1. Header con Telemetría en Vivo e Indicador de Estado (Separador lineal, sin cards) */}
-      <div className="pb-6 border-b border-[#222225] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className={conectado ? "text-[#0fa336]" : "text-[#e22718]"}>
-            <Radio className={`w-6 h-6 ${conectado ? "animate-pulse" : ""}`} />
-          </div>
+    <div className="space-y-6 max-w-[1700px] mx-auto">
+      {/* Layout Principal: 50% Margen Izquierdo (Demás Información) + 50% Derecha (Canvas 2D + Tiempos) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        {/* COLUMNA IZQUIERDA (Demás Información) */}
+        <div className="space-y-6">
+          {/* 1. Header con Telemetría en Vivo e Indicador de Estado */}
+          <div className="pb-5 border-b border-[#222225] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className={conectado ? "text-[#0fa336]" : "text-[#e22718]"}>
+                <Radio className={`w-5 h-5 ${conectado ? "animate-pulse" : ""}`} />
+              </div>
 
-          <div>
-            <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="text-xl sm:text-2xl font-bold uppercase tracking-tight text-white">
-                Autodromo Nazionale Monza • {sesion.carModel}
-              </h1>
-              {conectado ? (
-                <span className="flex items-center gap-1.5 text-xs font-mono text-[#0fa336] font-bold">
-                  <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
-                  Live {fpsEstimado} FPS
-                </span>
-              ) : (
-                <span className="flex items-center gap-1.5 text-xs font-mono text-[#e22718] font-bold">
-                  <span className="w-2 h-2 rounded-full bg-[#e22718]" />
-                  Desconectado
-                </span>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-lg sm:text-xl font-bold uppercase tracking-tight text-white">
+                    Autodromo Nazionale Monza • {sesion.carModel}
+                  </h1>
+                  {conectado ? (
+                    <span className="flex items-center gap-1.5 text-xs font-mono text-[#0fa336] font-bold">
+                      <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
+                      Live {fpsEstimado} FPS
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5 text-xs font-mono text-[#e22718] font-bold">
+                      <span className="w-2 h-2 rounded-full bg-[#e22718]" />
+                      Desconectado
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-[#bbbbbb] font-mono mt-0.5">
+                  Canal compartido Win32 MMF @ 60 Hz
+                </p>
+              </div>
+            </div>
+
+            {/* Controles de Conexión y Ping */}
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+              <div className="flex items-center gap-2.5 text-xs font-mono text-[#7e7e7e]">
+                <span>Ping: <strong className="text-white">{latenciaMs} ms</strong></span>
+                <span className="text-[#3c3c3c]">|</span>
+                <span>Cuadros: <strong className="text-[#0066b1]">{totalCuadrosRecibidos}</strong></span>
+              </div>
+
+              <button
+                onClick={manejarAlternarMock}
+                disabled={conmutandoMock}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold font-mono uppercase border border-white/15 hover:border-white/30 hover:bg-white/[0.04] text-white transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <Zap className="w-3.5 h-3.5 text-[#f4b400]" />
+                {conmutandoMock ? "..." : "Mock"}
+              </button>
+
+              {!conectado && (
+                <button
+                  onClick={reconectar}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold font-mono uppercase bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Reconectar
+                </button>
               )}
             </div>
-            <p className="text-xs text-[#bbbbbb] font-mono mt-1">
-              Canal compartido Win32 MMF @ 60 Hz
-            </p>
-          </div>
-        </div>
-
-        {/* Panel derecho: Ping, Contador y Conmutador Mock (Sin cards de fondo) */}
-        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
-          <div className="flex items-center gap-3 text-xs font-mono">
-            <span className="text-[#7e7e7e]">Ping:</span>
-            <span className="text-white font-bold">{latenciaMs} ms</span>
-            <span className="text-[#3c3c3c]">|</span>
-            <span className="text-[#7e7e7e]">Cuadros:</span>
-            <span className="text-[#0066b1] font-bold">{totalCuadrosRecibidos}</span>
           </div>
 
-          <button
-            onClick={manejarAlternarMock}
-            disabled={conmutandoMock}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-bold font-mono uppercase border border-white/15 hover:border-white/30 hover:bg-white/[0.04] text-white transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
-          >
-            <Zap className="w-3.5 h-3.5 text-[#f4b400]" />
-            {conmutandoMock ? "Conmutando..." : "Alternar Mock"}
-          </button>
+          {/* 2. Banner de Notificación de Vuelta Récord (si ocurrió evento) */}
+          {ultimoEventoVuelta && (
+            <div className="py-3 px-4 border border-[#0066b1]/30 rounded-lg flex items-center justify-between bg-[#0066b1]/5">
+              <div className="flex items-center gap-3">
+                <Trophy className="w-5 h-5 text-[#f4b400] shrink-0" />
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#0066b1] font-mono">
+                    {ultimoEventoVuelta.isPersonalBest ? "¡Récord Personal (PB) Registrado!" : "Vuelta Completada"}
+                  </span>
+                  <div className="text-base font-bold font-mono text-white tabular-nums">
+                    Vuelta {ultimoEventoVuelta.lapNumber} • {ultimoEventoVuelta.lapTimeStr}
+                  </div>
+                </div>
+              </div>
 
-          {!conectado && (
-            <button
-              onClick={reconectar}
-              className="px-3.5 py-1.5 rounded-lg text-xs font-bold font-mono uppercase bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-[#0066b1]/20"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Reconectar
-            </button>
+              <Link
+                href="/app/analysis"
+                className="px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-all flex items-center gap-1.5"
+              >
+                <LineChart className="w-3.5 h-3.5" />
+                uPlot
+              </Link>
+            </div>
           )}
-        </div>
-      </div>
 
-      {/* 2. Banner de Notificación de Vuelta Récord / Cruce de Meta */}
-      {ultimoEventoVuelta && (
-        <div className="py-4 border-b border-[#222225] flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Trophy className="w-6 h-6 text-[#f4b400] shrink-0" />
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#0066b1] font-mono">
-                {ultimoEventoVuelta.isPersonalBest ? "¡Récord Personal (PB)!" : "Vuelta Completada"}
+          {/* 3. Instrumental Dinámico HUD (Sin cards pesadas, dividores sutiles) */}
+          <div className="py-5 border-y border-[#222225] grid grid-cols-2 sm:grid-cols-4 gap-4 divide-y sm:divide-y-0 sm:divide-x divide-[#222225]">
+            {/* Velocidad */}
+            <div className="sm:pr-3">
+              <span className="text-[10px] uppercase font-bold text-[#7e7e7e] font-mono tracking-wider">
+                Velocidad
               </span>
-              <div className="text-lg font-bold font-mono text-white tabular-nums">
-                Vuelta {ultimoEventoVuelta.lapNumber} • {ultimoEventoVuelta.lapTimeStr}
+              <div className="text-3xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
+                {auto.speedKmh.toFixed(0)}
+                <span className="text-xs text-[#7e7e7e] ml-1 font-normal">km/h</span>
+              </div>
+            </div>
+
+            {/* Marcha */}
+            <div className="sm:px-3">
+              <span className="text-[10px] uppercase font-bold text-[#7e7e7e] font-mono tracking-wider">
+                Marcha
+              </span>
+              <div className="text-3xl font-bold font-mono text-[#0066b1] mt-1 tabular-nums tracking-tight">
+                {auto.gear === -1 ? "R" : auto.gear === 0 ? "N" : auto.gear}
+              </div>
+            </div>
+
+            {/* Régimen de Giro / RPM */}
+            <div className="pt-3 sm:pt-0 sm:px-3">
+              <span className="text-[10px] uppercase font-bold text-[#7e7e7e] font-mono tracking-wider">
+                Régimen
+              </span>
+              <div className="text-3xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
+                {auto.rpms.toLocaleString("es-AR")}
+                <span className="text-xs text-[#7e7e7e] ml-1 font-normal">RPM</span>
+              </div>
+            </div>
+
+            {/* Cronómetro y Delta */}
+            <div className="pt-3 sm:pt-0 sm:pl-3">
+              <span className="text-[10px] uppercase font-bold text-[#7e7e7e] font-mono tracking-wider">
+                Vuelta {timing.currentLap} • Delta
+              </span>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-2xl font-bold font-mono text-white tabular-nums tracking-tight">
+                  {timing.lapTimeStr}
+                </span>
+                <span className={`text-xs font-bold font-mono ${deltaColor} tabular-nums`}>
+                  {deltaNegativo ? deltaStr : `+${deltaStr}`}s
+                </span>
               </div>
             </div>
           </div>
 
-          <Link
-            href="/app/analysis"
-            className="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-all flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#1c69d4]"
-          >
-            <LineChart className="w-3.5 h-3.5" />
-            Analizar en uPlot
-          </Link>
-        </div>
-      )}
-
-      {/* 3. Instrumental Superior Unificado (Fondo invisible con separadores lineales) */}
-      <div className="py-6 border-b border-[#222225] grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-0 md:divide-x md:divide-[#222225]">
-        {/* Velocímetro */}
-        <div className="md:pr-5">
-          <span className="text-[10px] uppercase font-bold text-[#7e7e7e] font-mono tracking-wider">Velocidad</span>
-          <div className="text-3xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
-            {auto.speedKmh.toFixed(0)}
-            <span className="text-xs text-[#7e7e7e] ml-1 font-normal">km/h</span>
+          {/* 4. Módulos Físicos de Telemetría (Pedales, Círculo de Kamm, Neumáticos) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+            <PedalTelemetryBars car={auto} />
+            <KammFrictionCircle dynamics={dinamicas} />
+            <TyreThermalsMatrix tyres={neumaticos} />
           </div>
         </div>
 
-        {/* Marcha */}
-        <div className="md:px-5">
-          <span className="text-[10px] uppercase font-bold text-[#7e7e7e] font-mono tracking-wider">Marcha</span>
-          <div className="text-3xl font-bold font-mono text-[#0066b1] mt-1 tabular-nums tracking-tight">
-            {auto.gear === -1 ? "R" : auto.gear === 0 ? "N" : auto.gear}
-          </div>
-        </div>
+        {/* COLUMNA DERECHA (50% Ancho hacia la derecha: Canvas 2D + Tiempos de Vuelta) */}
+        <div className="space-y-6">
+          {/* Canvas 2D como Sección Principal */}
+          <LiveTrackCanvas2D
+            timing={timing}
+            dynamics={dinamicas}
+            auto={auto}
+            trackName="Autodromo Nazionale Monza"
+          />
 
-        {/* Tacómetro / RPM */}
-        <div className="md:px-5">
-          <span className="text-[10px] uppercase font-bold text-[#7e7e7e] font-mono tracking-wider">Régimen de Giro</span>
-          <div className="text-3xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
-            {auto.rpms.toLocaleString("es-AR")}
-            <span className="text-xs text-[#7e7e7e] ml-1 font-normal">RPM</span>
-          </div>
+          {/* Debajo, Lista de Tiempos de Vuelta */}
+          <LiveLapTimesList
+            timing={timing}
+            vueltas={vueltasSesion}
+            topSpeedActual={auto.speedKmh}
+          />
         </div>
-
-        {/* Cronómetro Actual */}
-        <div className="md:px-5">
-          <span className="text-[10px] uppercase font-bold text-[#7e7e7e] font-mono tracking-wider">Vuelta {timing.currentLap}</span>
-          <div className="text-2xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
-            {timing.lapTimeStr}
-          </div>
-        </div>
-
-        {/* Delta Time */}
-        <div className="col-span-2 md:col-span-1 md:pl-5">
-          <span className="text-[10px] uppercase font-bold text-[#7e7e7e] font-mono tracking-wider">Delta vs Récord</span>
-          <div className={`text-2xl font-bold font-mono mt-1 ${deltaColor} tabular-nums tracking-tight`}>
-            {deltaNegativo ? deltaStr : `+${deltaStr}`} s
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Grid Cuádruple de Telemetría (Pedales, Kamm Circle, Neumáticos, Minimap) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <PedalTelemetryBars car={auto} />
-        <KammFrictionCircle dynamics={dinamicas} />
-        <TyreThermalsMatrix tyres={neumaticos} />
-        <LiveTrackMinimap timing={timing} dynamics={dinamicas} trackName="Monza F1 2025" />
       </div>
     </div>
   );
