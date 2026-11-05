@@ -54,14 +54,9 @@ export default function PaginaAjustes() {
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#262626] pb-4">
         <div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
-              Ajustes de Boxes
-            </h1>
-            <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#0066b1]/15 text-[#81c4ff] border border-[#0066b1]/30">
-              Red & Hardware
-            </span>
-          </div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
+            Ajustes de Boxes
+          </h1>
           <p className="mt-1 text-xs text-[#bbbbbb]">
             Configuración de red, puertos de telemetría y preferencias de visualización.
           </p>
@@ -69,7 +64,7 @@ export default function PaginaAjustes() {
       </div>
 
       <form onSubmit={manejarGuardar} className="space-y-6">
-        <div className="border border-[#262626] bg-[#141414] rounded-xl p-6 space-y-4 shadow-sm">
+        <div className="surface-specular p-6 space-y-4 shadow-xl">
           <h2 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
             <Wifi className="w-4 h-4 text-[#0066b1]" />
             Conexión con el Servidor Kestrel (Core Relay)
@@ -84,7 +79,7 @@ export default function PaginaAjustes() {
                 type="text"
                 value={servidorUrl}
                 onChange={(e) => setServidorUrl(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-black border border-[#3c3c3c] text-xs font-mono text-white focus:outline-none focus:border-[#0066b1] focus:ring-1 focus:ring-[#0066b1] transition-all"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-black/60 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-[#0066b1] focus:ring-1 focus:ring-[#0066b1] transition-all"
               />
             </div>
 
@@ -96,13 +91,13 @@ export default function PaginaAjustes() {
                 type="text"
                 value={wsUrl}
                 onChange={(e) => setWsUrl(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-black border border-[#3c3c3c] text-xs font-mono text-white focus:outline-none focus:border-[#0066b1] focus:ring-1 focus:ring-[#0066b1] transition-all"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-black/60 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-[#0066b1] focus:ring-1 focus:ring-[#0066b1] transition-all"
               />
             </div>
           </div>
         </div>
 
-        <div className="border border-[#262626] bg-[#141414] rounded-xl p-6 space-y-4 shadow-sm">
+        <div className="surface-specular p-6 space-y-4 shadow-xl">
           <h2 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
             <Monitor className="w-4 h-4 text-[#0fa336]" />
             Preferencias de Rendimiento Visual

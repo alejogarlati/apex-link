@@ -16,8 +16,8 @@ export function Card({
   return (
     <div
       className={cn(
-        "relative bg-[#141414] border border-[#262626] rounded-xl overflow-hidden shadow-lg",
-        interactive && "hover:border-[#0066b1] transition-all duration-150",
+        "relative rounded-xl overflow-hidden",
+        interactive ? "surface-specular-interactive" : "surface-specular",
         className
       )}
       {...props}

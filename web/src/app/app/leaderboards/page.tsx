@@ -53,24 +53,12 @@ function ContenidoLeaderboards() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#262626] pb-4">
         <div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
-              Tabla de Récords
-            </h1>
-            <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#0066b1]/15 text-[#81c4ff] border border-[#0066b1]/30">
-              Clasificación Oficial
-            </span>
-          </div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
+            Tabla de Récords
+          </h1>
           <p className="mt-1 text-xs text-[#bbbbbb]">
-            Tiempos registrados en el simulador sincronizados con la base de datos central PostgreSQL.
+            Tiempos registrados en el simulador sincronizados con la base de datos central.
           </p>
-        </div>
-
-        <div className="flex items-center gap-2 font-mono text-xs">
-          <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#0fa336]/15 border border-[#0fa336]/30 text-[#0fa336] flex items-center gap-1.5 font-bold">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            PostgreSQL Sync 3FN
-          </span>
         </div>
       </div>
 
@@ -82,10 +70,10 @@ function ContenidoLeaderboards() {
             <button
               key={tab.id}
               onClick={() => setCircuitoActivo(tab.id)}
-              className={`px-4 py-2 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer border flex items-center gap-2 ${
+              className={`px-4 py-2 rounded-xl font-mono text-xs font-bold transition-all cursor-pointer border flex items-center gap-2 ${
                 activo
                   ? "bg-[#0066b1] border-[#0066b1] text-white shadow-md shadow-[#0066b1]/20"
-                  : "bg-[#141414] border-[#262626] text-[#bbbbbb] hover:text-white hover:bg-[#1a1a1a]"
+                  : "bg-black/60 border-white/10 text-[#bbbbbb] hover:text-white hover:bg-black/90"
               }`}
             >
               <Flag className="w-3.5 h-3.5" />
@@ -98,22 +86,22 @@ function ContenidoLeaderboards() {
         })}
       </div>
 
-      {/* Tabla de Clasificación */}
-      <div className="border border-[#3c3c3c] bg-[#141414] rounded-xl overflow-hidden shadow-xl">
-        <div className="p-4 bg-[#0d0d0d] border-b border-[#262626] flex items-center justify-between">
+      {/* Tabla de Clasificación con Superficie Especular */}
+      <div className="surface-specular overflow-hidden shadow-xl">
+        <div className="p-4 bg-black/40 border-b border-white/[0.06] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Trophy className="w-4 h-4 text-[#f4b400]" />
             <span className="text-xs font-bold uppercase tracking-wider text-white">
-              Clasificación Oficial • {CIRCUITOS_TABS.find((t) => t.id === circuitoActivo)?.nombre}
+              {CIRCUITOS_TABS.find((t) => t.id === circuitoActivo)?.nombre}
             </span>
           </div>
           <div className="flex items-center gap-2 font-mono text-xs text-[#7e7e7e]">
             {cargando && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0066b1]" />}
-            <span>{ranking.length} registros oficiales</span>
+            <span>{ranking.length} registros</span>
           </div>
         </div>
 
-        <div className="divide-y divide-[#262626]">
+        <div className="divide-y divide-white/[0.06]">
           {ranking.map((item) => (
             <div
               key={`${item.posicion}-${item.piloto}`}
@@ -139,11 +127,6 @@ function ContenidoLeaderboards() {
                 <div>
                   <div className="text-sm font-bold text-white flex items-center gap-2">
                     <span>{item.piloto}</span>
-                    {item.esRecord && (
-                      <span className="text-[9px] bg-[#0066b1] text-white font-mono px-2 py-0.5 rounded font-black uppercase tracking-wider">
-                        RECORD STAND
-                      </span>
-                    )}
                   </div>
                   <div className="text-xs text-[#7e7e7e] font-mono flex items-center gap-2 mt-0.5">
                     <span className="flex items-center gap-1 text-[#bbbbbb]">
@@ -157,11 +140,11 @@ function ContenidoLeaderboards() {
               </div>
 
               <div className="text-right font-mono">
-                <div className="text-base font-bold text-[#00E676] tabular-nums">
+                <div className="text-base font-bold text-[#00E676] tabular-nums tracking-tight">
                   {item.tiempo}
                 </div>
                 <div
-                  className={`text-[11px] font-bold ${
+                  className={`text-[11px] font-bold tabular-nums ${
                     item.delta === "Ref" ? "text-[#7e7e7e]" : "text-[#e22718]"
                   }`}
                 >
