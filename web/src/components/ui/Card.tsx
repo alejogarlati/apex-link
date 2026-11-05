@@ -16,7 +16,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "relative rounded-xl overflow-hidden",
+        "relative bg-transparent",
         interactive ? "surface-specular-interactive" : "surface-specular",
         className
       )}

@@ -97,8 +97,8 @@ export default function PaginaLivePitwall() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* 1. Header con Telemetría en Vivo e Indicador de Estado (Sin cards de fondo en items) */}
-      <div className="surface-specular p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
+      {/* 1. Header con Telemetría en Vivo e Indicador de Estado (Separador lineal, sin cards) */}
+      <div className="pb-6 border-b border-[#222225] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className={conectado ? "text-[#0fa336]" : "text-[#e22718]"}>
             <Radio className={`w-6 h-6 ${conectado ? "animate-pulse" : ""}`} />
@@ -160,7 +160,7 @@ export default function PaginaLivePitwall() {
 
       {/* 2. Banner de Notificación de Vuelta Récord / Cruce de Meta */}
       {ultimoEventoVuelta && (
-        <div className="p-4 surface-specular flex items-center justify-between shadow-lg">
+        <div className="py-4 border-b border-[#222225] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Trophy className="w-6 h-6 text-[#f4b400] shrink-0" />
             <div>
@@ -183,8 +183,8 @@ export default function PaginaLivePitwall() {
         </div>
       )}
 
-      {/* 3. Instrumental Superior Unificado (Sin cards de fondo individuales en cada métrica) */}
-      <div className="surface-specular p-5 shadow-xl grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-0 md:divide-x md:divide-white/[0.06]">
+      {/* 3. Instrumental Superior Unificado (Fondo invisible con separadores lineales) */}
+      <div className="py-6 border-b border-[#222225] grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-0 md:divide-x md:divide-[#222225]">
         {/* Velocímetro */}
         <div className="md:pr-5">
           <span className="text-[10px] uppercase font-bold text-[#7e7e7e] font-mono tracking-wider">Velocidad</span>

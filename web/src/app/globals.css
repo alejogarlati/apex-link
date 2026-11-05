@@ -141,26 +141,23 @@ section[id] {
   color: #ffffff;
 }
 
-/* Superficie especular Motorsport: degradé sutil con bisel de luz superior (1px highlight) */
+/* Superficie limpia sin card: fondo invisible y soporte para separadores lineales */
 .surface-specular {
-  background: linear-gradient(180deg, rgba(28, 28, 31, 0.75) 0%, rgba(13, 13, 15, 0.95) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 8px 24px -4px rgba(0, 0, 0, 0.6);
-  border-radius: 0.75rem;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
 }
 
 .surface-specular-interactive {
-  background: linear-gradient(180deg, rgba(28, 28, 31, 0.75) 0%, rgba(13, 13, 15, 0.95) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 8px 24px -4px rgba(0, 0, 0, 0.6);
-  border-radius: 0.75rem;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  transition: opacity 0.15s ease, color 0.15s ease;
   display: block;
 }
 
 .surface-specular-interactive:hover {
-  background: linear-gradient(180deg, rgba(36, 36, 42, 0.9) 0%, rgba(16, 16, 20, 0.98) 100%);
-  border-color: rgba(0, 102, 177, 0.6);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.18), 0 12px 32px -4px rgba(0, 102, 177, 0.18);
-  transform: translateY(-1.5px);
+  background: transparent;
 }

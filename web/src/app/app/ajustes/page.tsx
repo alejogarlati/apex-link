@@ -64,7 +64,7 @@ export default function PaginaAjustes() {
       </div>
 
       <form onSubmit={manejarGuardar} className="space-y-6">
-        <div className="surface-specular p-6 space-y-4 shadow-xl">
+        <div className="py-6 border-b border-[#222225] space-y-4">
           <h2 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
             <Wifi className="w-4 h-4 text-[#0066b1]" />
             Conexión con el Servidor Kestrel (Core Relay)
@@ -97,7 +97,7 @@ export default function PaginaAjustes() {
           </div>
         </div>
 
-        <div className="surface-specular p-6 space-y-4 shadow-xl">
+        <div className="py-6 border-b border-[#222225] space-y-4">
           <h2 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
             <Monitor className="w-4 h-4 text-[#0fa336]" />
             Preferencias de Rendimiento Visual

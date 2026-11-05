@@ -86,9 +86,9 @@ function ContenidoLeaderboards() {
         })}
       </div>
 
-      {/* Tabla de Clasificación con Superficie Especular */}
-      <div className="surface-specular overflow-hidden shadow-xl">
-        <div className="p-4 border-b border-white/[0.06] flex items-center justify-between">
+      {/* Tabla de Clasificación con fondo invisible y separadores lineales */}
+      <div className="border-t border-b border-[#222225]">
+        <div className="py-4 border-b border-[#222225] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Trophy className="w-4 h-4 text-[#f4b400]" />
             <span className="text-xs font-bold uppercase tracking-wider text-white">
@@ -101,13 +101,11 @@ function ContenidoLeaderboards() {
           </div>
         </div>
 
-        <div className="divide-y divide-white/[0.06]">
+        <div className="divide-y divide-[#222225]">
           {ranking.map((item) => (
             <div
               key={`${item.posicion}-${item.piloto}`}
-              className={`p-4 flex items-center justify-between transition-colors ${
-                item.posicion === 1 ? "bg-[#0066b1]/10" : "hover:bg-white/[0.02]"
-              }`}
+              className="py-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
             >
               <div className="flex items-center gap-4">
                 <span
