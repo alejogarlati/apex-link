@@ -6,6 +6,7 @@ import { VUELTAS_MOCK_MONZA, generarTelemetriaMonza } from "@/lib/mockTelemetria
 import { SelectorVueltas } from "@/components/analisis/SelectorVueltas";
 import { GraficoTelemetria } from "@/components/analisis/GraficoTelemetria";
 import { MapaCircuitoCanvas } from "@/components/analisis/MapaCircuitoCanvas";
+import { BotonColapsarSidebar } from "@/components/layout/BotonColapsarSidebar";
 import {
   Database,
   Flag,
@@ -225,10 +226,12 @@ function ContenidoAnalisis() {
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* 1. Encabezado de la Sesión de Telemetría */}
       <div className="flex flex-col justify-between gap-4 border-b border-[#262626] pb-4 sm:flex-row sm:items-end">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
-            Laboratorio Analítico 2D
-          </h1>
+        <div className="flex items-start gap-3.5">
+          <BotonColapsarSidebar />
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
+              Laboratorio Analítico 2D
+            </h1>
           <div className="mt-2 flex flex-wrap items-center gap-4 text-xs font-semibold tracking-wider text-[#bbbbbb] uppercase font-mono">
             <span className="flex items-center gap-1.5 text-white">
               <Flag className="h-3.5 w-3.5 text-[#0066b1]" />
@@ -247,6 +250,7 @@ function ContenidoAnalisis() {
           </div>
         </div>
       </div>
+    </div>
 
       <div className="space-y-6">
         {/* 2. Selector de Vueltas Superior */}

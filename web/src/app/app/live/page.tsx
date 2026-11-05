@@ -21,6 +21,7 @@ import { KammFrictionCircle } from "@/components/live/KammFrictionCircle";
 import { TyreThermalsMatrix } from "@/components/live/TyreThermalsMatrix";
 import { MapaCircuitoCanvas } from "@/components/analisis/MapaCircuitoCanvas";
 import { LiveLapTimesList, type VueltaRegistrada } from "@/components/live/LiveLapTimesList";
+import { BotonColapsarSidebar } from "@/components/layout/BotonColapsarSidebar";
 import { generarTelemetriaMonza } from "@/lib/mockTelemetria";
 import { solicitarPost } from "@/lib/apiClient";
 import type { EstadoMockDto } from "@/types/api";
@@ -168,6 +169,12 @@ export default function PaginaLivePitwall() {
   const longitudCircuito = 5793;
   const distanciaEstimada = (timing.lapProgress || 0) * longitudCircuito;
 
+  const circuitoIdEnVivo = sesion.track.toLowerCase().includes("imola")
+    ? ("imola" as const)
+    : sesion.track.toLowerCase().includes("rbr") || sesion.track.toLowerCase().includes("redbull")
+    ? ("rbr" as const)
+    : ("monza" as const);
+
   return (
     <div className="space-y-6 max-w-[1700px] mx-auto">
       {/* Layout Principal: 50% Margen Izquierdo (Demás Información) + 50% Derecha (Canvas 2D + Tiempos) */}
@@ -177,6 +184,9 @@ export default function PaginaLivePitwall() {
           {/* 1. Header con Telemetría en Vivo e Indicador de Estado */}
           <div className="pb-5 border-b border-[#222225] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
+              {/* Botón único de colapsar sidebar en la esquina superior izquierda */}
+              <BotonColapsarSidebar />
+
               <div className={conectado ? "text-[#0fa336]" : "text-[#e22718]"}>
                 <Radio className={`w-5 h-5 ${conectado ? "animate-pulse" : ""}`} />
               </div>
@@ -323,14 +333,14 @@ export default function PaginaLivePitwall() {
             <MapaCircuitoCanvas
               muestras={muestrasMonza}
               distanciaSeleccionada={distanciaEstimada}
-              nombreCircuito="Autodromo Nazionale Monza"
+              nombreCircuito={sesion.track.toUpperCase().includes("IMOLA") ? "Autodromo Enzo e Dino Ferrari" : sesion.track.toUpperCase().includes("RBR") ? "Red Bull Ring GP" : "Autodromo Nazionale Monza"}
               longitudMetros={longitudCircuito}
               vueltaAInfo={{
                 ranura: "A",
                 numeroVuelta: timing.currentLap,
                 tiempoVueltaStr: timing.lapTimeStr,
               }}
-              circuitoInicial="monza"
+              circuitoInicial={circuitoIdEnVivo}
             />
           </div>
 

@@ -23,6 +23,7 @@ import type { SesionResumenDto } from "@/types/api";
 import { TablaVueltasSesionModal } from "@/components/sessions/TablaVueltasSesionModal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { BotonColapsarSidebar } from "@/components/layout/BotonColapsarSidebar";
 
 // Tandas registradas oficiales de Alejo Garlati (Alien F1)
 const SESIONES_GARLATI: SesionResumenDto[] = [
@@ -190,13 +191,16 @@ export default function PaginaSesiones() {
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col justify-between gap-4 border-b border-[#262626] pb-4 sm:flex-row sm:items-end">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
-            Historial de Sesiones
-          </h1>
-          <p className="mt-1 text-xs text-[#bbbbbb]">
-            Tandas de telemetría capturadas desde Assetto Corsa sincronizadas con PostgreSQL.
-          </p>
+        <div className="flex items-start gap-3.5">
+          <BotonColapsarSidebar />
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
+              Historial de Sesiones
+            </h1>
+            <p className="mt-1 text-xs text-[#bbbbbb]">
+              Tandas de telemetría capturadas desde Assetto Corsa sincronizadas con PostgreSQL.
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">

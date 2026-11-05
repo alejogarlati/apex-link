@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Wifi, Monitor, Check, Save } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
+import { BotonColapsarSidebar } from "@/components/layout/BotonColapsarSidebar";
 
 export default function PaginaAjustes() {
   const toast = useToast();
@@ -53,13 +54,16 @@ export default function PaginaAjustes() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#262626] pb-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
-            Ajustes de Boxes
-          </h1>
-          <p className="mt-1 text-xs text-[#bbbbbb]">
-            Configuración de red, puertos de telemetría y preferencias de visualización.
-          </p>
+        <div className="flex items-start gap-3.5">
+          <BotonColapsarSidebar />
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
+              Ajustes de Boxes
+            </h1>
+            <p className="mt-1 text-xs text-[#bbbbbb]">
+              Configuración de red, puertos de telemetría y preferencias de visualización.
+            </p>
+          </div>
         </div>
       </div>
 
