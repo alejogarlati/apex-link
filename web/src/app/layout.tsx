@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ToastProvider } from "@/context/ToastContext";
+import { TopProgressBar } from "@/components/layout/TopProgressBar";
 
 export const metadata: Metadata = {
   title: "ApexLink | Telemetría para Assetto Corsa en Tiempo Real",
@@ -24,7 +26,8 @@ export default function RootLayout({
   return (
     <html lang="es" className="dark">
       <body className="antialiased bg-black text-white min-h-screen selection:bg-[#e22718] selection:text-white">
-        {children}
+        <TopProgressBar />
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );

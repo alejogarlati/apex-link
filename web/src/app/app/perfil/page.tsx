@@ -1,8 +1,20 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
+import {
+  obtenerSesionLocal,
+  USUARIO_ALEJO_GARLATI,
+} from "@/lib/auth";
+import { obtenerPerfilPiloto } from "@/lib/apiClient";
+import type {
+  PerfilUsuario,
+  HabilidadDetalle,
+  RecordCircuitoPiloto,
+  LogroGamificado,
+} from "@/types/usuario";
 import {
   ArrowRight,
   Award,
@@ -20,6 +32,7 @@ import {
   Timer,
   TrendingUp,
   Trophy,
+  Zap,
 } from "lucide-react";
 import {
   PolarAngleAxis,
@@ -51,30 +64,8 @@ const COLORES = {
 const GRADIENTE_TRICOLOR = `linear-gradient(to right, ${COLORES.azulClaro} 0 33.33%, ${COLORES.azulOscuro} 33.33% 66.66%, ${COLORES.rojoM} 66.66% 100%)`;
 
 /* -------------------------------------------------------------------------- */
-/*                                Modelo de datos                              */
+/*                                Tipos UI Locales                             */
 /* -------------------------------------------------------------------------- */
-
-interface PerfilPiloto {
-  nombre: string;
-  iniciales: string;
-  licencia: string;
-  nacionalidad: string;
-  codigoPais: string;
-  vehiculoPrincipal: string;
-  simulador: string;
-  apexRating: number;
-  vueltasEvaluadas: number;
-}
-
-interface Habilidad {
-  id: string;
-  nombre: string;
-  etiquetaCorta: string;
-  valor: number;
-  icono: LucideIcon;
-  descripcion: string;
-  consejo: string;
-}
 
 interface EstadisticaGlobal {
   etiqueta: string;
@@ -85,186 +76,6 @@ interface EstadisticaGlobal {
   acento: string;
 }
 
-interface RecordCircuito {
-  id: string;
-  circuito: string;
-  pais: string;
-  tiempo: string;
-  esRecordSesion: boolean;
-}
-
-interface Insignia {
-  id: string;
-  nombre: string;
-  descripcion: string;
-  icono: LucideIcon;
-  acento: string;
-}
-
-/* -------------------------------------------------------------------------- */
-/*                         Datos de ejemplo del perfil                         */
-/* -------------------------------------------------------------------------- */
-
-const PERFIL: PerfilPiloto = {
-  nombre: "Alejo Salas",
-  iniciales: "AS",
-  licencia: "Licencia Apex Pro-Am",
-  nacionalidad: "Argentina",
-  codigoPais: "ARG",
-  vehiculoPrincipal: "Ferrari 488 GT3",
-  simulador: "Assetto Corsa · Shared Memory Activo",
-  apexRating: 88.5,
-  vueltasEvaluadas: 284,
-};
-
-const HABILIDADES: readonly Habilidad[] = [
-  {
-    id: "frenada",
-    nombre: "Frenada / Trail Braking",
-    etiquetaCorta: "FRENADA",
-    valor: 86,
-    icono: Disc,
-    descripcion:
-      "Mide el pico de presión inicial y qué tan progresiva es la liberación del freno mientras girás hacia el ápice.",
-    consejo:
-      "Soltá el freno de forma más lineal en los últimos 30 m antes del ápice: estás liberando de golpe y el auto subvira en la entrada.",
-  },
-  {
-    id: "traccion",
-    nombre: "Tracción / Salida",
-    etiquetaCorta: "TRACCIÓN",
-    valor: 91,
-    icono: TrendingUp,
-    descripcion:
-      "Evalúa la progresividad del acelerador a la salida de curva y la ausencia de picos que provoquen patinaje.",
-    consejo:
-      "Es tu punto fuerte. Probá adelantar la apertura del acelerador unos metros en curvas lentas sin perder la progresividad.",
-  },
-  {
-    id: "apice",
-    nombre: "Velocidad en Ápice",
-    etiquetaCorta: "ÁPICE",
-    valor: 78,
-    icono: Gauge,
-    descripcion:
-      "Compara tu velocidad mínima en cada curva contra tu mejor vuelta de referencia en el mismo micro-sector.",
-    consejo:
-      "Llevás demasiada velocidad sobrante al frenar y la perdés en el ápice. Frená un poco antes y rodá más velocidad por el medio de la curva.",
-  },
-  {
-    id: "consistencia",
-    nombre: "Consistencia",
-    etiquetaCorta: "CONSISTENCIA",
-    valor: 94,
-    icono: Repeat,
-    descripcion:
-      "Dispersión de tiempos de vuelta, puntos de frenada y velocidades mínimas entre vueltas consecutivas.",
-    consejo:
-      "Ritmo muy repetible. Usá esa base para experimentar con una sola variable por stint y medir su efecto con claridad.",
-  },
-  {
-    id: "limites",
-    nombre: "Respeto de Límites",
-    etiquetaCorta: "LÍMITES",
-    valor: 84,
-    icono: Flag,
-    descripcion:
-      "Porcentaje de vueltas sin exceder los límites de pista y cantidad de excursiones por micro-sector.",
-    consejo:
-      "La mayoría de tus excursiones ocurren a la salida de Ascari. Dejá medio metro de margen al apoyar el piano exterior.",
-  },
-];
-
-const ESTADISTICAS: readonly EstadisticaGlobal[] = [
-  {
-    etiqueta: "Kilómetros en pista",
-    valor: "1.480",
-    unidad: "km",
-    detalle: "Distancia total registrada",
-    icono: Route,
-    acento: COLORES.azulClaro,
-  },
-  {
-    etiqueta: "Vueltas completadas",
-    valor: "284",
-    unidad: "vueltas",
-    detalle: "En todas las sesiones",
-    icono: Repeat,
-    acento: COLORES.azulOscuro,
-  },
-  {
-    etiqueta: "Vueltas válidas",
-    valor: "94.2",
-    unidad: "%",
-    detalle: "Sin exceder límites de pista",
-    icono: ShieldCheck,
-    acento: COLORES.verde,
-  },
-  {
-    etiqueta: "Velocidad máxima",
-    valor: "334.8",
-    unidad: "km/h",
-    detalle: "Alcanzada en Monza",
-    icono: Gauge,
-    acento: COLORES.rojoM,
-  },
-];
-
-const RECORDS: readonly RecordCircuito[] = [
-  {
-    id: "monza",
-    circuito: "Autodromo Nazionale Monza",
-    pais: "ITA",
-    tiempo: "01:20.940",
-    esRecordSesion: true,
-  },
-  {
-    id: "spa",
-    circuito: "Circuit de Spa-Francorchamps",
-    pais: "BEL",
-    tiempo: "02:18.420",
-    esRecordSesion: false,
-  },
-  {
-    id: "nurburgring",
-    circuito: "Nürburgring GP",
-    pais: "GER",
-    tiempo: "01:54.110",
-    esRecordSesion: false,
-  },
-];
-
-const INSIGNIAS: readonly Insignia[] = [
-  {
-    id: "freno-precision",
-    nombre: "Freno de Precisión",
-    descripcion: "Trail braking óptimo en la Variante del Rettifilo.",
-    icono: Disc,
-    acento: COLORES.rojoM,
-  },
-  {
-    id: "ritmo-quirurgico",
-    nombre: "Ritmo Quirúrgico",
-    descripcion: "10 vueltas seguidas dentro de un delta de ±0.2 s.",
-    icono: Crosshair,
-    acento: COLORES.azulOscuro,
-  },
-  {
-    id: "sub-121-monza",
-    nombre: "Sub 1:21 Monza",
-    descripcion: "Vuelta rápida en configuración GT3.",
-    icono: Timer,
-    acento: COLORES.amarillo,
-  },
-  {
-    id: "cero-incidentes",
-    nombre: "Cero Incidentes",
-    descripcion: "100% de vueltas válidas sin exceder los límites de pista.",
-    icono: ShieldCheck,
-    acento: COLORES.verde,
-  },
-];
-
 /* -------------------------------------------------------------------------- */
 /*                                   Utilidades                                */
 /* -------------------------------------------------------------------------- */
@@ -273,6 +84,44 @@ function colorPorPuntaje(valor: number): string {
   if (valor >= 90) return COLORES.verde;
   if (valor >= 80) return COLORES.azulOscuro;
   return COLORES.amarillo;
+}
+
+function iconoHabilidad(id: string): LucideIcon {
+  switch (id) {
+    case "frenada":
+      return Disc;
+    case "traccion":
+      return TrendingUp;
+    case "apice":
+      return Gauge;
+    case "consistencia":
+      return Repeat;
+    case "limites":
+      return Flag;
+    default:
+      return Disc;
+  }
+}
+
+function iconoLogro(icono: string): LucideIcon {
+  switch (icono) {
+    case "zap":
+      return Zap;
+    case "gauge":
+      return Gauge;
+    case "crosshair":
+      return Crosshair;
+    case "timer":
+      return Timer;
+    case "disc":
+      return Disc;
+    case "shield-check":
+      return ShieldCheck;
+    case "award":
+      return Award;
+    default:
+      return Trophy;
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -311,10 +160,6 @@ function Tarjeta({
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*                         1. Tarjeta principal del piloto                     */
-/* -------------------------------------------------------------------------- */
-
 function DatoPiloto({ icono: Icono, etiqueta, valor }: { icono: LucideIcon; etiqueta: string; valor: string }) {
   return (
     <div className="flex items-center gap-3 border border-[#3c3c3c] bg-[#262626] px-3 py-2">
@@ -329,93 +174,116 @@ function DatoPiloto({ icono: Icono, etiqueta, valor }: { icono: LucideIcon; etiq
   );
 }
 
-function TarjetaPiloto({ perfil }: { perfil: PerfilPiloto }) {
+/* -------------------------------------------------------------------------- */
+/*                         1. Tarjeta principal del piloto                     */
+/* -------------------------------------------------------------------------- */
+
+function TarjetaPiloto({
+  usuario,
+}: {
+  usuario: PerfilUsuario;
+}) {
+  const esGarlati = usuario.id === USUARIO_ALEJO_GARLATI.id || usuario.email.includes("garlati");
+  const iniciales = esGarlati ? "AG" : "AS";
+
   return (
-    <section
-      aria-labelledby="titulo-piloto"
-      className="grid gap-px border border-[#3c3c3c] bg-[#3c3c3c] lg:grid-cols-[1fr_320px]"
-    >
-      {/* Identidad */}
-      <div className="flex flex-col gap-6 bg-[#1a1a1a] p-6 sm:flex-row sm:items-center sm:p-8">
-        <div
-          className="h-28 w-28 shrink-0 p-[3px]"
-          style={{
-            background: `conic-gradient(${COLORES.azulClaro} 0 120deg, ${COLORES.azulOscuro} 120deg 240deg, ${COLORES.rojoM} 240deg 360deg)`,
-          }}
-          aria-hidden
-        >
-          <div className="flex h-full w-full items-center justify-center bg-[#262626]">
-            <span className="font-mono text-4xl font-bold tracking-wider text-white">
-              {perfil.iniciales}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex min-w-0 flex-1 flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <span className="inline-flex w-fit items-center gap-2 border border-[#0fa336] bg-[#0fa336]/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#0fa336]">
-              <span aria-hidden className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#0fa336]" />
-              {perfil.simulador}
-            </span>
-            <h1
-              id="titulo-piloto"
-              className="text-3xl font-bold uppercase tracking-wider text-white sm:text-4xl"
-            >
-              {perfil.nombre}
-            </h1>
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#0066b1]">
-              {perfil.licencia}
-            </p>
-          </div>
-
-          <div className="grid gap-2 sm:grid-cols-2">
-            <DatoPiloto
-              icono={MapPin}
-              etiqueta="Nacionalidad"
-              valor={`${perfil.nacionalidad} · ${perfil.codigoPais}`}
-            />
-            <DatoPiloto icono={Car} etiqueta="Vehículo principal" valor={perfil.vehiculoPrincipal} />
-          </div>
-        </div>
-      </div>
-
-      {/* Apex Rating */}
-      <div className="relative flex flex-col justify-between gap-6 bg-[#262626] p-6 sm:p-8">
-        <FranjaM className="absolute inset-x-0 top-0 h-1.5" />
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-[0.3em] text-white">
-            Apex Rating
-          </span>
-          <Award className="h-5 w-5 text-[#f4b400]" aria-hidden />
-        </div>
-
-        <p className="flex items-baseline gap-2">
-          <span className="font-mono text-6xl font-bold tabular-nums leading-none text-white">
-            {perfil.apexRating.toFixed(1)}
-          </span>
-          <span className="font-mono text-lg text-[#8a8a8a]">/ 100</span>
-        </p>
-
-        <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4">
+      <section
+        aria-labelledby="titulo-piloto"
+        className="grid gap-px border border-[#3c3c3c] bg-[#3c3c3c] lg:grid-cols-[1fr_320px]"
+      >
+        {/* Identidad */}
+        <div className="flex flex-col gap-6 bg-[#1a1a1a] p-6 sm:flex-row sm:items-center sm:p-8">
           <div
-            role="meter"
-            aria-label="Apex Rating"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={perfil.apexRating}
-            className="h-1.5 w-full bg-black"
+            className="h-28 w-28 shrink-0 p-[3px]"
+            style={{
+              background: `conic-gradient(${COLORES.azulClaro} 0 120deg, ${COLORES.azulOscuro} 120deg 240deg, ${COLORES.rojoM} 240deg 360deg)`,
+            }}
+            aria-hidden
           >
-            <div
-              className="h-full"
-              style={{ width: `${perfil.apexRating}%`, background: GRADIENTE_TRICOLOR }}
-            />
+            <div className="flex h-full w-full items-center justify-center bg-[#262626]">
+              <span className="font-mono text-4xl font-bold tracking-wider text-white">
+                {iniciales}
+              </span>
+            </div>
           </div>
-          <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[#8a8a8a]">
-            Calculado sobre {perfil.vueltasEvaluadas} vueltas
-          </span>
+
+          <div className="flex min-w-0 flex-1 flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <span className="inline-flex w-fit items-center gap-2 border border-[#0fa336] bg-[#0fa336]/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#0fa336]">
+                <span aria-hidden className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#0fa336]" />
+                {usuario.simulador}
+              </span>
+              <h1
+                id="titulo-piloto"
+                className="text-3xl font-bold uppercase tracking-wider text-white sm:text-4xl"
+              >
+                {usuario.nombre}
+              </h1>
+              <div className="flex items-center gap-3">
+                <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#0066b1]">
+                  {usuario.licencia}
+                </p>
+                <span className="text-[#3c3c3c]">|</span>
+                <span className="text-xs font-mono font-bold text-[#f4b400]">
+                  Pace {usuario.rating.paceRating} · Cat. {usuario.rating.safetyRating}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              <DatoPiloto
+                icono={MapPin}
+                etiqueta="Nacionalidad"
+                valor={`${usuario.nacionalidad} · ${usuario.codigoPais}`}
+              />
+              <DatoPiloto
+                icono={Car}
+                etiqueta="Vehículo principal"
+                valor={usuario.vehiculoPrincipal}
+              />
+            </div>
+          </div>
         </div>
-      </div>
-    </section>
+
+        {/* Apex Rating */}
+        <div className="relative flex flex-col justify-between gap-6 bg-[#262626] p-6 sm:p-8">
+          <FranjaM className="absolute inset-x-0 top-0 h-1.5" />
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-[0.3em] text-white">
+              Apex Rating
+            </span>
+            <Award className="h-5 w-5 text-[#f4b400]" aria-hidden />
+          </div>
+
+          <p className="flex items-baseline gap-2">
+            <span className="font-mono text-6xl font-bold tabular-nums leading-none text-white">
+              {usuario.puntajeGeneral.toFixed(1)}
+            </span>
+            <span className="font-mono text-lg text-[#8a8a8a]">/ 100</span>
+          </p>
+
+          <div className="flex flex-col gap-2">
+            <div
+              role="meter"
+              aria-label="Apex Rating"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={usuario.puntajeGeneral}
+              className="h-1.5 w-full bg-black"
+            >
+              <div
+                className="h-full"
+                style={{ width: `${usuario.puntajeGeneral}%`, background: GRADIENTE_TRICOLOR }}
+              />
+            </div>
+            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[#8a8a8a]">
+              Calculado sobre {usuario.vueltasTotales} vueltas oficiales ({usuario.rating.nivel})
+            </span>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -423,7 +291,13 @@ function TarjetaPiloto({ perfil }: { perfil: PerfilPiloto }) {
 /*                          2. Radar de habilidades                            */
 /* -------------------------------------------------------------------------- */
 
-function TooltipHabilidad({ activo, habilidad }: { activo: boolean | undefined; habilidad: Habilidad | undefined }) {
+function TooltipHabilidad({
+  activo,
+  habilidad,
+}: {
+  activo: boolean | undefined;
+  habilidad: HabilidadDetalle | undefined;
+}) {
   if (!activo || !habilidad) return null;
   return (
     <div className="border border-[#3c3c3c] bg-[#1a1a1a] px-3 py-2 shadow-2xl shadow-black/60">
@@ -438,11 +312,22 @@ function TooltipHabilidad({ activo, habilidad }: { activo: boolean | undefined; 
   );
 }
 
-function SeccionHabilidades() {
-  const [idActiva, setIdActiva] = useState<string>(HABILIDADES[0]?.id ?? "");
+function SeccionHabilidades({ habilidades }: { habilidades: HabilidadDetalle[] }) {
+  const [idActiva, setIdActiva] = useState<string>(habilidades[0]?.id ?? "frenada");
+
+  useEffect(() => {
+    if (habilidades.length > 0 && !habilidades.some((h) => h.id === idActiva)) {
+      const primera = habilidades[0];
+      if (primera) {
+        setIdActiva(primera.id);
+      }
+    }
+  }, [habilidades, idActiva]);
 
   const promedio =
-    HABILIDADES.reduce((suma, habilidad) => suma + habilidad.valor, 0) / HABILIDADES.length;
+    habilidades.length > 0
+      ? habilidades.reduce((suma, h) => suma + h.valor, 0) / habilidades.length
+      : 80;
 
   return (
     <section aria-labelledby="titulo-habilidades">
@@ -456,16 +341,16 @@ function SeccionHabilidades() {
               Radar técnico
             </span>
             <span className="font-mono text-xs tabular-nums text-[#8a8a8a]">
-              Promedio {promedio.toFixed(1)}
+              Promedio {promedio.toFixed(1)} / 100
             </span>
           </div>
           <div
             className="px-2 py-4"
             role="img"
-            aria-label={`Radar de habilidades: ${HABILIDADES.map((h) => `${h.nombre} ${h.valor}`).join(", ")}`}
+            aria-label={`Radar de habilidades: ${habilidades.map((h) => `${h.nombre} ${h.valor}`).join(", ")}`}
           >
             <ResponsiveContainer width="100%" height={360}>
-              <RadarChart data={[...HABILIDADES]} outerRadius="72%">
+              <RadarChart data={[...habilidades]} outerRadius="72%">
                 <PolarGrid stroke={COLORES.borde} />
                 <PolarAngleAxis
                   dataKey="etiquetaCorta"
@@ -483,7 +368,7 @@ function SeccionHabilidades() {
                   content={({ active, payload }) => (
                     <TooltipHabilidad
                       activo={active}
-                      habilidad={payload?.[0]?.payload as Habilidad | undefined}
+                      habilidad={payload?.[0]?.payload as HabilidadDetalle | undefined}
                     />
                   )}
                 />
@@ -504,8 +389,8 @@ function SeccionHabilidades() {
 
         {/* Leyenda lateral */}
         <ul className="flex flex-col divide-y divide-[#3c3c3c] bg-[#1a1a1a]">
-          {HABILIDADES.map((habilidad) => {
-            const Icono = habilidad.icono;
+          {habilidades.map((habilidad) => {
+            const Icono = iconoHabilidad(habilidad.id);
             const esActiva = habilidad.id === idActiva;
             const color = colorPorPuntaje(habilidad.valor);
             return (
@@ -515,7 +400,7 @@ function SeccionHabilidades() {
                   onClick={() => setIdActiva(habilidad.id)}
                   aria-expanded={esActiva}
                   aria-controls={`consejo-${habilidad.id}`}
-                  className={`flex w-full flex-col gap-2 px-5 py-4 text-left outline-none transition-colors focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white ${
+                  className={`flex w-full flex-col gap-2 px-5 py-4 text-left outline-none transition-colors focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white cursor-pointer ${
                     esActiva ? "bg-[#262626]" : "hover:bg-white/[0.03]"
                   }`}
                 >
@@ -551,7 +436,7 @@ function SeccionHabilidades() {
                     <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-[#0066b1]" aria-hidden />
                     <div className="flex flex-col gap-1">
                       <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#0066b1]">
-                        Consejo de ingeniería
+                        Consejo de ingeniería de pista
                       </span>
                       <p className="text-xs leading-relaxed text-white">{habilidad.consejo}</p>
                     </div>
@@ -570,12 +455,12 @@ function SeccionHabilidades() {
 /*                        3. Grid de estadísticas globales                     */
 /* -------------------------------------------------------------------------- */
 
-function SeccionEstadisticas() {
+function SeccionEstadisticas({ estadisticas }: { estadisticas: readonly EstadisticaGlobal[] }) {
   return (
     <section aria-labelledby="titulo-estadisticas">
       <TituloSeccion id="titulo-estadisticas" etiqueta="Carrera" titulo="Estadísticas globales" />
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {ESTADISTICAS.map((estadistica) => {
+        {estadisticas.map((estadistica) => {
           const Icono = estadistica.icono;
           return (
             <li key={estadistica.etiqueta}>
@@ -611,7 +496,7 @@ function SeccionEstadisticas() {
 /*                       4. Récords personales por circuito                    */
 /* -------------------------------------------------------------------------- */
 
-function SeccionRecords() {
+function SeccionRecords({ records }: { records: RecordCircuitoPiloto[] }) {
   return (
     <section aria-labelledby="titulo-records">
       <TituloSeccion id="titulo-records" etiqueta="Mejores tiempos" titulo="Récords personales" />
@@ -624,7 +509,7 @@ function SeccionRecords() {
                 Circuito
               </th>
               <th scope="col" className="px-5 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a8a8a]">
-                Mejor vuelta
+                Mejor vuelta (PB)
               </th>
               <th scope="col" className="px-5 py-3 text-right text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a8a8a]">
                 <span className="sr-only">Acciones</span>
@@ -632,7 +517,7 @@ function SeccionRecords() {
             </tr>
           </thead>
           <tbody>
-            {RECORDS.map((record) => (
+            {records.map((record) => (
               <tr key={record.id} className="border-b border-[#2a2a2a] last:border-b-0 hover:bg-white/[0.03]">
                 <th scope="row" className="px-5 py-4 font-normal">
                   <div className="flex items-center gap-3">
@@ -650,14 +535,14 @@ function SeccionRecords() {
                     {record.esRecordSesion && (
                       <span className="inline-flex items-center gap-1 bg-[#0066b1] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.15em] text-white">
                         <Trophy className="h-3 w-3" strokeWidth={2.5} aria-hidden />
-                        Récord de sesión
+                        Récord Personal Oficial
                       </span>
                     )}
                   </div>
                 </td>
                 <td className="px-5 py-4 text-right">
                   <Link
-                    href="/analysis"
+                    href={`/app/analysis`}
                     aria-label={`Abrir telemetría de ${record.circuito}`}
                     className="group inline-flex items-center gap-2 border border-[#3c3c3c] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white outline-none transition-colors hover:border-[#0066b1] hover:bg-[#0066b1] focus-visible:ring-1 focus-visible:ring-white"
                   >
@@ -678,13 +563,22 @@ function SeccionRecords() {
 /*                         5. Insignias y logros técnicos                      */
 /* -------------------------------------------------------------------------- */
 
-function SeccionInsignias() {
+function SeccionInsignias({ logros }: { logros: LogroGamificado[] }) {
   return (
     <section aria-labelledby="titulo-insignias">
       <TituloSeccion id="titulo-insignias" etiqueta="Logros técnicos" titulo="Insignias desbloqueadas" />
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {INSIGNIAS.map((insignia) => {
-          const Icono = insignia.icono;
+        {logros.map((insignia) => {
+          const Icono = iconoLogro(insignia.icono);
+          const acento =
+            insignia.id.includes("f1") || insignia.id.includes("monza")
+              ? COLORES.amarillo
+              : insignia.id.includes("freno")
+              ? COLORES.rojoM
+              : insignia.id.includes("ritmo")
+              ? COLORES.azulOscuro
+              : COLORES.verde;
+
           return (
             <li key={insignia.id}>
               <Tarjeta className="flex h-full flex-col items-center gap-4 p-6 text-center">
@@ -692,19 +586,19 @@ function SeccionInsignias() {
                   <span
                     aria-hidden
                     className="absolute inset-0 rotate-45 border-2"
-                    style={{ borderColor: insignia.acento, backgroundColor: `${insignia.acento}1a` }}
+                    style={{ borderColor: acento, backgroundColor: `${acento}1a` }}
                   />
-                  <Icono className="relative h-7 w-7" style={{ color: insignia.acento }} aria-hidden />
+                  <Icono className="relative h-7 w-7" style={{ color: acento }} aria-hidden />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <h3 className="text-sm font-bold uppercase tracking-wider text-white">
-                    {insignia.nombre}
+                    {insignia.titulo}
                   </h3>
                   <p className="text-xs leading-relaxed text-[#a8a8a8]">{insignia.descripcion}</p>
                 </div>
                 <span className="mt-auto inline-flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#0fa336]">
                   <ShieldCheck className="h-3 w-3" aria-hidden />
-                  Desbloqueada
+                  Desbloqueada {insignia.fechaDesbloqueo ? `(${insignia.fechaDesbloqueo})` : ""}
                 </span>
               </Tarjeta>
             </li>
@@ -720,6 +614,184 @@ function SeccionInsignias() {
 /* -------------------------------------------------------------------------- */
 
 export default function PaginaPerfil() {
+  const router = useRouter();
+  const [usuario, setUsuario] = useState<PerfilUsuario>(() => {
+    const sesion = obtenerSesionLocal();
+    return sesion ? sesion.usuario : USUARIO_ALEJO_GARLATI;
+  });
+
+  useEffect(() => {
+    const sincronizarUsuario = () => {
+      const sesion = obtenerSesionLocal();
+      if (sesion?.usuario) {
+        setUsuario(sesion.usuario);
+      }
+    };
+
+    sincronizarUsuario();
+    window.addEventListener("storage", sincronizarUsuario);
+    window.addEventListener("apexlink_usuario_cambiado", sincronizarUsuario);
+
+    return () => {
+      window.removeEventListener("storage", sincronizarUsuario);
+      window.removeEventListener("apexlink_usuario_cambiado", sincronizarUsuario);
+    };
+  }, []);
+
+  // Sincronización en vivo con backend Kestrel / PostgreSQL
+  useEffect(() => {
+    let cancelado = false;
+    obtenerPerfilPiloto(usuario.id)
+      .then((res) => {
+        if (!cancelado && res.exitoso && res.datos) {
+          const d = res.datos;
+          const evalActual = d.ultimaEvaluacion;
+          setUsuario((prev) => ({
+            ...prev,
+            nombre: d.nombre || prev.nombre,
+            alias: d.alias || prev.alias,
+            email: d.email || prev.email,
+            licencia: d.licencia || prev.licencia,
+            vehiculoPrincipal: d.vehiculoPrincipal || prev.vehiculoPrincipal,
+            puntajeGeneral: d.puntajeGeneral ?? prev.puntajeGeneral,
+            vueltasTotales: d.vueltasTotales ?? prev.vueltasTotales,
+            kilometrosTotales: d.kilometrosTotales ?? prev.kilometrosTotales,
+            rating: {
+              paceRating: d.paceRating ?? prev.rating.paceRating,
+              safetyRating: d.safetyRating ?? prev.rating.safetyRating,
+              nivel: d.nivel ?? prev.rating.nivel,
+              metricas: evalActual
+                ? {
+                    velocidad: evalActual.velocidad,
+                    consistencia: evalActual.consistencia,
+                    frenada: evalActual.frenada,
+                    control: evalActual.control,
+                    agresividad: evalActual.agresividad,
+                  }
+                : prev.rating.metricas,
+            },
+            habilidades: evalActual
+              ? [
+                  {
+                    id: "frenada",
+                    nombre: "Frenada / Trail Braking",
+                    etiquetaCorta: "FRENADA",
+                    valor: evalActual.frenada,
+                    descripcion: "Modulación de frenada de precisión.",
+                    consejo: evalActual.consejoFrenada,
+                  },
+                  {
+                    id: "traccion",
+                    nombre: "Tracción / Salida",
+                    etiquetaCorta: "TRACCIÓN",
+                    valor: evalActual.traccionSalida,
+                    descripcion: "Despliegue de potencia a la salida de curvas.",
+                    consejo: evalActual.consejoTraccion,
+                  },
+                  {
+                    id: "apice",
+                    nombre: "Velocidad en Ápice",
+                    etiquetaCorta: "ÁPICE",
+                    valor: evalActual.velocidadApice,
+                    descripcion: "Paso por curva en vértices.",
+                    consejo: evalActual.consejoApice,
+                  },
+                  {
+                    id: "consistencia",
+                    nombre: "Consistencia",
+                    etiquetaCorta: "CONSISTENCIA",
+                    valor: evalActual.consistencia,
+                    descripcion: "Dispersión de tiempos entre vueltas.",
+                    consejo: evalActual.consejoConsistencia,
+                  },
+                  {
+                    id: "limites",
+                    nombre: "Respeto de Límites",
+                    etiquetaCorta: "LÍMITES",
+                    valor: evalActual.respetoLimites,
+                    descripcion: "Uso de pianos y trazada reglamentaria.",
+                    consejo: evalActual.consejoLimites,
+                  },
+                ]
+              : prev.habilidades,
+            diagnosticoAi: evalActual
+              ? {
+                  puntoFuerteTitulo: evalActual.puntoFuerteTitulo,
+                  puntoFuerteDesc: evalActual.puntoFuerteDesc,
+                  oportunidadMejoraTitulo: evalActual.oportunidadMejoraTitulo,
+                  oportunidadMejoraDesc: evalActual.oportunidadMejoraDesc,
+                }
+              : prev.diagnosticoAi,
+            records:
+              d.records && d.records.length > 0
+                ? d.records.map((r) => ({
+                    id: r.id,
+                    circuito: r.circuito,
+                    pais: r.pais,
+                    tiempo: r.tiempo,
+                    esRecordSesion: r.esRecordSesion,
+                  }))
+                : prev.records,
+            logros:
+              d.logros && d.logros.length > 0
+                ? d.logros.map((l) => ({
+                    id: l.id,
+                    titulo: l.titulo,
+                    descripcion: l.descripcion,
+                    icono: l.icono,
+                    desbloqueado: l.desbloqueado,
+                    fechaDesbloqueo: l.fechaDesbloqueo,
+                  }))
+                : prev.logros,
+          }));
+        }
+      })
+      .catch(() => {
+        // Fallback transparente a estado local si el backend está desconectado
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [usuario.id]);
+
+  const esGarlati = usuario.id === USUARIO_ALEJO_GARLATI.id || usuario.email.includes("garlati");
+
+  const estadisticas: readonly EstadisticaGlobal[] = [
+    {
+      etiqueta: "Kilómetros en pista",
+      valor: usuario.kilometrosTotales.toLocaleString("es-AR"),
+      unidad: "km",
+      detalle: "Distancia total registrada en tandas",
+      icono: Route,
+      acento: COLORES.azulClaro,
+    },
+    {
+      etiqueta: "Vueltas completadas",
+      valor: String(usuario.vueltasTotales),
+      unidad: "vueltas",
+      detalle: "Sesiones oficiales de simulador",
+      icono: Repeat,
+      acento: COLORES.azulOscuro,
+    },
+    {
+      etiqueta: "Vueltas válidas",
+      valor: esGarlati ? "97.1" : "90.0",
+      unidad: "%",
+      detalle: "Sin exceder límites de pista",
+      icono: ShieldCheck,
+      acento: COLORES.verde,
+    },
+    {
+      etiqueta: "Velocidad máxima",
+      valor: esGarlati ? "348.5" : "284.2",
+      unidad: "km/h",
+      detalle: esGarlati ? "Alcanzada en Monza (Rettifilo con DRS)" : "Alcanzada en Monza (Curva Grande)",
+      icono: Gauge,
+      acento: COLORES.rojoM,
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-black text-white antialiased selection:bg-[#0066b1] selection:text-white">
       <FranjaM className="h-1.5 w-full" />
@@ -728,24 +800,24 @@ export default function PaginaPerfil() {
         <nav aria-label="Ruta de navegación">
           <ol className="flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#8a8a8a]">
             <li>
-              <Link href="/" className="outline-none transition-colors hover:text-white focus-visible:text-white">
-                ApexLink
+              <Link href="/app" className="outline-none transition-colors hover:text-white focus-visible:text-white">
+                Boxes
               </Link>
             </li>
             <li aria-hidden>
               <ChevronRight className="h-3 w-3" />
             </li>
             <li aria-current="page" className="text-white">
-              Perfil de piloto
+              Perfil de piloto • {usuario.nombre} ({usuario.alias})
             </li>
           </ol>
         </nav>
 
-        <TarjetaPiloto perfil={PERFIL} />
-        <SeccionHabilidades />
-        <SeccionEstadisticas />
-        <SeccionRecords />
-        <SeccionInsignias />
+        <TarjetaPiloto usuario={usuario} />
+        <SeccionHabilidades habilidades={usuario.habilidades} />
+        <SeccionEstadisticas estadisticas={estadisticas} />
+        <SeccionRecords records={usuario.records} />
+        <SeccionInsignias logros={usuario.logros} />
       </main>
     </div>
   );

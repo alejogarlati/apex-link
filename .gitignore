@@ -52,3 +52,5 @@ Thumbs.db
 
 # Assetto Corsa SDK & proprietary binaries
 sdk/
+ 
+.superpowers/
