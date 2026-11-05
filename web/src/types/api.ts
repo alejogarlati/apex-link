@@ -24,25 +24,23 @@ export interface PaginacionRespuesta<T> {
 
 /** Estado de conexión y simulación del backend */
 export interface EstadoServicioDto {
+  isConnected: boolean;
+  isMockMode: boolean;
+  circuit: string;
+  carModel: string;
+  trackLengthMeters: number;
+  activeCars: number;
+  pilotName?: string;
+  pilotAlias?: string;
+  isGuest?: boolean;
+
+  // Compatibilidad hacia atrás garantizada
   estaConectado: boolean;
   modoMock: boolean;
   circuito: string;
   modeloVehiculo: string;
   longitudPistaMetros: number;
   autosActivos: number;
-
-  // Propiedades serializadas con JsonPropertyName en C#
-  isConnected?: boolean;
-  isMockMode?: boolean;
-  circuit?: string;
-  carModel?: string;
-  trackLengthMeters?: number;
-  activeCars?: number;
-
-  // Perfil del piloto activo
-  pilotName?: string;
-  pilotAlias?: string;
-  isGuest?: boolean;
   nombrePiloto?: string;
   aliasPiloto?: string;
   esInvitado?: boolean;
@@ -58,32 +56,174 @@ export enum TipoSesion {
 /** Resumen de una tanda o sesión guardada */
 export interface SesionResumenDto {
   id: string; // Guid
-  circuito: string;
-  configuracionCircuito: string;
-  modeloVehiculo: string;
-  tipoSesion: TipoSesion;
-  esSimulacionMock: boolean;
-  fechaInicio: string; // ISO 8601 UTC
-  fechaFin: string; // ISO 8601 UTC
-  totalVueltas: number;
-  mejorTiempoMs: number;
+  circuit: string;
+  trackConfig: string;
+  carModel: string;
+  sessionType: TipoSesion;
+  isMockSimulation: boolean;
+  startTime: string; // ISO 8601 UTC
+  endTime: string | null; // ISO 8601 UTC
+  totalLaps: number;
+  bestLapTimeMs: number;
+
+  // Aliases de compatibilidad opcional
+  circuito?: string;
+  configuracionCircuito?: string;
+  modeloVehiculo?: string;
+  tipoSesion?: TipoSesion;
+  esSimulacionMock?: boolean;
+  fechaInicio?: string;
+  fechaFin?: string | null;
+  totalVueltas?: number;
+  mejorTiempoMs?: number;
 }
 
 /** Metadatos de vuelta registrada */
 export interface VueltaDto {
   id: string; // Guid
-  numeroVuelta: number;
-  tiempoVueltaMs: number;
-  tiempoVueltaTexto: string; // "mm:ss.fff"
+  lapNumber: number;
+  lapTimeMs: number;
+  lapTimeStr: string; // "mm:ss.fff"
   sector1Ms: number;
   sector2Ms: number;
   sector3Ms: number;
-  esValida: boolean;
-  esMejorVuelta: boolean;
+  isValidLap: boolean;
+  isBestLap: boolean;
+
+  // Aliases de compatibilidad opcional
+  numeroVuelta?: number;
+  tiempoVueltaMs?: number;
+  tiempoVueltaTexto?: string;
+  esValida?: boolean;
+  esMejorVuelta?: boolean;
 }
 
 /** Conmutador de modo Mock en desarrollo */
 export interface EstadoMockDto {
   modoMockActivo: boolean;
   mensaje: string;
+  isMockActive?: boolean;
+  message?: string;
+}
+
+/** Metadatos de circuitos FAPPE */
+export interface CircuitoDto {
+  id: string;
+  nombre: string;
+  pais: string;
+  codigoPais: string;
+  longitudMetros: number;
+  cantidadCurvas: number;
+  recordVuelta: string;
+  pilotoRecord: string;
+  zonasDrsCount: number;
+  esOficialFappe: boolean;
+}
+
+export interface CircuitoDetalleDto extends CircuitoDto {
+  descripcion: string;
+  variante: string;
+  escala: number;
+  xOffset: number;
+  zOffset: number;
+  archivoMapa: string;
+}
+
+/** Elemento del ranking / clasificación oficial */
+export interface LeaderboardItemDto {
+  posicion: number;
+  piloto: string;
+  alias: string;
+  tiempo: string;
+  tiempoMs: number;
+  delta: string;
+  auto: string;
+  circuito: string;
+  vueltas: number;
+  esRecord: boolean;
+}
+
+/** Evaluación completa del rendimiento del piloto generada por el motor analítico */
+export interface EvaluacionRendimientoApiDto {
+  id: string;
+  usuarioId: string;
+  sesionId?: string;
+  velocidad: number;
+  consistencia: number;
+  frenada: number;
+  control: number;
+  agresividad: number;
+  trailBraking: number;
+  traccionSalida: number;
+  velocidadApice: number;
+  respetoLimites: number;
+  puntoFuerteTitulo: string;
+  puntoFuerteDesc: string;
+  oportunidadMejoraTitulo: string;
+  oportunidadMejoraDesc: string;
+  consejoFrenada: string;
+  consejoTraccion: string;
+  consejoApice: string;
+  consejoConsistencia: string;
+  consejoLimites: string;
+  fechaCreacion: string;
+}
+
+/** Detalle completo de perfil de piloto */
+export interface PerfilPilotoDetalleApiDto {
+  usuarioId: string;
+  nombre: string;
+  alias: string;
+  email: string;
+  licencia: string;
+  nacionalidad: string;
+  codigoPais: string;
+  vehiculoPrincipal: string;
+  simuladorPrincipal: string;
+  paceRating: number;
+  safetyRating: string;
+  nivel: string;
+  puntajeGeneral: number;
+  vueltasTotales: number;
+  kilometrosTotales: number;
+  ultimaEvaluacion?: EvaluacionRendimientoApiDto;
+  logros: Array<{
+    id: string;
+    titulo: string;
+    descripcion: string;
+    icono: string;
+    desbloqueado: boolean;
+    fechaDesbloqueo?: string;
+  }>;
+  records: Array<{
+    id: string;
+    circuito: string;
+    pais: string;
+    tiempo: string;
+    esRecordSesion: boolean;
+  }>;
+}
+
+export interface GenerarEvaluacionApiRequest {
+  sesionId: string;
+  usuarioId?: string;
+}
+
+export interface ActualizarRatingApiRequest {
+  paceRating: number;
+  safetyRating: string;
+  puntajeGeneral: number;
+  vueltasSumar?: number;
+  kmSumar?: number;
+}
+
+export interface LoginApiRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginRespuestaApiDto {
+  token: string;
+  expiraEn: string;
+  usuario: PerfilPilotoDetalleApiDto;
 }

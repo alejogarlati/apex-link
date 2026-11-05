@@ -26,6 +26,30 @@ export interface LogroGamificado {
   fechaDesbloqueo?: string;
 }
 
+export interface HabilidadDetalle {
+  id: string;
+  nombre: string;
+  etiquetaCorta: string;
+  valor: number;
+  descripcion: string;
+  consejo: string;
+}
+
+export interface RecordCircuitoPiloto {
+  id: string;
+  circuito: string;
+  pais: string;
+  tiempo: string;
+  esRecordSesion: boolean;
+}
+
+export interface DiagnosticoAiCoach {
+  puntoFuerteTitulo: string;
+  puntoFuerteDesc: string;
+  oportunidadMejoraTitulo: string;
+  oportunidadMejoraDesc: string;
+}
+
 export interface PerfilUsuario {
   id: string;
   nombre: string;
@@ -33,10 +57,19 @@ export interface PerfilUsuario {
   email: string;
   avatarUrl?: string;
   esInvitadoFappe: boolean;
+  licencia: string;
+  nacionalidad: string;
+  codigoPais: string;
+  vehiculoPrincipal: string;
+  simulador: string;
+  puntajeGeneral: number; // 0..100
   rating: ApexRating;
   vueltasTotales: number;
   kilometrosTotales: number;
   logros: LogroGamificado[];
+  habilidades: HabilidadDetalle[];
+  records: RecordCircuitoPiloto[];
+  diagnosticoAi: DiagnosticoAiCoach;
 }
 
 export interface SesionAuth {
