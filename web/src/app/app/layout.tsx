@@ -97,8 +97,10 @@ export default function LayoutAppBoxes({
   const toast = useToast();
 
   const [sidebarAbierto, setSidebarAbierto] = useState(false);
-  const [verificandoSesion, setVerificandoSesion] = useState(true);
-  const [usuario, setUsuario] = useState<PerfilUsuario>(USUARIO_ALEJO_GARLATI);
+  const [usuario, setUsuario] = useState<PerfilUsuario>(() => {
+    const sesion = obtenerSesionLocal();
+    return sesion?.usuario ?? USUARIO_ALEJO_GARLATI;
+  });
 
   useEffect(() => {
     const sincronizarUsuario = () => {
@@ -108,7 +110,6 @@ export default function LayoutAppBoxes({
         return;
       }
       setUsuario(sesion.usuario);
-      setVerificandoSesion(false);
     };
 
     sincronizarUsuario();
@@ -128,24 +129,6 @@ export default function LayoutAppBoxes({
   };
 
   const enlaceActivo = ENLACES_NAVEGACION.find((e) => e.href === pathname);
-
-  if (verificandoSesion) {
-    return (
-      <div className="min-h-screen bg-black text-white p-6 space-y-6">
-        <div className="flex items-center justify-between border-b border-[#262626] pb-4">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-9 w-40" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Skeleton className="h-28 w-full" />
-          <Skeleton className="h-28 w-full" />
-          <Skeleton className="h-28 w-full" />
-          <Skeleton className="h-28 w-full" />
-        </div>
-        <Skeleton className="h-96 w-full" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col selection:bg-[#0066b1]">
