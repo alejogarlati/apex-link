@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Gauge,
@@ -11,324 +11,447 @@ import {
   Lightbulb,
   ArrowRight,
   Clock,
+  Radio,
+  RefreshCw,
+  Sparkles,
 } from "lucide-react";
-import { obtenerSesionLocal, PILOTO_INVITADO_FAPPE } from "@/lib/auth";
+import {
+  obtenerSesionLocal,
+  USUARIO_ALEJO_GARLATI,
+  USUARIO_ALEJO_SALAS,
+} from "@/lib/auth";
 import type { PerfilUsuario } from "@/types/usuario";
+import {
+  obtenerEstadoServicio,
+  obtenerSesionesPaginadas,
+  obtenerVueltasSesion,
+  obtenerLeaderboard,
+} from "@/lib/apiClient";
+import type { EstadoServicioDto, SesionResumenDto, LeaderboardItemDto } from "@/types/api";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { Tooltip } from "@/components/ui/Tooltip";
 
 export default function PaginaDashboardBoxes() {
-  const [usuario] = useState<PerfilUsuario>(() => {
+  const [usuario, setUsuario] = useState<PerfilUsuario>(() => {
     const sesion = obtenerSesionLocal();
-    return sesion ? sesion.usuario : PILOTO_INVITADO_FAPPE;
+    return sesion ? sesion.usuario : USUARIO_ALEJO_GARLATI;
   });
 
+  const [estadoServicio, setEstadoServicio] = useState<EstadoServicioDto | null>(null);
+  const [ultimaSesion, setUltimaSesion] = useState<SesionResumenDto | null>(null);
+  const [rankingTop, setRankingTop] = useState<LeaderboardItemDto[]>([]);
+  const [tiempoIdealStr, setTiempoIdealStr] = useState("01:20.810");
+  const [deltaIdealStr, setDeltaIdealStr] = useState("-0.430s");
+  const [consistenciaStr, setConsistenciaStr] = useState("94.4%");
+  const [vueltasValidasStr, setVueltasValidasStr] = useState("17 vueltas válidas");
+  const [cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    const sincronizarUsuario = () => {
+      const sesion = obtenerSesionLocal();
+      if (sesion?.usuario) {
+        setUsuario(sesion.usuario);
+      }
+    };
+
+    sincronizarUsuario();
+    window.addEventListener("storage", sincronizarUsuario);
+    window.addEventListener("apexlink_usuario_cambiado", sincronizarUsuario);
+
+    return () => {
+      window.removeEventListener("storage", sincronizarUsuario);
+      window.removeEventListener("apexlink_usuario_cambiado", sincronizarUsuario);
+    };
+  }, []);
+
   const metricas = usuario.rating.metricas;
+  const esGarlati = usuario.id === USUARIO_ALEJO_GARLATI.id || usuario.email.includes("garlati");
+
+  const formatearTiempoMs = (ms: number) => {
+    if (!ms || ms <= 0) return "--:--.---";
+    const totalSegundos = ms / 1000;
+    const minutos = Math.floor(totalSegundos / 60);
+    const segundos = totalSegundos % 60;
+    return `${minutos.toString().padStart(2, "0")}:${segundos.toFixed(3).padStart(6, "0")}`;
+  };
+
+  useEffect(() => {
+    let cancelado = false;
+    setCargando(true);
+
+    async function cargarDatosDashboard() {
+      try {
+        // 1. Consultar estado del Core Relay
+        const resEstado = await obtenerEstadoServicio().catch(() => null);
+        if (!cancelado && resEstado?.exitoso && resEstado.datos) {
+          setEstadoServicio(resEstado.datos);
+        }
+
+        // 2. Consultar la última tanda registrada
+        const resSesiones = await obtenerSesionesPaginadas(1, 1).catch(() => null);
+        if (!cancelado && resSesiones?.exitoso && resSesiones.datos?.elementos?.length) {
+          const sesion = resSesiones.datos.elementos[0];
+          if (sesion) {
+            setUltimaSesion(sesion);
+
+            // 3. Consultar las vueltas de la sesión para calcular vuelta ideal y consistencia
+            const resVueltas = await obtenerVueltasSesion(sesion.id).catch(() => null);
+            if (!cancelado && resVueltas?.exitoso && resVueltas.datos?.length) {
+              const vueltas = resVueltas.datos;
+              const validas = vueltas.filter((v) => v.isValidLap ?? v.esValida ?? true);
+
+              if (validas.length > 0) {
+                const s1Min = Math.min(...validas.map((v) => v.sector1Ms).filter((s) => s > 0));
+                const s2Min = Math.min(...validas.map((v) => v.sector2Ms).filter((s) => s > 0));
+                const s3Min = Math.min(...validas.map((v) => v.sector3Ms).filter((s) => s > 0));
+
+                if (s1Min > 0 && s2Min > 0 && s3Min > 0) {
+                  const idealMs = s1Min + s2Min + s3Min;
+                  setTiempoIdealStr(formatearTiempoMs(idealMs));
+                  const pb = sesion.bestLapTimeMs || sesion.mejorTiempoMs || idealMs;
+                  const delta = (idealMs - pb) / 1000;
+                  setDeltaIdealStr(`${delta.toFixed(3)}s`);
+                }
+
+                const pct = Math.round((validas.length / vueltas.length) * 1000) / 10;
+                setConsistenciaStr(`${pct}%`);
+                setVueltasValidasStr(`${validas.length} vueltas válidas`);
+              }
+            }
+          }
+        }
+
+        // 4. Consultar el top de clasificación de Monza
+        const resLeaderboard = await obtenerLeaderboard("monza", 3).catch(() => null);
+        if (!cancelado && resLeaderboard?.exitoso && resLeaderboard.datos?.length) {
+          setRankingTop(resLeaderboard.datos);
+        }
+      } finally {
+        if (!cancelado) setCargando(false);
+      }
+    }
+
+    cargarDatosDashboard();
+
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
+  const enlaceActivo = estadoServicio?.isConnected || estadoServicio?.isMockMode || false;
+  const esMock = estadoServicio?.isMockMode || false;
+  const circuitoActual = estadoServicio?.circuit && estadoServicio.circuit !== "Desconocido / Esperando simulador"
+    ? estadoServicio.circuit
+    : ultimaSesion?.circuit || ultimaSesion?.circuito || (esGarlati ? "Autodromo Nazionale Monza" : "Autodromo Nazionale Monza");
+  const autoActual = estadoServicio?.carModel && estadoServicio.carModel !== "Desconocido"
+    ? estadoServicio.carModel
+    : ultimaSesion?.carModel || ultimaSesion?.modeloVehiculo || usuario.vehiculoPrincipal;
+
+  const mejorVueltaMs = ultimaSesion?.bestLapTimeMs || ultimaSesion?.mejorTiempoMs || (esGarlati ? 81240 : 107382);
+  const totalVueltas = ultimaSesion?.totalLaps ?? ultimaSesion?.totalVueltas ?? usuario.vueltasTotales;
 
   return (
-    <div className="space-y-10 sm:space-y-12 max-w-7xl mx-auto pb-12">
-      {/* Banner de Bienvenida y Diagnóstico Rápido */}
-      <div className="card-cockpit-gradient border border-[#262626] rounded-none border-sheen p-8 sm:p-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-8 shadow-2xl relative overflow-hidden bg-[#141414]">
-        <div className="flex items-start gap-5">
-          <div className="p-4 bg-[#1a1a1a] border border-[#3c3c3c] rounded-none text-white">
-            <Gauge className="w-8 h-8 text-[#0066b1]" />
+    <div className="space-y-8 max-w-7xl mx-auto">
+      {/* Banner de Bienvenida y Diagnóstico Rápido (Fondo invisible con separador lineal) */}
+      <div className="pb-8 border-b border-[#222225] flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="flex items-start gap-4">
+          <div className="text-[#0066b1] pt-1">
+            <Gauge className="w-8 h-8" />
           </div>
           <div>
-            <div className="flex flex-wrap items-center gap-3 mb-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-[#0066b1]">
-                Dashboard de Ingeniería de Pista
-              </span>
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-none bg-[#0fa336]/10 text-[#0fa336] border border-[#0fa336]/30 text-[10px] font-mono uppercase tracking-[0.18em] font-bold">
-                <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
-                Win32 60Hz Telemetría OK
-              </span>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-bold uppercase tracking-tight text-white">
+                Bienvenido, {usuario.nombre}
+              </h1>
+              {enlaceActivo ? (
+                <span className="inline-flex items-center gap-1.5 text-xs font-mono text-[#0fa336] font-bold">
+                  <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
+                  {esMock ? "Generador Mock @ 60 Hz" : "Enlace Activo"}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-xs font-mono text-[#f4b400] font-bold">
+                  <span className="w-2 h-2 rounded-full bg-[#f4b400]" />
+                  Standby
+                </span>
+              )}
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold uppercase tracking-tight text-white font-mono">
-              Bienvenido, {usuario.nombre}
-            </h1>
-            <p className="text-sm text-[#bbbbbb] font-mono tracking-wide mt-2">
-              Sesión activa en el Autodromo Nazionale Monza • Ferrari SF70H (Formula 1 2017)
+            <p className="text-xs sm:text-sm text-[#bbbbbb] mt-1 font-mono">
+              Sesión activa: <span className="text-white font-bold">{circuitoActual}</span> • <span className="text-[#0066b1]">{autoActual}</span>
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <Link
+            href="/app/live"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-lg font-bold uppercase tracking-wider text-xs border border-white/15 hover:border-white/30 hover:bg-white/[0.04] text-white transition-all flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1]"
+          >
+            <Radio className="w-4 h-4 text-[#00E676] animate-pulse" />
+            Live Pitwall @ 60 Hz
+          </Link>
+
           <Link
             href="/app/analysis"
-            className="w-full sm:w-auto h-12 px-8 rounded-none bg-[#0066b1] hover:bg-[#1c69d4] active:scale-[0.99] text-white font-mono font-bold text-xs tracking-[0.16em] uppercase flex items-center justify-center gap-3 transition-all cursor-pointer"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-lg font-bold uppercase tracking-wider text-xs bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-all shadow-lg shadow-[#0066b1]/20 flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#1c69d4]"
           >
-            <LineChart className="w-4 h-4 text-white" />
+            <LineChart className="w-4 h-4" />
             Laboratorio Analítico 2D
-            <ArrowRight className="w-4 h-4 text-white" />
+            <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
       </div>
 
-      {/* Grid Central: Resumen de Tanda + Radar de Habilidades */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
+      {/* Grid Central: Resumen de Tanda + Radar de Habilidades (Separador lineal vertical y horizontal, sin cards) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 py-8 border-b border-[#222225]">
         {/* Resumen de Última Tanda */}
-        <div className="lg:col-span-2 card-cockpit-gradient border border-[#262626] rounded-none border-sheen p-8 sm:p-9 flex flex-col justify-between shadow-2xl bg-[#141414]">
+        <Link
+          href={`/app/analysis?sesionId=${ultimaSesion?.id || ""}`}
+          className="lg:col-span-2 flex flex-col justify-between group cursor-pointer lg:pr-8 lg:border-r lg:border-[#222225]"
+        >
           <div>
-            <div className="flex items-center justify-between pb-5 border-b border-[#262626]">
-              <div>
-                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-[#0066b1] flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-[#0066b1]" />
-                  Última Tanda Registrada
-                </span>
-                <h2 className="text-xl sm:text-2xl font-bold uppercase tracking-tight text-white font-mono mt-1">
-                  Autodromo Nazionale Monza (Grand Prix)
-                </h2>
-              </div>
-              <span className="text-xs font-mono font-bold tracking-[0.18em] text-white bg-[#1a1a1a] px-4 py-1.5 rounded-none border border-[#3c3c3c] uppercase">
-                18 Vueltas
+            <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
+              <h2 className="text-base sm:text-lg font-bold uppercase text-white tracking-tight group-hover:text-[#81c4ff] transition-colors">
+                {ultimaSesion?.circuit || ultimaSesion?.circuito || "Autodromo Nazionale Monza"}
+              </h2>
+              <span className="text-xs font-mono text-[#bbbbbb]">
+                {totalVueltas} Vueltas Registradas
               </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 sm:gap-6 py-8">
-              {/* Stat 1: Mejor Vuelta (Verde Éxito BMW M) */}
-              <div className="bg-[#0d0d0d] border border-[#262626] border-t-2 border-t-[#0fa336] p-5 rounded-none">
-                <div className="text-[10px] uppercase font-mono font-bold tracking-[0.18em] text-[#0fa336] flex items-center justify-between">
-                  <span>Mejor Vuelta</span>
-                  <span className="w-2 h-2 rounded-full bg-[#0fa336]" />
-                </div>
-                <div className="text-2xl font-bold font-mono text-[#0fa336] mt-2.5 tabular-nums">
-                  01:21.240
-                </div>
-                <div className="text-[11px] font-mono text-[#7e7e7e] mt-1.5">Vuelta 3 • 256.4 km/h</div>
+            {cargando ? (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 py-6 border-b border-white/[0.06]">
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
               </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 py-6 border-b border-white/[0.06]">
+                <div>
+                  <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#7e7e7e]">
+                    <span>Mejor Vuelta (PB)</span>
+                    <Tooltip content="Mejor tiempo oficial de vuelta válida registrado en la sesión." />
+                  </div>
+                  <div className="text-2xl font-bold font-mono text-[#00E676] mt-1 tabular-nums tracking-tight">
+                    {formatearTiempoMs(mejorVueltaMs)}
+                  </div>
+                </div>
 
-              {/* Stat 2: Vuelta Óptima (BMW Blue) */}
-              <div className="bg-[#0d0d0d] border border-[#262626] border-t-2 border-t-[#0066b1] p-5 rounded-none">
-                <div className="text-[10px] uppercase font-mono font-bold tracking-[0.18em] text-[#0066b1] flex items-center justify-between">
-                  <span>Vuelta Ideal</span>
-                  <span className="w-2 h-2 rounded-full bg-[#0066b1]" />
+                <div>
+                  <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#7e7e7e]">
+                    <span>Vuelta Óptima</span>
+                    <Tooltip content="Suma teórica de los 3 mejores sectores individuales del piloto en la tanda." />
+                  </div>
+                  <div className="text-2xl font-bold font-mono text-[#0066b1] mt-1 tabular-nums tracking-tight">
+                    {tiempoIdealStr}
+                  </div>
+                  <div className="text-[10px] text-[#0066b1] mt-0.5 font-mono tabular-nums">Delta: {deltaIdealStr}</div>
                 </div>
-                <div className="text-2xl font-bold font-mono text-white mt-2.5 tabular-nums">
-                  01:20.810
-                </div>
-                <div className="text-[11px] font-mono text-[#0066b1] mt-1.5 font-bold">Delta: -0.430s</div>
-              </div>
 
-              {/* Stat 3: Top Speed */}
-              <div className="bg-[#0d0d0d] border border-[#262626] border-t-2 border-t-[#1c69d4] p-5 rounded-none">
-                <div className="text-[10px] uppercase font-mono font-bold tracking-[0.18em] text-[#bbbbbb] flex items-center justify-between">
-                  <span>Top Speed</span>
-                  <span className="w-2 h-2 rounded-full bg-[#1c69d4]" />
+                <div>
+                  <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#7e7e7e]">
+                    <span>Top Speed</span>
+                    <Tooltip content="Velocidad máxima alcanzada antes del punto de frenada." />
+                  </div>
+                  <div className="text-2xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
+                    {esGarlati ? "348.5" : "284.2"} <span className="text-xs text-[#7e7e7e] font-normal">km/h</span>
+                  </div>
                 </div>
-                <div className="text-2xl font-bold font-mono text-white mt-2.5 tabular-nums">
-                  348.5 <span className="text-xs text-[#7e7e7e] font-sans">km/h</span>
-                </div>
-                <div className="text-[11px] font-mono text-[#7e7e7e] mt-1.5">Con DRS activo</div>
-              </div>
 
-              {/* Stat 4: Consistencia (Amarillo Warning BMW M) */}
-              <div className="bg-[#0d0d0d] border border-[#262626] border-t-2 border-t-[#f4b400] p-5 rounded-none">
-                <div className="text-[10px] uppercase font-mono font-bold tracking-[0.18em] text-[#f4b400] flex items-center justify-between">
-                  <span>Consistencia</span>
-                  <span className="w-2 h-2 rounded-full bg-[#f4b400]" />
+                <div>
+                  <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#7e7e7e]">
+                    <span>Consistencia</span>
+                    <Tooltip content="Porcentaje de vueltas limpias con baja dispersión." />
+                  </div>
+                  <div className="text-2xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
+                    {consistenciaStr}
+                  </div>
+                  <div className="text-[10px] text-[#0fa336] mt-0.5 font-mono">{vueltasValidasStr}</div>
                 </div>
-                <div className="text-2xl font-bold font-mono text-[#f4b400] mt-2.5 tabular-nums">
-                  94.4%
-                </div>
-                <div className="text-[11px] font-mono text-[#7e7e7e] mt-1.5">17 vueltas válidas</div>
               </div>
-            </div>
+            )}
           </div>
 
-          <div className="pt-5 border-t border-[#262626] flex items-center justify-between text-xs font-mono">
-            <span className="text-[#7e7e7e] flex items-center gap-2">
-              <Clock className="w-4 h-4 text-[#0066b1]" />
-              Finalizada hoy 19:15 UTC • Ferrari SF70H V6 Turbo Híbrido
+          <div className="pt-4 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono">
+            <span className="text-[#bbbbbb] flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-[#7e7e7e]" />
+              {ultimaSesion?.carModel || "Ferrari SF70H (F1 2017)"}
             </span>
-            <Link
-              href="/app/analysis"
-              className="text-white hover:text-[#0066b1] font-bold uppercase tracking-[0.16em] text-xs flex items-center gap-2 transition-colors py-1.5 px-3 bg-[#1a1a1a] border border-[#3c3c3c]"
-            >
-              Inspeccionar Telemetría
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            <span className="text-[#0066b1] group-hover:text-white font-bold uppercase text-[11px] flex items-center gap-1 transition-colors">
+              Abrir análisis completo de telemetría
+              <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
+            </span>
           </div>
-        </div>
+        </Link>
 
         {/* Radar de Habilidades del Piloto */}
-        <div className="card-cockpit-gradient border border-[#262626] rounded-none border-sheen p-8 sm:p-9 flex flex-col justify-between shadow-2xl bg-[#141414]">
+        <Link
+          href="/app/perfil"
+          className="flex flex-col justify-between group cursor-pointer"
+        >
           <div>
-            <div className="flex items-center justify-between pb-4 border-b border-[#262626]">
-              <div>
-                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-[#e22718] flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-[#e22718]" />
-                  Evaluación de Conducción
-                </span>
-                <h3 className="text-xl font-bold uppercase tracking-tight text-white font-mono mt-1">
-                  Apex Rating {usuario.rating.paceRating}
-                </h3>
-              </div>
-              <span className="text-xs font-bold font-mono tracking-[0.18em] px-3 py-1.5 rounded-none bg-[#e22718]/10 text-[#e22718] border border-[#e22718]/30 uppercase">
-                Cat. {usuario.rating.safetyRating}
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
+              <h3 className="text-base font-bold uppercase text-white tracking-tight group-hover:text-[#81c4ff] transition-colors">
+                Apex Rating {usuario.rating.paceRating}
+              </h3>
+              <span className="text-xs font-mono text-[#bbbbbb]">
+                {usuario.rating.nivel}
               </span>
             </div>
 
-            <div className="py-6 space-y-5">
+            <div className="py-4 space-y-3 font-mono">
               <div>
-                <div className="flex justify-between text-xs font-mono mb-2">
-                  <span className="text-[#bbbbbb] uppercase tracking-wider text-[11px] font-semibold">Velocidad Punta & Tracción</span>
-                  <span className="text-white font-bold tabular-nums text-sm">{metricas.velocidad}%</span>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-[#bbbbbb]">Velocidad Punta & Tracción</span>
+                  <span className="text-white font-bold tabular-nums">{metricas.velocidad}%</span>
                 </div>
-                <div className="h-1.5 bg-[#0d0d0d] rounded-none overflow-hidden border border-[#262626]">
+                <div className="h-1.5 bg-black rounded-full overflow-hidden">
                   <div className="h-full bg-[#0066b1]" style={{ width: `${metricas.velocidad}%` }} />
                 </div>
               </div>
 
               <div>
-                <div className="flex justify-between text-xs font-mono mb-2">
-                  <span className="text-[#bbbbbb] uppercase tracking-wider text-[11px] font-semibold">Potencia de Frenada</span>
-                  <span className="text-white font-bold tabular-nums text-sm">{metricas.frenada}%</span>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-[#bbbbbb]">Potencia de Frenada</span>
+                  <span className="text-white font-bold tabular-nums">{metricas.frenada}%</span>
                 </div>
-                <div className="h-1.5 bg-[#0d0d0d] rounded-none overflow-hidden border border-[#262626]">
+                <div className="h-1.5 bg-black rounded-full overflow-hidden">
                   <div className="h-full bg-[#e22718]" style={{ width: `${metricas.frenada}%` }} />
                 </div>
               </div>
 
               <div>
-                <div className="flex justify-between text-xs font-mono mb-2">
-                  <span className="text-[#bbbbbb] uppercase tracking-wider text-[11px] font-semibold">Control de Chasis & G-Force</span>
-                  <span className="text-white font-bold tabular-nums text-sm">{metricas.control}%</span>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-[#bbbbbb]">Control de Chasis & G-Force</span>
+                  <span className="text-white font-bold tabular-nums">{metricas.control}%</span>
                 </div>
-                <div className="h-1.5 bg-[#0d0d0d] rounded-none overflow-hidden border border-[#262626]">
+                <div className="h-1.5 bg-black rounded-full overflow-hidden">
                   <div className="h-full bg-[#1c69d4]" style={{ width: `${metricas.control}%` }} />
                 </div>
               </div>
 
               <div>
-                <div className="flex justify-between text-xs font-mono mb-2">
-                  <span className="text-[#bbbbbb] uppercase tracking-wider text-[11px] font-semibold">Consistencia Vuelta a Vuelta</span>
-                  <span className="text-white font-bold tabular-nums text-sm">{metricas.consistencia}%</span>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-[#bbbbbb]">Consistencia Vuelta a Vuelta</span>
+                  <span className="text-white font-bold tabular-nums">{metricas.consistencia}%</span>
                 </div>
-                <div className="h-1.5 bg-[#0d0d0d] rounded-none overflow-hidden border border-[#262626]">
+                <div className="h-1.5 bg-black rounded-full overflow-hidden">
                   <div className="h-full bg-[#0fa336]" style={{ width: `${metricas.consistencia}%` }} />
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-[#262626] text-center">
-            <span className="text-xs font-mono tracking-[0.14em] text-[#7e7e7e]">
-              Rango de Piloto: <strong className="text-white uppercase font-bold text-sm tracking-[0.18em] ml-1 bg-[#1a1a1a] px-3 py-1 border border-[#3c3c3c]">{usuario.rating.nivel}</strong>
+          <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between font-mono text-xs">
+            <span className="text-[11px] text-[#7e7e7e]">
+              Licencia: <strong className="text-white">{usuario.alias}</strong>
+            </span>
+            <span className="text-[#0066b1] group-hover:text-white font-bold uppercase text-[11px] flex items-center gap-1 transition-colors">
+              Ver Radar Completo
+              <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
             </span>
           </div>
-        </div>
+        </Link>
       </div>
 
-      {/* AI Race Coach: Diagnóstico Heurístico de Telemetría */}
-      <div className="card-cockpit-gradient border border-[#262626] rounded-none border-sheen p-8 sm:p-10 shadow-2xl bg-[#141414]">
-        <div className="flex items-center gap-4 mb-8">
-          <div className="p-3.5 rounded-none bg-[#1a1a1a] border border-[#3c3c3c] text-white">
-            <Lightbulb className="w-6 h-6 text-[#f4b400]" />
-          </div>
+      {/* AI Race Coach: Diagnóstico Heurístico de Telemetría (Separador lineal, sin card) */}
+      <div className="py-8 border-b border-[#222225]">
+        <div className="flex items-center gap-3 mb-5">
+          <Lightbulb className="w-5 h-5 text-[#f4b400]" />
           <div>
-            <h3 className="text-lg sm:text-xl font-bold uppercase tracking-[0.14em] text-white font-mono">
-              AI Race Coach • Diagnóstico Automático de Telemetría
+            <h3 className="text-base font-bold uppercase tracking-tight text-white">
+              AI Race Coach • Diagnóstico de Telemetría
             </h3>
-            <p className="text-xs font-mono text-[#7e7e7e] tracking-wider mt-1">
-              Análisis algorítmico comparando tu vuelta rápida contra la vuelta ideal metro a metro
+            <p className="text-xs text-[#7e7e7e] font-mono">
+              Análisis comparativo de telemetría sobre el trazado de Monza
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="p-6 rounded-none bg-[#0d0d0d] border-l-4 border-l-[#0fa336] border-y border-r border-[#262626]">
-            <div className="flex items-center gap-2.5 text-xs font-bold uppercase tracking-[0.14em] text-[#0fa336] mb-3 font-mono">
-              <CheckCircle2 className="w-5 h-5 shrink-0" />
-              Punto Fuerte: Variante Ascari (Curvas 8, 9 y 10)
+          <div className="border-l-2 border-[#0fa336] pl-4 py-1">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase text-[#0fa336] mb-1.5 font-mono">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>{usuario.diagnosticoAi.puntoFuerteTitulo}</span>
             </div>
-            <p className="text-xs sm:text-sm text-[#bbbbbb] leading-relaxed">
-              Excelente aplicación progresiva del acelerador al salir de la curva 10. Tu velocidad a la salida es <strong className="text-[#0fa336] font-bold">+4.8 km/h superior</strong> al promedio de la sesión, lo que maximiza tu aceleración a lo largo de la recta de Serraglio.
+            <p className="text-xs text-[#bbbbbb] leading-relaxed">
+              {usuario.diagnosticoAi.puntoFuerteDesc}
             </p>
           </div>
 
-          <div className="p-6 rounded-none bg-[#0d0d0d] border-l-4 border-l-[#e22718] border-y border-r border-[#262626]">
-            <div className="flex items-center gap-2.5 text-xs font-bold uppercase tracking-[0.14em] text-[#e22718] mb-3 font-mono">
-              <AlertTriangle className="w-5 h-5 shrink-0" />
-              Oportunidad de Mejora: Variante del Rettifilo (Curva 1)
+          <div className="border-l-2 border-[#e22718] pl-4 py-1">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase text-[#e22718] mb-1.5 font-mono">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              <span>{usuario.diagnosticoAi.oportunidadMejoraTitulo}</span>
             </div>
-            <p className="text-xs sm:text-sm text-[#bbbbbb] leading-relaxed">
-              Frenada tardía y abrupta en los 150 metros. Mantienes el pedal de freno al 100% hasta el apex, induciendo subviraje. Aplicando un <strong className="text-[#e22718] font-bold">20% más de trail-braking</strong> podrás adelantar el vértice y ganar aproximadamente <strong className="text-white font-bold">~0.240 s</strong> en el Sector 1.
+            <p className="text-xs text-[#bbbbbb] leading-relaxed">
+              {usuario.diagnosticoAi.oportunidadMejoraDesc}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Leaderboard del Stand FAPPE 2026 */}
-      <div className="card-cockpit-gradient border border-[#262626] rounded-none border-sheen p-8 sm:p-10 shadow-2xl bg-[#141414]">
-        <div className="flex items-center justify-between pb-6 border-b border-[#262626] mb-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-[#1a1a1a] border border-[#3c3c3c] text-white">
-              <Trophy className="w-6 h-6 text-[#f4b400]" />
-            </div>
+      {/* Leaderboard Oficial: Separador lineal superior, sin card */}
+      <Link
+        href="/app/leaderboards"
+        className="pt-8 group cursor-pointer block"
+      >
+        <div className="flex items-center justify-between pb-4 border-b border-white/[0.06] mb-4">
+          <div className="flex items-center gap-2.5">
+            <Trophy className="w-5 h-5 text-[#f4b400]" />
             <div>
-              <h3 className="text-lg sm:text-xl font-bold uppercase tracking-[0.14em] text-white font-mono">
+              <h3 className="text-base font-bold uppercase tracking-tight text-white group-hover:text-[#81c4ff] transition-colors">
                 Tabla de Récords Oficiales • Monza GP
               </h3>
-              <p className="text-xs font-mono text-[#7e7e7e] tracking-wider mt-1">
-                Registros en vivo marcados por pilotos en el simulador con telemetría en tiempo real
+              <p className="text-xs text-[#7e7e7e] font-mono">
+                Registros en vivo marcados por pilotos en el simulador
               </p>
             </div>
           </div>
-          <span className="text-xs font-mono font-bold tracking-[0.18em] text-[#f4b400] bg-[#f4b400]/10 px-4 py-2 rounded-none border border-[#f4b400]/30 uppercase">
-            Monza GP • SF70H
+          <span className="text-xs font-mono text-[#0066b1] group-hover:text-white flex items-center gap-1 font-bold uppercase transition-colors">
+            Ver Tabla Completa
+            <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
           </span>
         </div>
 
-        <div className="divide-y divide-[#262626]">
-          {/* Puesto 1 (Oro / Campeón) */}
-          <div className="py-5 px-4 flex items-center justify-between border-l-4 border-l-[#f4b400] bg-[#0d0d0d] transition-all">
-            <div className="flex items-center gap-4">
-              <span className="text-base font-bold font-mono text-black bg-[#f4b400] w-8 h-8 flex items-center justify-center">01</span>
-              <div>
-                <div className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2.5">
-                  <span>Alejo Garlati (Piloto Pro)</span>
-                  <span className="text-[9px] font-mono px-2 py-0.5 rounded-none bg-[#0066b1] text-white uppercase tracking-widest font-bold">
-                    PB STAND
-                  </span>
+        <div className="divide-y divide-white/[0.06]">
+          {rankingTop.map((item) => (
+            <div key={`${item.posicion}-${item.piloto}`} className="py-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span
+                  className={`text-sm font-bold font-mono w-6 tabular-nums ${
+                    item.posicion === 1
+                      ? "text-[#f4b400]"
+                      : item.posicion === 2
+                      ? "text-[#bbbbbb]"
+                      : "text-[#e22718]"
+                  }`}
+                >
+                  {String(item.posicion).padStart(2, "0")}
+                </span>
+                <div>
+                  <div className="text-xs font-bold text-white flex items-center gap-2">
+                    <span>{item.piloto}</span>
+                  </div>
+                  <div className="text-[10px] text-[#7e7e7e] font-mono">
+                    {item.auto} • {item.vueltas} vueltas
+                  </div>
                 </div>
-                <div className="text-xs font-mono text-[#7e7e7e] mt-1">Ferrari SF70H • P.B. Oficial</div>
+              </div>
+              <div className="text-right font-mono">
+                <div className="text-sm font-bold text-[#00E676] tabular-nums tracking-tight">{item.tiempo}</div>
+                <div
+                  className={`text-[10px] tabular-nums ${
+                    item.delta === "Ref" ? "text-[#7e7e7e]" : "text-[#e22718]"
+                  }`}
+                >
+                  {item.delta}
+                </div>
               </div>
             </div>
-            <div className="text-right font-mono">
-              <div className="text-lg font-bold text-[#0fa336] tabular-nums">01:21.240</div>
-              <div className="text-[10px] uppercase tracking-wider text-[#0066b1] font-bold">Récord de Pista</div>
-            </div>
-          </div>
-
-          {/* Puesto 2 (Plata) */}
-          <div className="py-5 px-4 flex items-center justify-between border-l-4 border-l-[#bbbbbb] bg-[#141414] transition-all">
-            <div className="flex items-center gap-4">
-              <span className="text-base font-bold font-mono text-black bg-[#bbbbbb] w-8 h-8 flex items-center justify-center">02</span>
-              <div>
-                <div className="text-sm font-bold uppercase tracking-wider text-white">Martin Basso (Sim Pro)</div>
-                <div className="text-xs font-mono text-[#7e7e7e] mt-1">Ferrari SF70H • Ronda 2</div>
-              </div>
-            </div>
-            <div className="text-right font-mono">
-              <div className="text-lg font-bold text-white tabular-nums">01:22.450</div>
-              <div className="text-xs text-[#e22718] tabular-nums font-bold">+1.210 s</div>
-            </div>
-          </div>
-
-          {/* Puesto 3 (Bronce / BMW Blue) */}
-          <div className="py-5 px-4 flex items-center justify-between border-l-4 border-l-[#1c69d4] bg-[#141414] transition-all">
-            <div className="flex items-center gap-4">
-              <span className="text-base font-bold font-mono text-white bg-[#1c69d4] w-8 h-8 flex items-center justify-center">03</span>
-              <div>
-                <div className="text-sm font-bold uppercase tracking-wider text-white">Lucas Di Grassi (GT3)</div>
-                <div className="text-xs font-mono text-[#7e7e7e] mt-1">Ferrari SF70H • Ronda 1</div>
-              </div>
-            </div>
-            <div className="text-right font-mono">
-              <div className="text-lg font-bold text-white tabular-nums">01:24.110</div>
-              <div className="text-xs text-[#e22718] tabular-nums font-bold">+2.870 s</div>
-            </div>
-          </div>
+          ))}
         </div>
-      </div>
+      </Link>
     </div>
   );
 }
