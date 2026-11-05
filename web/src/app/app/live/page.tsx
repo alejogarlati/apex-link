@@ -111,12 +111,12 @@ export default function PaginaLivePitwall() {
           </div>
 
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#0066b1]">
-                Live Pitwall • Muro de Boxes
-              </span>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="text-xl sm:text-2xl font-bold uppercase tracking-tight text-white">
+                Autodromo Nazionale Monza • {sesion.carModel}
+              </h1>
               <span
-                className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+                className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border ${
                   conectado
                     ? "bg-[#0fa336]/15 text-[#0fa336] border-[#0fa336]/30"
                     : "bg-[#e22718]/15 text-[#e22718] border-[#e22718]/30"
@@ -125,9 +125,9 @@ export default function PaginaLivePitwall() {
                 {conectado ? `STREAM 60Hz (${fpsEstimado} FPS)` : "DESCONECTADO"}
               </span>
             </div>
-            <h1 className="text-2xl font-bold uppercase tracking-tight text-white mt-1">
-              Autodromo Nazionale Monza • {sesion.carModel}
-            </h1>
+            <p className="text-xs text-[#bbbbbb] font-mono mt-1">
+              Telemetría en tiempo real de canal compartido Win32 MMF @ 60 Hz
+            </p>
           </div>
         </div>
 
@@ -164,14 +164,16 @@ export default function PaginaLivePitwall() {
 
       {/* 2. Banner de Notificación de Vuelta Récord / Cruce de Meta */}
       {ultimoEventoVuelta && (
-        <div className="p-4 rounded-lg bg-gradient-to-r from-[#9c27b0]/20 via-[#0066b1]/20 to-black border border-[#9c27b0]/50 flex items-center justify-between">
+        <div className="p-4 rounded-xl bg-[#141414] border border-[#0066b1] flex items-center justify-between shadow-lg">
           <div className="flex items-center gap-3">
-            <Trophy className="w-6 h-6 text-[#9c27b0] animate-bounce" />
+            <div className="p-2.5 rounded-lg bg-[#0066b1]/15 text-[#0066b1] border border-[#0066b1]/30">
+              <Trophy className="w-5 h-5" />
+            </div>
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#9c27b0]">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#0066b1] font-mono">
                 {ultimoEventoVuelta.isPersonalBest ? "¡Récord Personal (PB)!" : "Vuelta Completada"}
               </span>
-              <div className="text-lg font-bold font-mono text-white">
+              <div className="text-lg font-bold font-mono text-white tabular-nums">
                 Vuelta {ultimoEventoVuelta.lapNumber} • {ultimoEventoVuelta.lapTimeStr}
               </div>
             </div>
@@ -179,7 +181,7 @@ export default function PaginaLivePitwall() {
 
           <Link
             href="/app/analysis"
-            className="px-4 py-2 rounded text-xs font-bold uppercase tracking-wider bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-all flex items-center gap-1.5"
+            className="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-all flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#1c69d4]"
           >
             <LineChart className="w-3.5 h-3.5" />
             Analizar en uPlot
@@ -190,43 +192,43 @@ export default function PaginaLivePitwall() {
       {/* 3. Instrumental Superior: Velocímetro Gigante, Tacómetro, Marcha y Delta */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {/* Velocímetro */}
-        <div className="bg-[#141414] border border-[#262626] rounded-lg p-4">
-          <span className="text-[10px] uppercase font-bold text-[#7e7e7e]">Velocidad</span>
-          <div className="text-3xl font-bold font-mono text-white mt-1">
+        <div className="bg-[#141414] border border-[#262626] rounded-xl p-4 shadow-sm">
+          <span className="text-[10px] uppercase font-bold text-[#7e7e7e] font-mono tracking-wider">Velocidad</span>
+          <div className="text-3xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
             {auto.speedKmh.toFixed(0)}
-            <span className="text-xs text-[#7e7e7e] ml-1">km/h</span>
+            <span className="text-xs text-[#7e7e7e] ml-1 font-normal">km/h</span>
           </div>
         </div>
 
         {/* Marcha */}
-        <div className="bg-[#141414] border border-[#262626] rounded-lg p-4 flex flex-col justify-between">
-          <span className="text-[10px] uppercase font-bold text-[#7e7e7e]">Marcha</span>
-          <div className="text-3xl font-bold font-mono text-[#0066b1]">
+        <div className="bg-[#141414] border border-[#262626] rounded-xl p-4 flex flex-col justify-between shadow-sm">
+          <span className="text-[10px] uppercase font-bold text-[#7e7e7e] font-mono tracking-wider">Marcha</span>
+          <div className="text-3xl font-bold font-mono text-[#0066b1] tabular-nums tracking-tight">
             {auto.gear === -1 ? "R" : auto.gear === 0 ? "N" : auto.gear}
           </div>
         </div>
 
         {/* Tacómetro / RPM */}
-        <div className="bg-[#141414] border border-[#262626] rounded-lg p-4">
-          <span className="text-[10px] uppercase font-bold text-[#7e7e7e]">Régimen de Giro</span>
-          <div className="text-3xl font-bold font-mono text-white mt-1">
-            {auto.rpms}
-            <span className="text-xs text-[#7e7e7e] ml-1">RPM</span>
+        <div className="bg-[#141414] border border-[#262626] rounded-xl p-4 shadow-sm">
+          <span className="text-[10px] uppercase font-bold text-[#7e7e7e] font-mono tracking-wider">Régimen de Giro</span>
+          <div className="text-3xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
+            {auto.rpms.toLocaleString("es-AR")}
+            <span className="text-xs text-[#7e7e7e] ml-1 font-normal">RPM</span>
           </div>
         </div>
 
         {/* Cronómetro Actual */}
-        <div className="bg-[#141414] border border-[#262626] rounded-lg p-4">
-          <span className="text-[10px] uppercase font-bold text-[#7e7e7e]">Vuelta {timing.currentLap}</span>
-          <div className="text-2xl font-bold font-mono text-white mt-1">
+        <div className="bg-[#141414] border border-[#262626] rounded-xl p-4 shadow-sm">
+          <span className="text-[10px] uppercase font-bold text-[#7e7e7e] font-mono tracking-wider">Vuelta {timing.currentLap}</span>
+          <div className="text-2xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
             {timing.lapTimeStr}
           </div>
         </div>
 
         {/* Delta Time */}
-        <div className={`col-span-2 md:col-span-1 rounded-lg p-4 border ${deltaFondo} ${deltaBorde}`}>
-          <span className="text-[10px] uppercase font-bold text-[#7e7e7e]">Delta vs Récord</span>
-          <div className={`text-2xl font-bold font-mono mt-1 ${deltaColor}`}>
+        <div className={`col-span-2 md:col-span-1 rounded-xl p-4 border ${deltaFondo} ${deltaBorde} shadow-sm`}>
+          <span className="text-[10px] uppercase font-bold text-[#7e7e7e] font-mono tracking-wider">Delta vs Récord</span>
+          <div className={`text-2xl font-bold font-mono mt-1 ${deltaColor} tabular-nums tracking-tight`}>
             {deltaNegativo ? deltaStr : `+${deltaStr}`} s
           </div>
         </div>

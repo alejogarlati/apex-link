@@ -78,11 +78,13 @@ export default function PaginaCircuitos() {
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#262626] pb-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 bg-[#0066b1] animate-pulse" />
-            <h1 className="text-xl font-bold tracking-tight text-white uppercase sm:text-2xl">
-              Catálogo de Circuitos & Tiempos Récord
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
+              Catálogo de Circuitos
             </h1>
+            <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#0066b1]/15 text-[#81c4ff] border border-[#0066b1]/30">
+              Laser Scan 1mm
+            </span>
           </div>
           <p className="mt-1 text-xs text-[#bbbbbb]">
             Pistas escaneadas por láser con calibración cartográfica map.ini en el Core Relay.
@@ -91,12 +93,12 @@ export default function PaginaCircuitos() {
 
         <div className="flex items-center gap-2 font-mono text-xs">
           {esDesdeApi ? (
-            <span className="px-2.5 py-1 rounded bg-[#0fa336]/15 border border-[#0fa336]/30 text-[#0fa336] flex items-center gap-1.5 font-bold">
+            <span className="px-2.5 py-1 rounded-full bg-[#0fa336]/15 border border-[#0fa336]/30 text-[#0fa336] flex items-center gap-1.5 font-bold">
               <ShieldCheck className="w-3.5 h-3.5" />
               Catálogo FAPPE Activo
             </span>
           ) : (
-            <span className="px-2.5 py-1 rounded bg-[#1a1a1a] border border-[#3c3c3c] text-[#7e7e7e] flex items-center gap-1.5">
+            <span className="px-2.5 py-1 rounded-full bg-[#1a1a1a] border border-[#3c3c3c] text-[#7e7e7e] flex items-center gap-1.5">
               <RefreshCw className={`w-3.5 h-3.5 ${cargando ? "animate-spin text-[#0066b1]" : ""}`} />
               Base Local
             </span>
@@ -111,7 +113,7 @@ export default function PaginaCircuitos() {
           return (
             <div
               key={pista.id}
-              className={`border rounded-lg p-6 flex flex-col justify-between transition-all ${
+              className={`border rounded-xl p-6 flex flex-col justify-between transition-all ${
                 esMonza
                   ? "border-[#0066b1] bg-[#1a1a1a] shadow-lg shadow-[#0066b1]/10"
                   : "border-[#262626] bg-[#141414] hover:border-[#3c3c3c]"
@@ -168,7 +170,7 @@ export default function PaginaCircuitos() {
               <div className="mt-6 flex flex-col gap-2">
                 <Link
                   href="/app/analysis"
-                  className="w-full py-2.5 rounded font-bold uppercase tracking-wider text-xs bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm shadow-[#0066b1]/20"
+                  className="w-full py-2.5 rounded-lg font-bold uppercase tracking-wider text-xs bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm shadow-[#0066b1]/20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#1c69d4]"
                 >
                   <Flag className="w-3.5 h-3.5" />
                   Ver Trazada en Boxes
@@ -176,7 +178,7 @@ export default function PaginaCircuitos() {
 
                 <Link
                   href={`/app/leaderboards?circuito=${pista.id}`}
-                  className="w-full py-2 rounded font-bold uppercase tracking-wider text-[11px] bg-[#1a1a1a] hover:bg-[#262626] border border-[#3c3c3c] text-[#bbbbbb] hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-2 rounded-lg font-bold uppercase tracking-wider text-[11px] bg-[#1a1a1a] hover:bg-[#262626] border border-[#3c3c3c] text-[#bbbbbb] hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1]"
                 >
                   <Trophy className="w-3 h-3 text-[#f4b400]" />
                   Ver Leaderboard Oficial

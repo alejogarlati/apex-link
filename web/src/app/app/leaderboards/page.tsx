@@ -53,11 +53,13 @@ function ContenidoLeaderboards() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#262626] pb-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 bg-[#0066b1] animate-pulse" />
-            <h1 className="text-xl font-bold tracking-tight text-white uppercase sm:text-2xl">
-              Tabla de Récords y Clasificación Oficial
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
+              Tabla de Récords
             </h1>
+            <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#0066b1]/15 text-[#81c4ff] border border-[#0066b1]/30">
+              Clasificación Oficial
+            </span>
           </div>
           <p className="mt-1 text-xs text-[#bbbbbb]">
             Tiempos registrados en el simulador sincronizados con la base de datos central PostgreSQL.
@@ -65,7 +67,7 @@ function ContenidoLeaderboards() {
         </div>
 
         <div className="flex items-center gap-2 font-mono text-xs">
-          <span className="text-[10px] px-2.5 py-1 rounded bg-[#0fa336]/15 border border-[#0fa336]/30 text-[#0fa336] flex items-center gap-1.5 font-bold">
+          <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#0fa336]/15 border border-[#0fa336]/30 text-[#0fa336] flex items-center gap-1.5 font-bold">
             <ShieldCheck className="w-3.5 h-3.5" />
             PostgreSQL Sync 3FN
           </span>
