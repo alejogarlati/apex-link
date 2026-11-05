@@ -72,7 +72,7 @@ export function MapaCircuitoCanvas({
   // Sincronizar si cambia el circuito provisto externamente (ej: Live Pitwall)
   useEffect(() => {
     if (circuitoInicial && (circuitoInicial === "monza" || circuitoInicial === "imola" || circuitoInicial === "rbr")) {
-      setCircuitoActivoId(circuitoInicial);
+      setCircuitoActivoId((prev) => (prev === circuitoInicial ? prev : circuitoInicial));
     }
   }, [circuitoInicial]);
 
