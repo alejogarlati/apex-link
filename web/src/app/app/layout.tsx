@@ -416,15 +416,9 @@ export default function LayoutAppBoxes({
               })}
             </div>
 
-            {/* Footer en Modo Expandido */}
-            <div className="p-3.5 border-t border-[#262626] bg-black/60 text-[11px] text-[#7e7e7e] font-mono">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-[#bbbbbb]">ApexLink Pitwall</span>
-                <span className="text-[10px] text-[#666666]">v2.4</span>
-              </div>
-              <div className="text-[10px] text-[#666666] mt-0.5 truncate">
-                Licencia: {usuario.alias}
-              </div>
+            {/* Info de Licencia sutil en Modo Expandido */}
+            <div className="px-3.5 py-2 text-[10px] text-[#555555] font-mono truncate">
+              Licencia: {usuario.alias}
             </div>
           </div>
 
@@ -484,13 +478,40 @@ export default function LayoutAppBoxes({
                   );
                 })}
               </div>
-
-              {/* Indicador sutil de pie colapsado */}
-              <div className="p-2 border-t border-[#262626] bg-black/60 flex items-center justify-center text-[9px] text-[#555] font-mono">
-                v2.4
-              </div>
             </div>
           )}
+
+          {/* Botón de Colapsar Sidebar en el Margen Inferior */}
+          <div className="border-t border-[#262626] bg-[#09090b] p-2">
+            <button
+              type="button"
+              onClick={alternarColapsoSidebar}
+              title={sidebarColapsado ? "Expandir barra lateral" : "Colapsar barra lateral"}
+              aria-label={sidebarColapsado ? "Expandir barra lateral" : "Colapsar barra lateral"}
+              className={`w-full flex items-center rounded-lg text-xs font-mono font-bold text-[#88888e] hover:text-white hover:bg-[#18181b] transition-all cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1] select-none ${
+                sidebarColapsado
+                  ? "justify-center h-10 px-0"
+                  : "justify-between px-3 py-2.5"
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                {sidebarColapsado ? (
+                  <PanelLeft className="w-4 h-4 text-[#0066b1]" />
+                ) : (
+                  <PanelLeftClose className="w-4 h-4 text-[#737373]" />
+                )}
+                {!sidebarColapsado && (
+                  <span className="uppercase tracking-wider text-[11px] text-[#a3a3a3]">
+                    Colapsar barra
+                  </span>
+                )}
+              </div>
+
+              {!sidebarColapsado && (
+                <span className="text-[10px] text-[#555555] font-mono">v2.4</span>
+              )}
+            </button>
+          </div>
         </aside>
 
         {/* Contenido Dinámico con Proveedor de Sidebar */}

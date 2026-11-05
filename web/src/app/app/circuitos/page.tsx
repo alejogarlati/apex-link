@@ -5,7 +5,6 @@ import Link from "next/link";
 import { MapPin, RefreshCw, Trophy, Flag, ShieldCheck, ArrowRight } from "lucide-react";
 import { obtenerCircuitos } from "@/lib/apiClient";
 import type { CircuitoDto } from "@/types/api";
-import { BotonColapsarSidebar } from "@/components/layout/BotonColapsarSidebar";
 
 const CIRCUITOS_FALLBACK: CircuitoDto[] = [
   {
@@ -79,7 +78,6 @@ export default function PaginaCircuitos() {
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#262626] pb-4">
         <div className="flex items-start gap-3.5">
-          <BotonColapsarSidebar />
           <div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
               Catálogo de Circuitos

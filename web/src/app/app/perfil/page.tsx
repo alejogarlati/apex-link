@@ -9,7 +9,6 @@ import {
   USUARIO_ALEJO_GARLATI,
 } from "@/lib/auth";
 import { obtenerPerfilPiloto } from "@/lib/apiClient";
-import { BotonColapsarSidebar } from "@/components/layout/BotonColapsarSidebar";
 import type {
   PerfilUsuario,
   HabilidadDetalle,
@@ -195,7 +194,6 @@ function TarjetaPiloto({
       >
         {/* Identidad */}
         <div className="flex flex-col gap-6 bg-transparent sm:flex-row sm:items-center">
-          <BotonColapsarSidebar />
           <div
             className="h-28 w-28 shrink-0 p-[3px]"
             style={{
