@@ -705,7 +705,7 @@ export function MapaCircuitoCanvas({
   return (
     <div
       ref={contenedorRef}
-      className="relative flex flex-col rounded-xl border border-[#262626] bg-[#0a0a0a] overflow-hidden shadow-2xl"
+      className="relative flex flex-col rounded-none border border-[#262626] bg-[#0a0a0a] overflow-hidden shadow-2xl border-sheen card-cockpit-gradient"
     >
       {/* 1. Barra de Acento Tricolor BMW M */}
       <div className="h-1 w-full flex">
@@ -715,14 +715,14 @@ export function MapaCircuitoCanvas({
       </div>
 
       {/* 2. Barra Superior de Control de Ingeniería */}
-      <div className="p-3 sm:p-4 border-b border-[#262626] bg-[#0d0d0d]/90 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+      <div className="p-3 sm:p-4 border-b border-[#262626] bg-[#0a0a0a] flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
         {/* Selector de Circuito Oficial */}
         <div className="flex items-center gap-2">
           <MapPin className="w-4 h-4 text-[#0066b1]" />
           <select
             value={circuitoActivoId}
             onChange={(e) => setCircuitoActivoId(e.target.value as CircuitoId)}
-            className="bg-[#1a1a1a] border border-[#3c3c3c] text-white px-3 py-1.5 rounded font-bold uppercase tracking-wider text-xs focus:outline-none focus:border-[#0066b1] cursor-pointer"
+            className="bg-[#141414] border border-[#3c3c3c] text-white px-3 py-1.5 rounded-none font-bold uppercase tracking-[0.12em] text-xs focus:outline-none focus:border-[#0066b1] cursor-pointer"
           >
             <option value="monza">Autodromo Nazionale Monza (5.757 m)</option>
             <option value="imola">Autodromo Enzo e Dino Ferrari (4.867 m)</option>
@@ -732,18 +732,18 @@ export function MapaCircuitoCanvas({
 
         {/* Pestañas de Comparativa Dual Vuelta A vs Vuelta B */}
         {tieneComparativa && (
-          <div className="flex items-center gap-1.5 bg-[#141414] border border-[#262626] rounded p-0.5">
+          <div className="flex items-center gap-1.5 bg-[#141414] border border-[#262626] rounded-none p-0.5">
             <button
               onClick={() => onCambiarRanura?.("A")}
               title="Activar telemetría y mapa de calor de Vuelta A"
               className={cn(
-                "px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer",
+                "px-2.5 py-1 rounded-none text-[11px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer",
                 ranuraActiva === "A"
                   ? "bg-[#0066b1] text-white shadow-md shadow-[#0066b1]/30"
                   : "text-[#7e7e7e] hover:text-white"
               )}
             >
-              <span className="w-3.5 h-3.5 rounded-full bg-white text-black text-[9px] flex items-center justify-center font-black">
+              <span className="w-3.5 h-3.5 rounded-none bg-white text-black text-[9px] flex items-center justify-center font-black">
                 A
               </span>
               <span>
@@ -757,13 +757,13 @@ export function MapaCircuitoCanvas({
               onClick={() => onCambiarRanura?.("B")}
               title="Activar telemetría y mapa de calor de Vuelta B"
               className={cn(
-                "px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer",
+                "px-2.5 py-1 rounded-none text-[11px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer",
                 ranuraActiva === "B"
                   ? "bg-[#1c69d4] text-white shadow-md shadow-[#1c69d4]/30"
                   : "text-[#7e7e7e] hover:text-white"
               )}
             >
-              <span className="w-3.5 h-3.5 rounded-full bg-[#93c5fd] text-black text-[9px] flex items-center justify-center font-black">
+              <span className="w-3.5 h-3.5 rounded-none bg-[#93c5fd] text-black text-[9px] flex items-center justify-center font-black">
                 B
               </span>
               <span>
@@ -832,7 +832,7 @@ export function MapaCircuitoCanvas({
           <button
             onClick={restablecerVista}
             title="Restablecer Cámara"
-            className="p-1.5 bg-[#1a1a1a] border border-[#3c3c3c] hover:border-[#0066b1] text-[#bbbbbb] hover:text-white rounded transition-colors cursor-pointer"
+            className="p-1.5 bg-[#141414] border border-[#3c3c3c] hover:border-[#0066b1] text-[#bbbbbb] hover:text-white rounded-none transition-colors cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
@@ -855,16 +855,16 @@ export function MapaCircuitoCanvas({
         <div
           ref={deltaBadgeRef}
           style={{ display: "none" }}
-          className="absolute top-4 right-4 z-20 pointer-events-none bg-[#0a0e14]/90 backdrop-blur-md border border-[#262626] rounded-lg px-3 py-2 text-white font-mono shadow-xl items-center gap-2"
+          className="absolute top-4 right-4 z-20 pointer-events-none bg-[#0a0e14]/90 backdrop-blur-md border border-[#262626] rounded-none px-3.5 py-2 text-white font-mono shadow-xl items-center gap-2 border-sheen"
         >
           <GitCompare className="w-4 h-4 text-[#0066b1]" />
           <div>
-            <span className="text-[10px] text-[#7e7e7e] block uppercase leading-none">
+            <span className="text-[10px] text-[#7e7e7e] block uppercase tracking-wider leading-none">
               Brecha Temporal (A vs B)
             </span>
             <span
               ref={deltaTextRef}
-              className="text-sm font-black text-[#0066b1] leading-tight block mt-0.5"
+              className="text-sm font-black text-[#0066b1] leading-tight block mt-0.5 tabular-nums"
             >
               +0.000 s
             </span>
@@ -872,10 +872,10 @@ export function MapaCircuitoCanvas({
         </div>
 
         {/* Guía de Controles Inferior Izquierda */}
-        <div className="absolute bottom-4 left-4 z-20 pointer-events-none hidden sm:block bg-black/75 backdrop-blur px-2.5 py-1.5 rounded border border-[#262626] text-[10px] font-mono text-[#7e7e7e]">
+        <div className="absolute bottom-4 left-4 z-20 pointer-events-none hidden sm:block bg-black/85 backdrop-blur px-3 py-1.5 rounded-none border border-[#262626] text-[10px] font-mono text-[#7e7e7e] tracking-wider uppercase">
           {modoRender === "isometric"
-            ? "Clic Izq: Orbitar 3D • Clic Der: Desplazar • Rueda: Zoom (sin scroll)"
-            : "Clic Izq / Der: Desplazar • Rueda: Zoom (sin scroll)"}
+            ? "Clic Izq: Orbitar 3D • Clic Der: Desplazar • Rueda: Zoom"
+            : "Clic Izq / Der: Desplazar • Rueda: Zoom"}
         </div>
       </div>
 
@@ -948,11 +948,11 @@ export function MapaCircuitoCanvas({
       </div>
 
       {/* 5. Barra Inferior de Reproducción & Scrubbing */}
-      <div className="p-3 border-t border-[#262626] bg-[#0d0d0d] flex items-center gap-4">
+      <div className="p-3 border-t border-[#262626] bg-[#0a0a0a] flex items-center gap-4">
         <button
           onClick={() => setEstaReproduciendo(!estaReproduciendo)}
           title={estaReproduciendo ? "Pausar" : "Reproducir Demostración Simultánea"}
-          className="p-2 rounded bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-colors cursor-pointer"
+          className="p-2.5 rounded-none bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-all cursor-pointer shadow-[0_0_15px_rgba(0,102,177,0.3)] active:scale-[0.98]"
         >
           {estaReproduciendo ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-white" />}
         </button>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Gauge,
@@ -92,84 +93,91 @@ export default function LayoutAppBoxes({
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col selection:bg-[#0066b1]">
-      {/* Barra Tricolor M Superior */}
-      <div className="h-1 w-full flex sticky top-0 z-50">
-        <div className="h-full w-1/3 bg-[#0066b1]" />
-        <div className="h-full w-1/3 bg-[#1c69d4]" />
-        <div className="h-full w-1/3 bg-[#e22718]" />
+      {/* Barra Tricolor M Superior + Header Superior de Mando (Sticky) */}
+      <div className="sticky top-0 z-40 bg-[#0d0d0d]">
+        <div className="h-1 w-full flex">
+          <div className="h-full w-1/3 bg-[#0066b1]" />
+          <div className="h-full w-1/3 bg-[#1c69d4]" />
+          <div className="h-full w-1/3 bg-[#e22718]" />
+        </div>
+
+        <header className="border-b border-[#262626] bg-[#0a0a0a] px-6 sm:px-8 py-3.5 flex items-center justify-between">
+          <div className="flex items-center gap-5">
+            <button
+              onClick={() => setSidebarAbierto(!sidebarAbierto)}
+              className="md:hidden p-2 rounded-none bg-black border border-[#3c3c3c] text-white cursor-pointer hover:border-[#0066b1] transition-colors"
+            >
+              {sidebarAbierto ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+
+            <Link href="/hub" className="flex items-center gap-3.5 group py-1">
+              <Image
+                src="/logos/logo.webp"
+                alt="ApexLink Logo"
+                width={140}
+                height={28}
+                priority
+                className="h-6 sm:h-7 w-auto object-contain transition-opacity group-hover:opacity-90"
+              />
+              <span className="hidden sm:inline-flex items-center text-[10px] font-mono font-bold tracking-[0.2em] text-[#bbbbbb] bg-[#1a1a1a] border border-[#262626] px-2.5 py-0.5 uppercase">
+                BOXES
+              </span>
+            </Link>
+          </div>
+
+          {/* Indicadores de Enlace */}
+          <div className="flex items-center gap-4 sm:gap-5">
+            <div className="hidden lg:flex items-center gap-4 text-xs font-mono px-4 py-2 rounded-none bg-[#141414] border border-[#262626] tracking-[0.1em]">
+              <span className="flex items-center gap-2 text-[#0fa336] font-bold">
+                <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
+                60 Hz Win32 OK
+              </span>
+              <span className="text-[#3c3c3c]">|</span>
+              <span className="flex items-center gap-1.5 text-[#bbbbbb]">
+                &lt; 0.8 ms USB
+              </span>
+              <span className="text-[#3c3c3c]">|</span>
+              <span className="text-[#0066b1] font-bold uppercase tracking-wider">
+                Live Feed
+              </span>
+            </div>
+
+            {/* Perfil del Piloto */}
+            <div className="flex items-center gap-3 pl-3 border-l border-[#262626]">
+              <div className="w-8 h-8 rounded-none bg-[#1a1a1a] border border-[#3c3c3c] flex items-center justify-center text-white">
+                <User className="w-4 h-4" />
+              </div>
+              <div className="hidden sm:block text-left">
+                <div className="text-xs font-bold uppercase tracking-[0.12em] text-white leading-none">
+                  {usuario.nombre}
+                </div>
+                <div className="text-[10px] text-[#0fa336] font-mono tracking-[0.15em] font-bold mt-1">
+                  Rating {usuario.rating.paceRating}
+                </div>
+              </div>
+
+              <button
+                onClick={manejarCerrarSesion}
+                title="Cerrar Sesión"
+                className="p-2 rounded-none bg-[#141414] hover:bg-[#1a1a1a] border border-[#3c3c3c] hover:border-[#e22718] text-[#bbbbbb] hover:text-white transition-all cursor-pointer ml-1"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </header>
       </div>
 
-      {/* Header Superior de Mando */}
-      <header className="border-b border-[#262626] bg-[#0d0d0d] px-4 sm:px-6 py-2.5 flex items-center justify-between z-40">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setSidebarAbierto(!sidebarAbierto)}
-            className="md:hidden p-2 rounded bg-black border border-[#3c3c3c] text-white"
-          >
-            {sidebarAbierto ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-
-          <Link href="/hub" className="flex items-center gap-2.5 group">
-            <div className="p-1.5 rounded bg-black border border-[#3c3c3c] group-hover:border-[#0066b1] transition-colors">
-              <Gauge className="w-4 h-4 text-[#0066b1]" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-bold uppercase tracking-tight text-white font-mono leading-none">
-                Apex<span className="text-[#0066b1]">Link</span> Pitwall
-              </span>
-              <span className="text-[9px] text-[#7e7e7e] font-mono leading-none mt-1">
-                Assetto Corsa • Monza F1 2025
-              </span>
-            </div>
-          </Link>
-        </div>
-
-        {/* Indicadores de Enlace */}
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="hidden lg:flex items-center gap-3 text-xs font-mono px-3 py-1 rounded bg-black border border-[#262626]">
-            <span className="flex items-center gap-1.5 text-[#0fa336]">
-              <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
-              60 Hz Win32 OK
-            </span>
-            <span className="text-[#3c3c3c]">|</span>
-            <span className="text-[#bbbbbb]">&lt; 0.8 ms USB</span>
-          </div>
-
-          {/* Perfil del Piloto */}
-          <div className="flex items-center gap-2 pl-2 border-l border-[#262626]">
-            <div className="w-7 h-7 rounded bg-[#1a1a1a] border border-[#3c3c3c] flex items-center justify-center text-[#0066b1]">
-              <User className="w-4 h-4" />
-            </div>
-            <div className="hidden sm:block text-left">
-              <div className="text-xs font-bold text-white leading-none">
-                {usuario.nombre}
-              </div>
-              <div className="text-[10px] text-[#0fa336] font-mono mt-0.5">
-                Rating {usuario.rating.paceRating}
-              </div>
-            </div>
-
-            <button
-              onClick={manejarCerrarSesion}
-              title="Cerrar Sesión"
-              className="p-1.5 rounded bg-black hover:bg-[#262626] border border-[#3c3c3c] text-[#bbbbbb] hover:text-white transition-colors cursor-pointer ml-1"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      </header>
-
       {/* Cuerpo Principal: Sidebar + Contenido */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar Lateral de Boxes */}
+      <div className="flex-1 flex flex-col md:flex-row min-h-0">
+        {/* Sidebar Lateral de Boxes (Sticky en desktop, acompaña la pantalla al scrollear) */}
         <aside
-          className={`fixed inset-y-0 left-0 z-30 w-64 bg-[#0d0d0d] border-r border-[#262626] flex flex-col justify-between pt-16 md:pt-0 transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0 ${
+          className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#0d0d0d] border-r border-[#262626] flex flex-col justify-between pt-16 md:pt-0 transform transition-transform duration-200 ease-in-out md:sticky md:top-[63px] md:h-[calc(100vh-63px)] md:self-start md:translate-x-0 shrink-0 ${
             sidebarAbierto ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="p-4 space-y-1 overflow-y-auto">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-[#7e7e7e] px-3 py-2">
+          <div className="p-4 sm:p-5 space-y-1.5 overflow-y-auto flex-1">
+            <div className="text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-[#7e7e7e] px-4 py-2">
               Boxes & Telemetría
             </div>
 
@@ -182,54 +190,69 @@ export default function LayoutAppBoxes({
                   key={enlace.href}
                   href={enlace.href}
                   onClick={() => setSidebarAbierto(false)}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded text-xs font-bold transition-all group ${
+                  className={`flex items-center justify-between px-3.5 py-3 rounded-none text-xs font-bold uppercase tracking-[0.14em] transition-all group ${
                     activo
-                      ? "bg-[#0066b1] text-white shadow-lg shadow-[#0066b1]/20"
-                      : "text-[#bbbbbb] hover:text-white hover:bg-[#1a1a1a]"
+                      ? "bg-[#1a1a1a] text-white border-l-2 border-l-[#0066b1]"
+                      : "text-[#bbbbbb] hover:text-white hover:bg-[#141414] border-l-2 border-l-transparent"
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <Icono
-                      className={`w-4 h-4 ${
-                        activo ? "text-white" : enlace.destacado ? "text-[#0066b1]" : "text-[#7e7e7e] group-hover:text-white"
+                  <div className="flex items-center gap-3.5">
+                    <div
+                      className={`w-7 h-7 rounded-none flex items-center justify-center transition-all ${
+                        activo
+                          ? "bg-[#0066b1] text-white"
+                          : "bg-[#141414] border border-[#262626] text-[#8a8a8a] group-hover:text-white group-hover:border-[#3c3c3c]"
                       }`}
-                    />
+                    >
+                      <Icono className="w-4 h-4" />
+                    </div>
                     <span>{enlace.etiqueta}</span>
                   </div>
                   {enlace.destacado && !activo && (
-                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#0066b1]/20 text-[#0066b1] border border-[#0066b1]/30">
-                      CORE
+                    <span className="text-[9px] font-mono px-2 py-0.5 rounded-none bg-[#0fa336]/10 text-[#0fa336] border border-[#0fa336]/30 tracking-wider font-bold">
+                      LIVE
                     </span>
                   )}
                 </Link>
               );
             })}
 
-            <div className="pt-4 border-t border-[#262626] mt-4">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-[#7e7e7e] px-3 py-2">
+            <div className="pt-6 border-t border-[#262626] mt-6">
+              <div className="text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-[#7e7e7e] px-4 py-2">
                 Simulador
               </div>
               <Link
                 href="/hub"
-                className="flex items-center justify-between px-3 py-2 rounded text-xs text-[#bbbbbb] hover:text-white hover:bg-[#1a1a1a] transition-colors"
+                className="flex items-center justify-between px-4 py-3 rounded-none text-xs uppercase tracking-[0.15em] text-[#bbbbbb] hover:text-white hover:bg-[#141414] border border-transparent hover:border-[#3c3c3c] transition-all"
               >
                 <span>Cambiar Simulador</span>
-                <ChevronRight className="w-3.5 h-3.5 text-[#7e7e7e]" />
+                <ChevronRight className="w-4 h-4 text-[#7e7e7e]" />
               </Link>
             </div>
           </div>
 
           {/* Footer de Versión en Sidebar */}
-          <div className="p-4 border-t border-[#262626] bg-black text-[11px] text-[#7e7e7e]">
-            <div className="font-bold text-[#bbbbbb]">ApexLink SaaS v2.0</div>
-            <div>Telemetría de Competición</div>
+          <div className="p-5 border-t border-[#262626] bg-[#0a0a0a] text-[11px] font-mono tracking-[0.12em] text-[#7e7e7e] shrink-0">
+            <div className="font-bold uppercase tracking-[0.16em] text-white flex items-center justify-between">
+              <span>ApexLink SaaS</span>
+              <span className="text-[9px] px-2 py-0.5 bg-[#141414] text-[#bbbbbb] border border-[#3c3c3c]">v2.0</span>
+            </div>
+            <div className="text-[10px] text-[#7e7e7e] mt-1 uppercase tracking-[0.12em]">Telemetría de Competición</div>
           </div>
         </aside>
 
+        {/* Backdrop en Mobile cuando el sidebar está abierto */}
+        {sidebarAbierto && (
+          <div
+            onClick={() => setSidebarAbierto(false)}
+            className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-xs"
+          />
+        )}
+
         {/* Contenido Dinámico */}
-        <div className="flex-1 overflow-y-auto bg-black p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 min-w-0 bg-[#000000] p-6 sm:p-10 lg:p-12 xl:p-14">
           {children}
-        </div>
+        </main>
       </div>
     </div>
   );
