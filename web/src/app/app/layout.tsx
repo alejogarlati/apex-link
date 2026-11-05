@@ -34,6 +34,7 @@ import type { PerfilUsuario } from "@/types/usuario";
 import { UserNavDropdown } from "@/components/layout/UserNavDropdown";
 import { useToast } from "@/context/ToastContext";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { SidebarProvider } from "@/context/SidebarContext";
 
 interface EnlaceNav {
   href: string;
@@ -250,16 +251,6 @@ export default function LayoutAppBoxes({
             {sidebarAbierto ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
-          <button
-            type="button"
-            onClick={alternarColapsoSidebar}
-            title={sidebarColapsado ? "Expandir barra lateral" : "Colapsar barra lateral en iconos"}
-            aria-label={sidebarColapsado ? "Expandir barra lateral" : "Colapsar barra lateral en iconos"}
-            className="hidden md:flex p-2 rounded-lg text-[#8e8e93] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer"
-          >
-            {sidebarColapsado ? <PanelLeft className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
-          </button>
-
           <Link href="/app" className="flex items-center gap-3 sm:gap-4 group">
             <Image
               src="/logos/logo.webp"
@@ -426,25 +417,12 @@ export default function LayoutAppBoxes({
             </div>
 
             {/* Footer en Modo Expandido */}
-            <div className="p-3 border-t border-[#262626] bg-black/60 text-[11px] text-[#7e7e7e] font-mono space-y-2">
-              <button
-                type="button"
-                onClick={alternarColapsoSidebar}
-                title="Colapsar barra lateral en iconos"
-                className="hidden md:flex items-center justify-between w-full px-2 py-1.5 rounded-md text-[11px] text-[#8e8e93] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer"
-              >
-                <span className="flex items-center gap-2">
-                  <PanelLeftClose className="w-3.5 h-3.5" />
-                  <span>Colapsar barra</span>
-                </span>
-                <span className="text-[10px] text-[#555] font-mono">Iconos</span>
-              </button>
-
-              <div className="pt-1 border-t border-[#1c1c1f] flex items-center justify-between">
+            <div className="p-3.5 border-t border-[#262626] bg-black/60 text-[11px] text-[#7e7e7e] font-mono">
+              <div className="flex items-center justify-between">
                 <span className="font-bold text-[#bbbbbb]">ApexLink Pitwall</span>
                 <span className="text-[10px] text-[#666666]">v2.4</span>
               </div>
-              <div className="text-[10px] text-[#666666] truncate">
+              <div className="text-[10px] text-[#666666] mt-0.5 truncate">
                 Licencia: {usuario.alias}
               </div>
             </div>
@@ -507,26 +485,23 @@ export default function LayoutAppBoxes({
                 })}
               </div>
 
-              {/* Footer en Modo Colapsado */}
-              <div className="p-2 border-t border-[#262626] bg-black/60 flex flex-col items-center justify-center">
-                <button
-                  type="button"
-                  onClick={alternarColapsoSidebar}
-                  title="Expandir barra lateral"
-                  aria-label="Expandir barra lateral"
-                  className="w-10 h-10 rounded-lg flex items-center justify-center text-[#8e8e93] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer"
-                >
-                  <PanelLeft className="w-4 h-4" />
-                </button>
+              {/* Indicador sutil de pie colapsado */}
+              <div className="p-2 border-t border-[#262626] bg-black/60 flex items-center justify-center text-[9px] text-[#555] font-mono">
+                v2.4
               </div>
             </div>
           )}
         </aside>
 
-        {/* Contenido Dinámico */}
-        <div className="flex-1 overflow-y-auto bg-black p-4 sm:p-6 lg:p-8">
-          {children}
-        </div>
+        {/* Contenido Dinámico con Proveedor de Sidebar */}
+        <SidebarProvider
+          sidebarColapsado={sidebarColapsado}
+          alternarColapsoSidebar={alternarColapsoSidebar}
+        >
+          <main className="flex-1 overflow-y-auto bg-black p-4 sm:p-6 lg:p-8">
+            {children}
+          </main>
+        </SidebarProvider>
       </div>
     </div>
   );

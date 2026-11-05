@@ -30,6 +30,7 @@ import {
 import type { EstadoServicioDto, SesionResumenDto, LeaderboardItemDto } from "@/types/api";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { BotonColapsarSidebar } from "@/components/layout/BotonColapsarSidebar";
 
 export default function PaginaDashboardBoxes() {
   const [usuario, setUsuario] = useState<PerfilUsuario>(() => {
@@ -155,6 +156,7 @@ export default function PaginaDashboardBoxes() {
       {/* Banner de Bienvenida y Diagnóstico Rápido (Fondo invisible con separador lineal) */}
       <div className="pb-8 border-b border-[#222225] flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="flex items-start gap-4">
+          <BotonColapsarSidebar />
           <div className="text-[#0066b1] pt-1">
             <Gauge className="w-8 h-8" />
           </div>
