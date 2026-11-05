@@ -33,42 +33,44 @@ export default function PaginaAnalisis() {
   const muestrasMapa = ranuraEfectiva === "B" && muestrasVueltaB ? muestrasVueltaB : muestrasVueltaA;
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* 1. Encabezado de la Sesión de Telemetría */}
-      <div className="flex flex-col justify-between gap-4 border-b border-[#262626] pb-4 sm:flex-row sm:items-end">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 bg-[#0066b1]" />
-            <h1 className="text-xl font-bold tracking-tight text-white uppercase sm:text-2xl">
-              Laboratorio Analítico 2D & Comparador de Telemetría
-            </h1>
+    <div className="space-y-10 sm:space-y-12 max-w-7xl mx-auto pb-16">
+      {/* 1. Encabezado de la Sesión de Telemetría con más amplitud */}
+      <div className="flex flex-col justify-between gap-6 border-b border-[#262626] pb-6 sm:flex-row sm:items-end">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#0066b1] animate-pulse" />
+            <span className="text-xs font-mono font-bold uppercase tracking-[0.25em] text-[#0066b1]">
+              Telemetría 2D Normalizada • Laboratorio Analítico
+            </span>
           </div>
-          <div className="mt-2 flex flex-wrap items-center gap-4 text-xs font-semibold tracking-wider text-[#bbbbbb] uppercase">
-            <span className="flex items-center gap-1.5 text-white">
-              <Flag className="h-3.5 w-3.5 text-[#0066b1]" />
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white uppercase font-mono">
+            Laboratorio Analítico 2D & Comparador de Telemetría
+          </h1>
+          <div className="flex flex-wrap items-center gap-4 text-xs font-mono font-bold tracking-[0.15em] uppercase pt-1">
+            <span className="flex items-center gap-2 text-white bg-[#141414] border border-[#262626] px-3 py-1.5 rounded-none">
+              <Flag className="h-4 w-4 text-[#0066b1]" />
               Autodromo Nazionale Monza
             </span>
-            <span className="text-[#7e7e7e]">•</span>
-            <span className="flex items-center gap-1.5">
-              <Gauge className="h-3.5 w-3.5 text-[#7e7e7e]" />
+            <span className="flex items-center gap-2 text-[#bbbbbb] bg-[#141414] border border-[#262626] px-3 py-1.5 rounded-none">
+              <Gauge className="h-4 w-4 text-[#e22718]" />
               Ferrari SF70H (F1)
             </span>
-            <span className="text-[#7e7e7e]">•</span>
-            <span className="flex items-center gap-1.5 text-[#0fa336]">
-              <Database className="h-3.5 w-3.5" />
-              4 Vueltas Registradas (Dominio Métrica 0 - 5.793 m)
+            <span className="flex items-center gap-2 text-[#0fa336] bg-[#0fa336]/10 border border-[#0fa336]/30 px-3 py-1.5 rounded-none">
+              <Database className="h-4 w-4 text-[#0fa336]" />
+              4 Vueltas • Dominio Métrico 0 - 5.793 m
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="border border-[#3c3c3c] bg-[#1a1a1a] px-3 py-1 text-xs font-mono font-bold tracking-wider text-[#bbbbbb] uppercase rounded">
-            Assetto Corsa Relay
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center gap-2 border border-[#0066b1]/50 bg-[#0066b1]/15 px-4 py-2 text-xs font-mono font-bold tracking-[0.18em] text-white uppercase rounded-none">
+            <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-ping" />
+            Assetto Corsa Relay Activo
           </span>
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-10 sm:space-y-12">
         {/* 2. Selector de Vueltas Superior (Organizado horizontalmente con acceso rápido) */}
         <section>
           <SelectorVueltas
