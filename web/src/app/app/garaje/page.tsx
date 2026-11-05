@@ -121,83 +121,65 @@ export default function PaginaGaraje() {
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#262626] pb-4">
         <div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
-              Garaje Virtual
-            </h1>
-            <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#0066b1]/15 text-[#81c4ff] border border-[#0066b1]/30">
-              Odómetro & Suspensiones
-            </span>
-          </div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
+            Garaje Virtual
+          </h1>
           <p className="mt-1 text-xs text-[#bbbbbb]">
             Vehículos calibrados con telemetría de suspensiones, odómetro en SQLite y corte de revoluciones.
           </p>
         </div>
-
-        <div className="flex items-center gap-2 font-mono text-xs">
-          {datosReales ? (
-            <span className="px-2.5 py-1 rounded-full bg-[#0fa336]/15 border border-[#0fa336]/30 text-[#0fa336] flex items-center gap-1.5 font-bold">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Odómetro Dinámico WAL
-            </span>
-          ) : (
-            <span className="px-2.5 py-1 rounded-full bg-[#1a1a1a] border border-[#3c3c3c] text-[#7e7e7e] flex items-center gap-1.5">
-              <RefreshCw className={`w-3.5 h-3.5 ${cargando ? "animate-spin text-[#0066b1]" : ""}`} />
-              Telemetría Base
-            </span>
-          )}
-        </div>
       </div>
 
+      {/* Grid del Garaje: Cada vehículo es una tarjeta 100% interactiva */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {vehiculos.map((auto) => (
-          <div
+          <Link
             key={auto.id}
-            className="border border-[#262626] bg-[#141414] rounded-xl p-6 flex flex-col justify-between hover:border-[#0066b1] transition-all shadow-lg group"
+            href={`/app/analysis?auto=${auto.id}`}
+            className="surface-specular-interactive p-6 flex flex-col justify-between group cursor-pointer block"
           >
             <div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#0066b1] bg-[#0066b1]/15 px-2.5 py-1 rounded border border-[#0066b1]/30">
+              <div className="flex items-center justify-between mb-3 text-xs font-mono">
+                <span className="text-[#0066b1] font-bold">
                   {auto.clase}
                 </span>
-                <span className="text-xs text-[#7e7e7e] font-mono">{auto.traccion}</span>
+                <span className="text-[#7e7e7e]">{auto.traccion}</span>
               </div>
 
-              <h2 className="text-lg font-bold text-white uppercase">{auto.nombre}</h2>
+              <h2 className="text-lg font-bold text-white uppercase group-hover:text-[#81c4ff] transition-colors">
+                {auto.nombre}
+              </h2>
 
-              <div className="mt-4 space-y-2.5 text-xs font-mono border-y border-[#262626] py-4">
+              <div className="mt-4 space-y-2.5 text-xs font-mono border-y border-white/[0.06] py-4">
                 <div className="flex justify-between">
-                  <span className="text-[#7e7e7e]">Potencia Motor:</span>
+                  <span className="text-[#7e7e7e]">Potencia:</span>
                   <span className="text-white font-bold">{auto.potencia}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#7e7e7e]">Corte Tacómetro:</span>
-                  <span className="text-[#e22718] font-bold">{auto.maxRpm} RPM</span>
+                  <span className="text-[#7e7e7e]">Corte:</span>
+                  <span className="text-[#e22718] font-bold tabular-nums">{auto.maxRpm.toLocaleString("es-AR")} RPM</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#7e7e7e]">Peso en Vacío:</span>
+                  <span className="text-[#7e7e7e]">Peso:</span>
                   <span className="text-white">{auto.peso}</span>
                 </div>
-                <div className="flex justify-between items-center border-t border-[#262626] pt-2">
-                  <span className="text-[#7e7e7e]">Odómetro Acumulado:</span>
-                  <span className="text-[#00E676] font-bold text-sm tabular-nums">
-                    {auto.kilometros} km
+                <div className="flex justify-between items-center border-t border-white/[0.06] pt-2">
+                  <span className="text-[#7e7e7e]">Odómetro:</span>
+                  <span className="text-[#00E676] font-bold text-sm tabular-nums tracking-tight">
+                    {auto.kilometros.toLocaleString("es-AR")} km
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="mt-5 pt-3 border-t border-[#262626] flex items-center justify-between text-xs font-mono text-[#7e7e7e]">
+            <div className="mt-5 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono text-[#7e7e7e]">
               <span>{auto.vueltasTotales} vueltas computadas</span>
-              <Link
-                href="/app/analysis"
-                className="text-[#0066b1] group-hover:text-white flex items-center gap-1 font-bold text-[11px] uppercase transition-colors"
-              >
+              <span className="text-[#0066b1] group-hover:text-white flex items-center gap-1 font-bold text-[11px] uppercase transition-colors">
                 Telemetría
-                <ArrowRight className="w-3 h-3" />
-              </Link>
+                <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
+              </span>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

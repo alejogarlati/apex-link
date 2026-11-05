@@ -156,7 +156,7 @@ function Tarjeta({
   className?: string;
 }) {
   return (
-    <div className={`border border-[#3c3c3c] bg-[#1a1a1a] ${className}`}>{children}</div>
+    <div className={`surface-specular ${className}`}>{children}</div>
   );
 }
 

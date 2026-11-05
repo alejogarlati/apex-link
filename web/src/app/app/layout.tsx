@@ -163,11 +163,8 @@ export default function LayoutAppBoxes({
               />
             </div>
             <div className="hidden sm:flex flex-col">
-              <span className="text-xs font-bold uppercase tracking-wider text-white font-mono leading-none flex items-center gap-1.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-white font-mono leading-none">
                 Pitwall
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#0066b1]/20 text-[#81c4ff] border border-[#0066b1]/40 font-mono font-bold">
-                  PRO
-                </span>
               </span>
               <span className="text-[9px] text-[#7e7e7e] font-mono leading-none mt-1">
                 {usuario.vehiculoPrincipal}
@@ -255,11 +252,6 @@ export default function LayoutAppBoxes({
                     />
                     <span>{enlace.etiqueta}</span>
                   </div>
-                  {enlace.destacado && !activo && (
-                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#0066b1]/20 text-[#81c4ff] border border-[#0066b1]/30">
-                      LIVE
-                    </span>
-                  )}
                 </Link>
               );
             })}

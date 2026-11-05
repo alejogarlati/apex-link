@@ -153,9 +153,9 @@ export default function PaginaDashboardBoxes() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       {/* Banner de Bienvenida y Diagnóstico Rápido */}
-      <div className="bg-[#141414] border border-[#262626] rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-xl">
+      <div className="surface-specular p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-xl">
         <div className="flex items-start gap-4">
-          <div className="p-3 bg-black border border-[#262626] rounded-lg text-[#0066b1]">
+          <div className="p-3 bg-black/60 border border-white/10 rounded-xl text-[#0066b1]">
             <Gauge className="w-8 h-8" />
           </div>
           <div>
@@ -164,14 +164,14 @@ export default function PaginaDashboardBoxes() {
                 Bienvenido, {usuario.nombre}
               </h1>
               {enlaceActivo ? (
-                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-[#0fa336]/15 text-[#0fa336] border border-[#0fa336]/30 font-bold flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#0fa336] animate-pulse" />
-                  {esMock ? "Generador Mock @ 60 Hz" : "Enlace Win32 MMF Activo"}
+                <span className="inline-flex items-center gap-1.5 text-xs font-mono text-[#0fa336] font-bold">
+                  <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
+                  {esMock ? "Generador Mock @ 60 Hz" : "Enlace Activo"}
                 </span>
               ) : (
-                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-[#f4b400]/15 text-[#f4b400] border border-[#f4b400]/30 font-bold flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#f4b400]" />
-                  Standby • Esperando Sim
+                <span className="inline-flex items-center gap-1.5 text-xs font-mono text-[#f4b400] font-bold">
+                  <span className="w-2 h-2 rounded-full bg-[#f4b400]" />
+                  Standby
                 </span>
               )}
             </div>
@@ -184,7 +184,7 @@ export default function PaginaDashboardBoxes() {
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           <Link
             href="/app/live"
-            className="w-full sm:w-auto px-4 py-2.5 rounded-lg font-bold uppercase tracking-wider text-xs bg-[#1a1a1a] hover:bg-[#262626] border border-[#3c3c3c] hover:border-[#0066b1] text-white transition-all flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1]"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-lg font-bold uppercase tracking-wider text-xs bg-black/60 hover:bg-black/90 border border-white/10 hover:border-[#0066b1] text-white transition-all flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1]"
           >
             <Radio className="w-4 h-4 text-[#00E676] animate-pulse" />
             Live Pitwall @ 60 Hz
@@ -201,22 +201,20 @@ export default function PaginaDashboardBoxes() {
         </div>
       </div>
 
-      {/* Grid Central: Resumen de Tanda + Radar de Habilidades */}
+      {/* Grid Central: Resumen de Tanda + Radar de Habilidades (Ambas tarjetas 100% interactivas) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Resumen de Última Tanda */}
-        <div className="lg:col-span-2 bg-[#141414] border border-[#262626] rounded-xl p-6 flex flex-col justify-between shadow-lg">
+        {/* Resumen de Última Tanda: Toda la superficie es clicable hacia el análisis */}
+        <Link
+          href={`/app/analysis?sesionId=${ultimaSesion?.id || ""}`}
+          className="lg:col-span-2 surface-specular-interactive p-6 flex flex-col justify-between group cursor-pointer"
+        >
           <div>
-            <div className="flex items-center justify-between pb-4 border-b border-[#262626]">
-              <div className="flex items-center gap-3">
-                <h2 className="text-base sm:text-lg font-bold uppercase text-white tracking-tight">
-                  {ultimaSesion?.circuit || ultimaSesion?.circuito || "Autodromo Nazionale Monza"}
-                </h2>
-                <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-[#262626] text-[#bbbbbb] border border-[#3c3c3c]">
-                  Última Tanda
-                </span>
-              </div>
-              <span className="text-xs font-mono text-[#0066b1] bg-[#0066b1]/10 px-2.5 py-1 rounded border border-[#0066b1]/30 font-bold">
-                {totalVueltas} Vueltas
+            <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
+              <h2 className="text-base sm:text-lg font-bold uppercase text-white tracking-tight group-hover:text-[#81c4ff] transition-colors">
+                {ultimaSesion?.circuit || ultimaSesion?.circuito || "Autodromo Nazionale Monza"}
+              </h2>
+              <span className="text-xs font-mono text-[#bbbbbb]">
+                {totalVueltas} Vueltas Registradas
               </span>
             </div>
 
@@ -229,47 +227,43 @@ export default function PaginaDashboardBoxes() {
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-6">
-                <div className="bg-black/60 border border-[#262626] p-3.5 rounded-lg">
+                <div className="bg-black/50 border border-white/[0.06] p-3.5 rounded-xl">
                   <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#7e7e7e]">
                     <span>Mejor Vuelta (PB)</span>
                     <Tooltip content="Mejor tiempo oficial de vuelta válida registrado en la sesión." />
                   </div>
-                  <div className="text-xl font-bold font-mono text-[#00E676] mt-1 tabular-nums">
+                  <div className="text-xl font-bold font-mono text-[#00E676] mt-1 tabular-nums tracking-tight">
                     {formatearTiempoMs(mejorVueltaMs)}
                   </div>
-                  <div className="text-[10px] text-[#7e7e7e] mt-0.5 font-mono">SQLite WAL oficial</div>
                 </div>
 
-                <div className="bg-black/60 border border-[#262626] p-3.5 rounded-lg">
+                <div className="bg-black/50 border border-white/[0.06] p-3.5 rounded-xl">
                   <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#7e7e7e]">
-                    <span>Vuelta Óptima (Ideal)</span>
+                    <span>Vuelta Óptima</span>
                     <Tooltip content="Suma teórica de los 3 mejores sectores individuales del piloto en la tanda." />
                   </div>
-                  <div className="text-xl font-bold font-mono text-[#0066b1] mt-1 tabular-nums">
+                  <div className="text-xl font-bold font-mono text-[#0066b1] mt-1 tabular-nums tracking-tight">
                     {tiempoIdealStr}
                   </div>
-                  <div className="text-[10px] text-[#0066b1] mt-0.5 font-mono">Delta: {deltaIdealStr}</div>
+                  <div className="text-[10px] text-[#0066b1] mt-0.5 font-mono tabular-nums">Delta: {deltaIdealStr}</div>
                 </div>
 
-                <div className="bg-black/60 border border-[#262626] p-3.5 rounded-lg">
+                <div className="bg-black/50 border border-white/[0.06] p-3.5 rounded-xl">
                   <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#7e7e7e]">
-                    <span>Top Speed (Rettifilo)</span>
-                    <Tooltip content="Velocidad máxima alcanzada al final de la recta principal antes del punto de frenada." />
+                    <span>Top Speed</span>
+                    <Tooltip content="Velocidad máxima alcanzada antes del punto de frenada." />
                   </div>
-                  <div className="text-xl font-bold font-mono text-white mt-1 tabular-nums">
-                    {esGarlati ? "348.5" : "284.2"} <span className="text-xs text-[#7e7e7e]">km/h</span>
-                  </div>
-                  <div className="text-[10px] text-[#7e7e7e] mt-0.5 font-mono">
-                    {esGarlati ? "Con DRS activo" : "Curva Grande GT3"}
+                  <div className="text-xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
+                    {esGarlati ? "348.5" : "284.2"} <span className="text-xs text-[#7e7e7e] font-normal">km/h</span>
                   </div>
                 </div>
 
-                <div className="bg-black/60 border border-[#262626] p-3.5 rounded-lg">
+                <div className="bg-black/50 border border-white/[0.06] p-3.5 rounded-xl">
                   <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#7e7e7e]">
                     <span>Consistencia</span>
-                    <Tooltip content="Porcentaje de vueltas limpias sin exceder límites de pista y con baja dispersión." />
+                    <Tooltip content="Porcentaje de vueltas limpias con baja dispersión." />
                   </div>
-                  <div className="text-xl font-bold font-mono text-white mt-1 tabular-nums">
+                  <div className="text-xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
                     {consistenciaStr}
                   </div>
                   <div className="text-[10px] text-[#0fa336] mt-0.5 font-mono">{vueltasValidasStr}</div>
@@ -278,30 +272,30 @@ export default function PaginaDashboardBoxes() {
             )}
           </div>
 
-          <div className="pt-4 border-t border-[#262626] flex items-center justify-between text-xs font-mono">
+          <div className="pt-4 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono">
             <span className="text-[#bbbbbb] flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-[#7e7e7e]" />
               {ultimaSesion?.carModel || "Ferrari SF70H (F1 2017)"}
             </span>
-            <Link
-              href="/app/sessions"
-              className="text-[#0066b1] hover:underline font-bold uppercase text-[11px] flex items-center gap-1"
-            >
-              Explorar Historial
-              <ArrowRight className="w-3 h-3" />
-            </Link>
+            <span className="text-[#0066b1] group-hover:text-white font-bold uppercase text-[11px] flex items-center gap-1 transition-colors">
+              Abrir análisis completo de telemetría
+              <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
+            </span>
           </div>
-        </div>
+        </Link>
 
-        {/* Radar de Habilidades del Piloto */}
-        <div className="bg-[#141414] border border-[#262626] rounded-xl p-6 flex flex-col justify-between shadow-lg">
+        {/* Radar de Habilidades del Piloto: Toda la tarjeta es clicable hacia el Perfil */}
+        <Link
+          href="/app/perfil"
+          className="surface-specular-interactive p-6 flex flex-col justify-between group cursor-pointer"
+        >
           <div>
-            <div className="flex items-center justify-between pb-3 border-b border-[#262626]">
-              <h3 className="text-base font-bold uppercase text-white tracking-tight">
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
+              <h3 className="text-base font-bold uppercase text-white tracking-tight group-hover:text-[#81c4ff] transition-colors">
                 Apex Rating {usuario.rating.paceRating}
               </h3>
-              <span className="text-xs font-bold font-mono px-2 py-0.5 rounded bg-[#e22718]/15 text-[#e22718] border border-[#e22718]/30">
-                Cat. {usuario.rating.safetyRating}
+              <span className="text-xs font-mono text-[#bbbbbb]">
+                {usuario.rating.nivel}
               </span>
             </div>
 
@@ -309,7 +303,7 @@ export default function PaginaDashboardBoxes() {
               <div>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-[#bbbbbb]">Velocidad Punta & Tracción</span>
-                  <span className="text-white font-bold">{metricas.velocidad}%</span>
+                  <span className="text-white font-bold tabular-nums">{metricas.velocidad}%</span>
                 </div>
                 <div className="h-1.5 bg-black rounded-full overflow-hidden">
                   <div className="h-full bg-[#0066b1]" style={{ width: `${metricas.velocidad}%` }} />
@@ -319,7 +313,7 @@ export default function PaginaDashboardBoxes() {
               <div>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-[#bbbbbb]">Potencia de Frenada</span>
-                  <span className="text-white font-bold">{metricas.frenada}%</span>
+                  <span className="text-white font-bold tabular-nums">{metricas.frenada}%</span>
                 </div>
                 <div className="h-1.5 bg-black rounded-full overflow-hidden">
                   <div className="h-full bg-[#e22718]" style={{ width: `${metricas.frenada}%` }} />
@@ -329,7 +323,7 @@ export default function PaginaDashboardBoxes() {
               <div>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-[#bbbbbb]">Control de Chasis & G-Force</span>
-                  <span className="text-white font-bold">{metricas.control}%</span>
+                  <span className="text-white font-bold tabular-nums">{metricas.control}%</span>
                 </div>
                 <div className="h-1.5 bg-black rounded-full overflow-hidden">
                   <div className="h-full bg-[#1c69d4]" style={{ width: `${metricas.control}%` }} />
@@ -339,7 +333,7 @@ export default function PaginaDashboardBoxes() {
               <div>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-[#bbbbbb]">Consistencia Vuelta a Vuelta</span>
-                  <span className="text-white font-bold">{metricas.consistencia}%</span>
+                  <span className="text-white font-bold tabular-nums">{metricas.consistencia}%</span>
                 </div>
                 <div className="h-1.5 bg-black rounded-full overflow-hidden">
                   <div className="h-full bg-[#0fa336]" style={{ width: `${metricas.consistencia}%` }} />
@@ -348,32 +342,36 @@ export default function PaginaDashboardBoxes() {
             </div>
           </div>
 
-          <div className="pt-3 border-t border-[#262626] text-center font-mono">
+          <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between font-mono text-xs">
             <span className="text-[11px] text-[#7e7e7e]">
-              Rango de Piloto: <strong className="text-white">{usuario.rating.nivel}</strong>
+              Licencia: <strong className="text-white">{usuario.alias}</strong>
+            </span>
+            <span className="text-[#0066b1] group-hover:text-white font-bold uppercase text-[11px] flex items-center gap-1 transition-colors">
+              Ver Radar Completo
+              <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
             </span>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* AI Race Coach: Diagnóstico Heurístico de Telemetría */}
-      <div className="bg-[#141414] border border-[#262626] rounded-xl p-6 shadow-lg">
+      <div className="surface-specular p-6 shadow-xl">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-lg bg-black border border-[#262626] text-[#f4b400]">
+          <div className="p-2.5 rounded-xl bg-black/60 border border-white/10 text-[#f4b400]">
             <Lightbulb className="w-5 h-5" />
           </div>
           <div>
             <h3 className="text-base font-bold uppercase tracking-tight text-white">
-              AI Race Coach • Diagnóstico Automático de Telemetría
+              AI Race Coach • Diagnóstico de Telemetría
             </h3>
             <p className="text-xs text-[#7e7e7e] font-mono">
-              Análisis comparativo de telemetría en tiempo real sobre el trazado de Monza
+              Análisis comparativo de telemetría sobre el trazado de Monza
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 rounded-lg bg-black/60 border border-[#0fa336]/30">
+          <div className="p-4 rounded-xl bg-black/50 border border-[#0fa336]/30">
             <div className="flex items-center gap-2 text-xs font-bold uppercase text-[#0fa336] mb-1.5 font-mono">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>{usuario.diagnosticoAi.puntoFuerteTitulo}</span>
@@ -383,7 +381,7 @@ export default function PaginaDashboardBoxes() {
             </p>
           </div>
 
-          <div className="p-4 rounded-lg bg-black/60 border border-[#e22718]/30">
+          <div className="p-4 rounded-xl bg-black/50 border border-[#e22718]/30">
             <div className="flex items-center gap-2 text-xs font-bold uppercase text-[#e22718] mb-1.5 font-mono">
               <AlertTriangle className="w-4 h-4 shrink-0" />
               <span>{usuario.diagnosticoAi.oportunidadMejoraTitulo}</span>
@@ -395,35 +393,35 @@ export default function PaginaDashboardBoxes() {
         </div>
       </div>
 
-      {/* Leaderboard del Stand FAPPE 2026 */}
-      <div className="bg-[#141414] border border-[#262626] rounded-xl p-6 shadow-lg">
-        <div className="flex items-center justify-between pb-4 border-b border-[#262626] mb-4">
+      {/* Leaderboard Oficial: Tarjeta Especular Interactiva hacia la tabla completa */}
+      <Link
+        href="/app/leaderboards"
+        className="surface-specular-interactive p-6 shadow-xl group cursor-pointer block"
+      >
+        <div className="flex items-center justify-between pb-4 border-b border-white/[0.06] mb-4">
           <div className="flex items-center gap-2.5">
             <Trophy className="w-5 h-5 text-[#f4b400]" />
             <div>
-              <h3 className="text-base font-bold uppercase tracking-tight text-white">
+              <h3 className="text-base font-bold uppercase tracking-tight text-white group-hover:text-[#81c4ff] transition-colors">
                 Tabla de Récords Oficiales • Monza GP
               </h3>
               <p className="text-xs text-[#7e7e7e] font-mono">
-                Registros en vivo marcados por pilotos en el simulador sincronizados con la base de datos
+                Registros en vivo marcados por pilotos en el simulador
               </p>
             </div>
           </div>
-          <Link
-            href="/app/leaderboards"
-            className="text-xs font-mono text-[#0066b1] hover:underline flex items-center gap-1 font-bold"
-          >
+          <span className="text-xs font-mono text-[#0066b1] group-hover:text-white flex items-center gap-1 font-bold uppercase transition-colors">
             Ver Tabla Completa
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+            <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
+          </span>
         </div>
 
-        <div className="divide-y divide-[#262626]">
+        <div className="divide-y divide-white/[0.06]">
           {rankingTop.map((item) => (
             <div key={`${item.posicion}-${item.piloto}`} className="py-3 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span
-                  className={`text-sm font-bold font-mono w-6 ${
+                  className={`text-sm font-bold font-mono w-6 tabular-nums ${
                     item.posicion === 1
                       ? "text-[#f4b400]"
                       : item.posicion === 2
@@ -436,11 +434,6 @@ export default function PaginaDashboardBoxes() {
                 <div>
                   <div className="text-xs font-bold text-white flex items-center gap-2">
                     <span>{item.piloto}</span>
-                    {item.esRecord && (
-                      <span className="text-[9px] bg-[#0066b1] text-white font-mono px-1.5 py-0.2 rounded font-black uppercase">
-                        Record
-                      </span>
-                    )}
                   </div>
                   <div className="text-[10px] text-[#7e7e7e] font-mono">
                     {item.auto} • {item.vueltas} vueltas
@@ -448,9 +441,9 @@ export default function PaginaDashboardBoxes() {
                 </div>
               </div>
               <div className="text-right font-mono">
-                <div className="text-sm font-bold text-[#00E676] tabular-nums">{item.tiempo}</div>
+                <div className="text-sm font-bold text-[#00E676] tabular-nums tracking-tight">{item.tiempo}</div>
                 <div
-                  className={`text-[10px] ${
+                  className={`text-[10px] tabular-nums ${
                     item.delta === "Ref" ? "text-[#7e7e7e]" : "text-[#e22718]"
                   }`}
                 >
@@ -460,7 +453,7 @@ export default function PaginaDashboardBoxes() {
             </div>
           ))}
         </div>
-      </div>
+      </Link>
     </div>
   );
 }

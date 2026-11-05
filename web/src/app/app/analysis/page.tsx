@@ -226,14 +226,9 @@ function ContenidoAnalisis() {
       {/* 1. Encabezado de la Sesión de Telemetría */}
       <div className="flex flex-col justify-between gap-4 border-b border-[#262626] pb-4 sm:flex-row sm:items-end">
         <div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
-              Laboratorio Analítico 2D
-            </h1>
-            <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#0066b1]/15 text-[#81c4ff] border border-[#0066b1]/30">
-              uPlot Engine @ 120 FPS
-            </span>
-          </div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
+            Laboratorio Analítico 2D
+          </h1>
           <div className="mt-2 flex flex-wrap items-center gap-4 text-xs font-semibold tracking-wider text-[#bbbbbb] uppercase font-mono">
             <span className="flex items-center gap-1.5 text-white">
               <Flag className="h-3.5 w-3.5 text-[#0066b1]" />
@@ -247,23 +242,9 @@ function ContenidoAnalisis() {
             <span className="text-[#7e7e7e]">•</span>
             <span className="flex items-center gap-1.5 text-[#0fa336]">
               <Database className="h-3.5 w-3.5" />
-              {vueltas.length} Vueltas Registradas (0 - 5.793 m)
+              {vueltas.length} Vueltas Registradas
             </span>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {esModoReal ? (
-            <span className="inline-flex items-center gap-1.5 border border-[#0fa336]/40 bg-[#0fa336]/15 px-3 py-1 text-xs font-mono font-bold tracking-wider text-[#0fa336] uppercase rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0fa336] animate-pulse" />
-              SQLite WAL Live
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 border border-[#3c3c3c] bg-[#1a1a1a] px-3 py-1 text-xs font-mono font-bold tracking-wider text-[#bbbbbb] uppercase rounded-full">
-              <Sparkles className="w-3.5 h-3.5 text-[#0066b1]" />
-              Demostración Offline
-            </span>
-          )}
         </div>
       </div>
 

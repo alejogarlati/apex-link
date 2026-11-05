@@ -191,16 +191,11 @@ export default function PaginaSesiones() {
       {/* Header */}
       <div className="flex flex-col justify-between gap-4 border-b border-[#262626] pb-4 sm:flex-row sm:items-end">
         <div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
-              Historial de Sesiones
-            </h1>
-            <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#0066b1]/15 text-[#81c4ff] border border-[#0066b1]/30">
-              SQLite WAL Sync
-            </span>
-          </div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
+            Historial de Sesiones
+          </h1>
           <p className="mt-1 text-xs text-[#bbbbbb]">
-            Tandas de telemetría capturadas desde Assetto Corsa persistidas en SQLite WAL y sincronizadas con PostgreSQL.
+            Tandas de telemetría capturadas desde Assetto Corsa sincronizadas con PostgreSQL.
           </p>
         </div>
 
@@ -208,7 +203,7 @@ export default function PaginaSesiones() {
           <button
             onClick={() => cargarSesiones(pagina)}
             disabled={cargando}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1a1a1a] hover:bg-[#262626] text-xs font-mono text-[#bbbbbb] hover:text-white border border-[#3c3c3c] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1]"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-black/60 hover:bg-black/90 text-xs font-mono text-[#bbbbbb] hover:text-white border border-white/10 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1]"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${cargando ? "animate-spin text-[#0066b1]" : ""}`} />
             Actualizar
@@ -253,7 +248,7 @@ export default function PaginaSesiones() {
         />
       )}
 
-      {/* Grid de Sesiones */}
+      {/* Grid de Sesiones: Cada tarjeta es 100% interactiva sin botones pequeños */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {sesiones.map((sesion) => {
           const circuitoNombre = sesion.circuit || sesion.circuito || "Circuito";
@@ -262,34 +257,27 @@ export default function PaginaSesiones() {
           const fechaStr = formatearFecha(sesion.startTime || sesion.fechaInicio || "");
           const mejorVueltaStr = formatearTiempoMs(sesion.bestLapTimeMs || sesion.mejorTiempoMs || 0);
           const totalV = sesion.totalLaps ?? sesion.totalVueltas ?? 0;
-          const esMock = sesion.isMockSimulation ?? sesion.esSimulacionMock ?? false;
 
           return (
-            <div
+            <Link
               key={sesion.id}
-              className="border border-[#262626] bg-[#141414] rounded-xl p-5 flex flex-col justify-between hover:border-[#0066b1] transition-all group shadow-sm hover:shadow-lg"
+              href={`/app/analysis?sesionId=${sesion.id}`}
+              className="surface-specular-interactive p-6 flex flex-col justify-between group cursor-pointer block"
             >
               <div>
-                <div className="mb-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="border border-[#0066b1]/40 bg-[#0066b1]/15 px-2 py-0.5 text-[10px] font-bold tracking-widest text-[#0066b1] uppercase rounded">
-                      {circuitoNombre.split(" ")[0]}
-                    </span>
-                    {esMock && (
-                      <span className="border border-[#3c3c3c] bg-[#1a1a1a] px-1.5 py-0.5 text-[9px] font-mono text-[#7e7e7e] uppercase rounded">
-                        Mock
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-[11px] text-[#7e7e7e] font-mono">{fechaStr}</span>
+                <div className="mb-3 flex items-center justify-between text-xs font-mono">
+                  <span className="text-[#bbbbbb] font-bold">
+                    {totalV} Vueltas Registradas
+                  </span>
+                  <span className="text-[11px] text-[#7e7e7e]">{fechaStr}</span>
                 </div>
 
-                <h3 className="text-base font-bold text-white uppercase mb-1 tracking-tight">
+                <h3 className="text-lg font-bold text-white uppercase mb-1 tracking-tight group-hover:text-[#81c4ff] transition-colors">
                   {circuitoNombre}
                 </h3>
                 <p className="text-xs text-[#7e7e7e] font-mono mb-4">{configNombre}</p>
 
-                <div className="space-y-2.5 border-y border-[#262626] py-3 text-xs font-mono">
+                <div className="space-y-2.5 border-y border-white/[0.06] py-3 text-xs font-mono">
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-[#bbbbbb]">
                       <Car className="h-4 w-4 text-[#7e7e7e]" />
@@ -305,35 +293,17 @@ export default function PaginaSesiones() {
                     </span>
                     <span className="font-bold text-[#00E676] tabular-nums tracking-tight">{mejorVueltaStr}</span>
                   </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 text-[#bbbbbb]">
-                      <Clock className="h-4 w-4 text-[#7e7e7e]" />
-                      Vueltas:
-                    </span>
-                    <span className="text-white tabular-nums">{totalV} registradas</span>
-                  </div>
                 </div>
               </div>
 
-              <div className="mt-5 grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => abrirModalVueltas(sesion)}
-                  className="w-full py-2 rounded-lg font-bold uppercase tracking-wider text-[11px] bg-[#1a1a1a] hover:bg-[#262626] border border-[#3c3c3c] text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1]"
-                >
-                  <ListFilter className="w-3.5 h-3.5 text-[#0066b1]" />
-                  Vueltas ({totalV})
-                </button>
-
-                <Link
-                  href={`/app/analysis?sesionId=${sesion.id}`}
-                  className="w-full py-2 rounded-lg font-bold uppercase tracking-wider text-[11px] bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-[#0066b1]/20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#1c69d4]"
-                >
-                  Laboratorio 2D
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+              <div className="mt-5 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono">
+                <span className="text-[#7e7e7e]">Abrir telemetría 2D</span>
+                <span className="text-[#0066b1] group-hover:text-white font-bold uppercase text-[11px] flex items-center gap-1 transition-colors">
+                  Analizar
+                  <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
+                </span>
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>
