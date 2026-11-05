@@ -1,59 +1,124 @@
-import { Trophy } from "lucide-react";
+"use client";
 
-export default function PaginaLeaderboards() {
-  const ranking = [
-    { posicion: 1, piloto: "Alejo Garlati (Piloto Pro)", tiempo: "01:21.240", delta: "Ref", auto: "Ferrari SF70H", vueltas: 18 },
-    { posicion: 2, piloto: "Martin Basso (Sim Pro)", tiempo: "01:22.450", delta: "+1.210 s", auto: "Ferrari SF70H", vueltas: 8 },
-    { posicion: 3, piloto: "Lucas Di Grassi (GT3)", tiempo: "01:24.110", delta: "+2.870 s", auto: "Ferrari SF70H", vueltas: 14 },
-    { posicion: 4, piloto: "Franco Colapinto (Sim)", tiempo: "01:25.890", delta: "+4.650 s", auto: "Ferrari SF70H", vueltas: 6 },
-    { posicion: 5, piloto: "Piloto Invitado (Demo)", tiempo: "01:27.420", delta: "+6.180 s", auto: "Ferrari SF70H", vueltas: 5 },
-  ];
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { Trophy, RefreshCw, Flag, Car, ShieldCheck, Loader2 } from "lucide-react";
+import { obtenerLeaderboard } from "@/lib/apiClient";
+import type { LeaderboardItemDto } from "@/types/api";
+
+const CIRCUITOS_TABS = [
+  { id: "monza", nombre: "Monza GP", sub: "5.793 m" },
+  { id: "spa", nombre: "Spa-Francorchamps", sub: "7.004 m" },
+  { id: "redbullring", nombre: "Red Bull Ring", sub: "4.318 m" },
+];
+
+function ContenidoLeaderboards() {
+  const searchParams = useSearchParams();
+  const circuitoInicial = searchParams.get("circuito") || "monza";
+
+  const [circuitoActivo, setCircuitoActivo] = useState(
+    circuitoInicial.toLowerCase().includes("spa")
+      ? "spa"
+      : circuitoInicial.toLowerCase().includes("redbull")
+      ? "redbullring"
+      : "monza"
+  );
+  const [ranking, setRanking] = useState<LeaderboardItemDto[]>([]);
+  const [cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    let cancelado = false;
+    setCargando(true);
+
+    obtenerLeaderboard(circuitoActivo, 10)
+      .then((res) => {
+        if (!cancelado && res.exitoso && Array.isArray(res.datos)) {
+          setRanking(res.datos);
+        }
+      })
+      .catch(() => {
+        // Fallback silencioso
+      })
+      .finally(() => {
+        if (!cancelado) setCargando(false);
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [circuitoActivo]);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="border-b border-[#262626] pb-4">
-        <div className="flex items-center gap-2">
-          <span className="h-2 w-2 bg-[#0066b1]" />
-          <h1 className="text-xl font-bold tracking-tight text-white uppercase sm:text-2xl">
-            Tabla de Récords y Clasificación Oficial
-          </h1>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#262626] pb-4">
+        <div className="flex items-start gap-3.5">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
+              Tabla de Récords
+            </h1>
+            <p className="mt-1 text-xs text-[#bbbbbb]">
+              Tiempos registrados en el simulador sincronizados con la base de datos central.
+            </p>
+          </div>
         </div>
-        <p className="mt-1 text-xs text-[#bbbbbb]">
-          Tiempos registrados en el simulador con telemetría en tiempo real. Autodromo Nazionale Monza • Ferrari SF70H.
-        </p>
       </div>
 
-      <div className="border border-[#3c3c3c] bg-[#1a1a1a] rounded-lg overflow-hidden">
-        <div className="p-4 bg-[#0d0d0d] border-b border-[#262626] flex items-center justify-between">
+      {/* Selector de Circuito (Pestañas limpias sin cards de fondo) */}
+      <div className="flex flex-wrap items-center gap-2">
+        {CIRCUITOS_TABS.map((tab) => {
+          const activo = circuitoActivo === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setCircuitoActivo(tab.id)}
+              className={`px-4 py-2 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                activo
+                  ? "bg-[#0066b1] text-white shadow-md shadow-[#0066b1]/20"
+                  : "text-[#8e8e93] hover:text-white hover:bg-white/[0.04]"
+              }`}
+            >
+              <Flag className="w-3.5 h-3.5" />
+              <span>{tab.nombre}</span>
+              <span className={`text-[10px] ${activo ? "text-white/80" : "text-[#7e7e7e]"}`}>
+                ({tab.sub})
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Tabla de Clasificación con fondo invisible y separadores lineales */}
+      <div className="border-t border-b border-[#222225]">
+        <div className="py-4 border-b border-[#222225] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Trophy className="w-4 h-4 text-[#f4b400]" />
             <span className="text-xs font-bold uppercase tracking-wider text-white">
-              Clasificación General de Monza GP
+              {CIRCUITOS_TABS.find((t) => t.id === circuitoActivo)?.nombre}
             </span>
           </div>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#0fa336]/15 text-[#0fa336] border border-[#0fa336]/30">
-            Actualización en Vivo
-          </span>
+          <div className="flex items-center gap-2 font-mono text-xs text-[#7e7e7e]">
+            {cargando && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0066b1]" />}
+            <span>{ranking.length} registros</span>
+          </div>
         </div>
 
-        <div className="divide-y divide-[#262626]">
+        <div className="divide-y divide-[#222225]">
           {ranking.map((item) => (
             <div
-              key={item.posicion}
-              className={`p-4 flex items-center justify-between transition-colors ${
-                item.posicion === 1 ? "bg-[#0066b1]/10" : "hover:bg-white/[0.02]"
-              }`}
+              key={`${item.posicion}-${item.piloto}`}
+              className="py-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
             >
               <div className="flex items-center gap-4">
                 <span
-                  className={`w-7 h-7 rounded flex items-center justify-center font-mono font-bold text-xs ${
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center font-mono font-bold text-xs shadow-sm ${
                     item.posicion === 1
-                      ? "bg-[#f4b400] text-black"
+                      ? "bg-[#f4b400] text-black font-black"
                       : item.posicion === 2
-                      ? "bg-[#bbbbbb] text-black"
+                      ? "bg-[#bbbbbb] text-black font-black"
                       : item.posicion === 3
-                      ? "bg-[#e22718] text-white"
-                      : "bg-[#262626] text-[#7e7e7e]"
+                      ? "bg-[#e22718] text-white font-black"
+                      : "bg-[#262626] text-[#bbbbbb]"
                   }`}
                 >
                   {item.posicion}
@@ -61,23 +126,25 @@ export default function PaginaLeaderboards() {
 
                 <div>
                   <div className="text-sm font-bold text-white flex items-center gap-2">
-                    {item.piloto}
-                    {item.posicion === 1 && (
-                      <span className="text-[9px] bg-[#0066b1] text-white font-mono px-1.5 py-0.5 rounded uppercase">
-                        PB Stand
-                      </span>
-                    )}
+                    <span>{item.piloto}</span>
                   </div>
-                  <div className="text-[11px] text-[#7e7e7e] font-mono">
-                    {item.auto} • {item.vueltas} vueltas rodadas
+                  <div className="text-xs text-[#7e7e7e] font-mono flex items-center gap-2 mt-0.5">
+                    <span className="flex items-center gap-1 text-[#bbbbbb]">
+                      <Car className="w-3 h-3 text-[#0066b1]" />
+                      {item.auto}
+                    </span>
+                    <span>•</span>
+                    <span>{item.vueltas} vueltas rodadas</span>
                   </div>
                 </div>
               </div>
 
               <div className="text-right font-mono">
-                <div className="text-base font-bold text-[#0fa336]">{item.tiempo}</div>
+                <div className="text-base font-bold text-[#00E676] tabular-nums tracking-tight">
+                  {item.tiempo}
+                </div>
                 <div
-                  className={`text-[10px] ${
+                  className={`text-[11px] font-bold tabular-nums ${
                     item.delta === "Ref" ? "text-[#7e7e7e]" : "text-[#e22718]"
                   }`}
                 >
@@ -89,5 +156,20 @@ export default function PaginaLeaderboards() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaginaLeaderboards() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex flex-col items-center justify-center min-h-[50vh] text-[#7e7e7e]">
+          <Loader2 className="w-8 h-8 animate-spin text-[#0066b1] mb-2" />
+          <span className="text-xs font-mono">Cargando clasificación oficial...</span>
+        </div>
+      }
+    >
+      <ContenidoLeaderboards />
+    </Suspense>
   );
 }

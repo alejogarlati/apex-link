@@ -78,7 +78,7 @@ export function SelectorVueltas({
   };
 
   return (
-    <div className="border border-[#262626] bg-[#141414] rounded-xl p-4 shadow-xl space-y-3.5">
+    <div className="pb-6 border-b border-[#222225] space-y-4">
       {/* Encabezado Superior: Título, Resumen de Comparación y Mejor Vuelta */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#262626]">
         <div className="flex items-center gap-3">
@@ -96,7 +96,7 @@ export function SelectorVueltas({
         {/* Chips de Ranuras Activas y Mejor Vuelta */}
         <div className="flex flex-wrap items-center gap-2 text-xs">
           {/* Chip Vuelta A (Base) */}
-          <div className="flex items-center gap-1.5 bg-[#1a1a1a] border border-white/40 px-2.5 py-1 rounded-md text-white font-mono">
+          <div className="flex items-center gap-1.5 border border-white/40 px-2.5 py-1 rounded-md text-white font-mono">
             <span className="w-3.5 h-3.5 rounded-full bg-white text-black font-black text-[9px] flex items-center justify-center">
               A
             </span>
@@ -107,7 +107,7 @@ export function SelectorVueltas({
 
           {/* Chip Vuelta B (Comparativa) */}
           {vueltaB ? (
-            <div className="flex items-center gap-1.5 bg-[#1c69d4]/20 border border-[#1c69d4] px-2.5 py-1 rounded-md text-[#93c5fd] font-mono">
+            <div className="flex items-center gap-1.5 border border-[#1c69d4] px-2.5 py-1 rounded-md text-[#93c5fd] font-mono">
               <span className="w-3.5 h-3.5 rounded-full bg-[#1c69d4] text-white font-black text-[9px] flex items-center justify-center">
                 B
               </span>
@@ -124,7 +124,7 @@ export function SelectorVueltas({
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 bg-[#1a1a1a] border border-[#333333] px-2.5 py-1 rounded-md text-[#7e7e7e] font-mono text-[11px]">
+            <div className="flex items-center gap-1.5 border border-white/10 px-2.5 py-1 rounded-md text-[#7e7e7e] font-mono text-[11px]">
               <GitCompareArrows className="w-3.5 h-3.5 text-[#555555]" />
               <span>Sin comparativa (haz clic en "+ VS B")</span>
             </div>
@@ -132,7 +132,7 @@ export function SelectorVueltas({
 
           {/* Badge Mejor Vuelta de Sesión */}
           {mejorVuelta && (
-            <div className="flex items-center gap-1.5 bg-[#0066b1]/20 border border-[#0066b1]/60 px-2.5 py-1 rounded-md text-[#81c4ff] text-[11px] font-mono">
+            <div className="flex items-center gap-1.5 border border-[#0066b1]/60 px-2.5 py-1 rounded-md text-[#81c4ff] text-[11px] font-mono">
               <Trophy className="w-3 h-3 text-[#f4b400]" />
               <span className="text-[10px] uppercase font-bold text-[#bbbbbb]">Récord:</span>
               <span className="font-bold text-white">{mejorVuelta.tiempoVueltaStr}</span>
@@ -161,7 +161,7 @@ export function SelectorVueltas({
                   ? "bg-white/[0.08] border-white ring-1 ring-white/50 shadow-md shadow-white/5"
                   : esB
                   ? "bg-[#1c69d4]/[0.15] border-[#1c69d4] ring-1 ring-[#1c69d4]/60 shadow-md shadow-[#1c69d4]/10"
-                  : "bg-[#1a1a1a] border-[#262626] hover:border-[#3c3c3c] hover:bg-[#202020]"
+                  : "border border-white/10 hover:border-white/25 hover:bg-white/[0.03]"
               )}
             >
               {/* Cabecera de la Tarjeta */}

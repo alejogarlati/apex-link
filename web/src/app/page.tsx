@@ -439,7 +439,7 @@ export default function PaginaInicio() {
           <div className="relative w-full h-full flex items-center justify-center sm:translate-y-[50px]">
             <video
               ref={heroVideoRef}
-              src="/landing/videos/gemini_generated_video_c76c6af4.mp4"
+              src="/landing/videos/hero-video-crude.mp4"
               muted
               playsInline
               preload="auto"

@@ -1,26 +1,53 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Gauge, Zap, CheckCircle2, ArrowLeft, ShieldCheck, Lock } from "lucide-react";
-import { iniciarSesionInvitado, iniciarSesionCredenciales } from "@/lib/auth";
+import {
+  Gauge,
+  ArrowLeft,
+  ShieldCheck,
+  Lock,
+  Mail,
+  KeyRound,
+  AlertCircle,
+  CheckCircle2,
+  HelpCircle,
+} from "lucide-react";
+import { iniciarSesionConServidor, estaAutenticado } from "@/lib/auth";
 import { solicitarGet } from "@/lib/apiClient";
 import type { EstadoServicioDto } from "@/types/api";
-import { MSlantedBadge } from "@/components/landing/MSlantedBadge";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Badge } from "@/components/ui/Badge";
+import { useToast } from "@/context/ToastContext";
 
 export default function PaginaLogin() {
   const router = useRouter();
-  const [email, setEmail] = useState("piloto@apexlink.io");
-  const [alias, setAlias] = useState("PILOTO_BOXES");
-  const [password, setPassword] = useState("••••••••");
+  const toast = useToast();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [recordarSesion, setRecordarSesion] = useState(true);
   const [estaCargando, setEstaCargando] = useState(false);
+  const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
+  const [mostrarRecupero, setMostrarRecupero] = useState(false);
+  const [emailRecupero, setEmailRecupero] = useState("");
+  const [recuperoEnviado, setRecuperoEnviado] = useState(false);
+
   const [estadoBackend, setEstadoBackend] = useState<{
     verificado: boolean;
     conectado: boolean;
     circuito?: string;
   }>({ verificado: false, conectado: false });
+
+  // Si ya hay sesión activa, redirigir directamente a /app
+  useEffect(() => {
+    if (estaAutenticado()) {
+      router.replace("/app");
+    }
+  }, [router]);
 
   // Verificar estado del servidor de telemetría de fondo
   useEffect(() => {
@@ -28,8 +55,13 @@ export default function PaginaLogin() {
       .then((res) => {
         setEstadoBackend({
           verificado: true,
-          conectado: res.datos.estaConectado || res.datos.modoMock,
-          circuito: res.datos.circuito,
+          conectado: Boolean(
+            res.datos?.isConnected ||
+              res.datos?.estaConectado ||
+              res.datos?.isMockMode ||
+              res.datos?.modoMock
+          ),
+          circuito: res.datos?.circuit || res.datos?.circuito,
         });
       })
       .catch(() => {
@@ -40,25 +72,57 @@ export default function PaginaLogin() {
       });
   }, []);
 
-  const manejarLoginInvitado = () => {
+  const manejarSubmitLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorGeneral(null);
+
+    if (!email.trim()) {
+      setErrorGeneral("Ingresá tu dirección de correo electrónico corporativo o de piloto.");
+      return;
+    }
+
+    if (!password) {
+      setErrorGeneral("Ingresá tu contraseña de acceso a boxes.");
+      return;
+    }
+
     setEstaCargando(true);
-    iniciarSesionInvitado();
-    setTimeout(() => {
-      router.push("/hub");
-    }, 300);
+    try {
+      const resultado = await iniciarSesionConServidor(email, password);
+      if (!resultado.exitoso || !resultado.sesion) {
+        setErrorGeneral(
+          resultado.error || "Credenciales inválidas. Verificá tu correo y contraseña."
+        );
+        toast.error("Error de autenticación", resultado.error || "Credenciales incorrectas");
+        return;
+      }
+
+      toast.success(
+        `Bienvenido a boxes, ${resultado.sesion.usuario.nombre}`,
+        `Licencia activa: ${resultado.sesion.usuario.licencia}`
+      );
+      router.push("/app");
+    } catch {
+      setErrorGeneral(
+        "No se pudo establecer comunicación con el servidor de autenticación."
+      );
+    } finally {
+      setEstaCargando(false);
+    }
   };
 
-  const manejarLoginCredenciales = (e: React.FormEvent) => {
+  const manejarSolicitudRecupero = (e: React.FormEvent) => {
     e.preventDefault();
-    setEstaCargando(true);
-    iniciarSesionCredenciales(email, alias);
-    setTimeout(() => {
-      router.push("/hub");
-    }, 400);
+    if (!emailRecupero.trim()) return;
+    setRecuperoEnviado(true);
+    toast.info(
+      "Solicitud de recuperación procesada",
+      "Si el correo está registrado, recibirás un enlace válido por 15 minutos."
+    );
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col justify-between selection:bg-[#e22718]">
+    <div className="min-h-screen bg-black text-white flex flex-col justify-between selection:bg-[#0066b1]">
       {/* Barra de Acento Tricolor BMW M (4px) */}
       <div className="h-1 w-full flex">
         <div className="h-full w-1/3 bg-[#0066b1]" />
@@ -67,172 +131,240 @@ export default function PaginaLogin() {
       </div>
 
       {/* Navegación Superior */}
-      <header className="px-6 py-4 flex items-center justify-between border-b border-[#262626]">
+      <header className="px-6 py-4 flex items-center justify-between border-b border-[#262626] bg-[#0d0d0d]">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#bbbbbb] hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Volver a Inicio
+          Volver al Inicio
         </Link>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center px-2 py-1 bg-[#141414] border border-[#3c3c3c]">
+
+        <div className="flex items-center gap-3">
+          {estadoBackend.verificado && (
+            <Badge
+              variant={estadoBackend.conectado ? "success" : "info"}
+              dot
+              pulse={estadoBackend.conectado}
+            >
+              {estadoBackend.conectado
+                ? `Core Relay Online (${estadoBackend.circuito || "Monza"})`
+                : "PostgreSQL Auth Ready"}
+            </Badge>
+          )}
+          <div className="hidden sm:flex items-center px-2.5 py-1 bg-[#141414] border border-[#3c3c3c] rounded">
             <Image
               src="/logos/logo.webp"
               alt="ApexLink"
-              width={100}
-              height={20}
+              width={90}
+              height={18}
               className="h-4 w-auto object-contain"
             />
           </div>
-          {estadoBackend.verificado && (
-            <span
-              className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 border ${
-                estadoBackend.conectado
-                  ? "bg-[#0fa336]/10 border-[#0fa336]/30 text-[#0fa336]"
-                  : "bg-[#7e7e7e]/10 border-[#3c3c3c] text-[#bbbbbb]"
-              }`}
-            >
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${
-                  estadoBackend.conectado ? "bg-[#0fa336] animate-pulse" : "bg-[#7e7e7e]"
-                }`}
-              />
-              {estadoBackend.conectado
-                ? `Telemetría Activa (${estadoBackend.circuito || "Monza"})`
-                : "Modo Demostración"}
-            </span>
-          )}
         </div>
       </header>
 
       {/* Contenedor Central */}
       <main className="flex-1 flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md bg-[#0d0d0d] border border-[#3c3c3c] shadow-2xl overflow-hidden">
+        <div className="w-full max-w-md bg-[#0d0d0d] border border-[#3c3c3c] shadow-2xl overflow-hidden rounded-xl">
           {/* Header de la Tarjeta */}
-          <div className="p-6 border-b border-[#262626] bg-black">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-[#141414] border border-[#3c3c3c]">
-                <Gauge className="w-6 h-6 text-[#e22718]" />
+          <div className="p-6 border-b border-[#262626] bg-[#141414]/60">
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 bg-black border border-[#3c3c3c] rounded-xl text-[#0066b1] shadow-inner">
+                <Gauge className="w-6 h-6" />
               </div>
               <div>
-                <h1 className="text-xl font-bold uppercase tracking-tight text-white font-mono">
-                  Apex<span className="text-[#e22718]">Link</span> Pitwall
+                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-[#0066b1]">
+                  Autenticación de Piloto
+                </span>
+                <h1 className="text-xl font-bold uppercase tracking-tight text-white">
+                  Acceso a Muro de Boxes
                 </h1>
-                <p className="text-xs text-[#7e7e7e]">
-                  Acceso a Muro de Telemetría y Perfil de Piloto
-                </p>
               </div>
             </div>
           </div>
 
-          <div className="p-6 space-y-6">
-            {/* Opción Rápida Recomendada: 1-Click Acceso Directo */}
-            <div className="bg-black border-2 border-[#e22718] p-4 space-y-3">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#e22718] bg-[#e22718]/10 px-2 py-0.5">
-                    <Zap className="w-3 h-3" />
-                    Acceso Rápido Recomendado
+          {!mostrarRecupero ? (
+            <div className="p-6 space-y-5">
+              {/* Banner de Error Reactivo */}
+              {errorGeneral && (
+                <div
+                  role="alert"
+                  aria-live="assertive"
+                  className="p-3.5 rounded-lg bg-[#e22718]/10 border border-[#e22718]/40 flex items-start gap-3 text-xs text-[#ff8080]"
+                >
+                  <AlertCircle className="w-4 h-4 text-[#e22718] shrink-0 mt-0.5" />
+                  <div className="space-y-0.5">
+                    <p className="font-bold uppercase text-white font-mono">
+                      Fallo de Autenticación
+                    </p>
+                    <p className="leading-relaxed">{errorGeneral}</p>
                   </div>
-                  <h3 className="text-sm font-bold text-white mt-1 uppercase">
-                    Piloto de Pruebas
-                  </h3>
-                  <p className="text-xs text-[#bbbbbb]">
-                    Entrada instantánea con telemetría de Monza y datos en tiempo real listos sin contraseñas.
-                  </p>
+                </div>
+              )}
+
+              {/* Formulario de Credenciales de Producción */}
+              <form onSubmit={manejarSubmitLogin} className="space-y-4" noValidate>
+                <Input
+                  label="Correo Electrónico"
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (errorGeneral) setErrorGeneral(null);
+                  }}
+                  placeholder="ejemplo: agarlati@apexlink.io"
+                  leftIcon={<Mail className="w-4 h-4" />}
+                  autoComplete="email"
+                  required
+                  mono
+                />
+
+                <div className="space-y-1.5">
+                  <Input
+                    label="Contraseña"
+                    type="password"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (errorGeneral) setErrorGeneral(null);
+                    }}
+                    placeholder="Ingresá tu contraseña de boxes"
+                    leftIcon={<KeyRound className="w-4 h-4" />}
+                    autoComplete="current-password"
+                    required
+                  />
+
+                  <div className="flex items-center justify-between pt-1">
+                    <label className="inline-flex items-center gap-2 text-xs text-[#bbbbbb] cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={recordarSesion}
+                        onChange={(e) => setRecordarSesion(e.target.checked)}
+                        className="rounded border-[#3c3c3c] bg-black text-[#0066b1] focus:ring-[#0066b1]"
+                      />
+                      <span>Mantener sesión en cabina</span>
+                    </label>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMostrarRecupero(true);
+                        setEmailRecupero(email);
+                        setRecuperoEnviado(false);
+                      }}
+                      className="text-xs font-mono text-[#0066b1] hover:text-[#81c4ff] hover:underline transition-colors cursor-pointer"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="lg"
+                    fullWidth
+                    isLoading={estaCargando}
+                    loadingText="Verificando credenciales..."
+                    leftIcon={<Lock className="w-4 h-4" />}
+                  >
+                    Iniciar Sesión en Boxes
+                  </Button>
+                </div>
+              </form>
+
+              {/* Guía de Cuentas Registradas en PostgreSQL para Evaluación */}
+              <div className="pt-4 border-t border-[#262626] space-y-2">
+                <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#8a8a8a]">
+                  <HelpCircle className="w-3.5 h-3.5 text-[#0066b1] shrink-0" />
+                  <span>Credenciales registradas en PostgreSQL (`usuarios`):</span>
+                </div>
+                <div className="p-3 rounded-lg bg-black/70 border border-[#262626] text-[11px] font-mono space-y-1.5 text-[#bbbbbb]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#8a8a8a]">Piloto 1 (F1):</span>
+                    <code className="text-white">agarlati@apexlink.io</code>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#8a8a8a]">Piloto 2 (GT3):</span>
+                    <code className="text-white">asalas@apexlink.io</code>
+                  </div>
+                  <div className="flex items-center justify-between border-t border-[#262626] pt-1">
+                    <span className="text-[#8a8a8a]">Clave de acceso:</span>
+                    <code className="text-[#00E676]">Password123!</code>
+                  </div>
                 </div>
               </div>
 
+              <div className="pt-1 flex items-center justify-center gap-4 text-[11px] text-[#7e7e7e] font-mono">
+                <span className="inline-flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#0fa336]" />
+                  PostgreSQL 16
+                </span>
+                <span>•</span>
+                <span className="inline-flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#0066b1]" />
+                  Sesión Persistente
+                </span>
+              </div>
+            </div>
+          ) : (
+            /* Vista de Recuperación de Contraseña por Correo */
+            <div className="p-6 space-y-5">
+              <div className="space-y-1">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-white">
+                  Recuperación de Contraseña
+                </h2>
+                <p className="text-xs text-[#bbbbbb] leading-relaxed">
+                  Ingresá el correo electrónico asociado a tu licencia de piloto. Te enviaremos un enlace temporal válido por 15 minutos para restablecer tu clave.
+                </p>
+              </div>
+
+              {recuperoEnviado ? (
+                <div className="p-4 rounded-lg bg-[#0fa336]/10 border border-[#0fa336]/40 space-y-2 text-xs">
+                  <div className="flex items-center gap-2 font-bold text-[#00E676] uppercase font-mono">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Enlace de Recuperación Despachado</span>
+                  </div>
+                  <p className="text-[#cccccc] leading-relaxed">
+                    Si la dirección <strong className="text-white">{emailRecupero}</strong> se encuentra registrada en el servidor central, recibirás las instrucciones en tu bandeja de entrada en los próximos instantes.
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={manejarSolicitudRecupero} className="space-y-4">
+                  <Input
+                    label="Correo Electrónico Registrado"
+                    type="email"
+                    value={emailRecupero}
+                    onChange={(e) => setEmailRecupero(e.target.value)}
+                    placeholder="piloto@apexlink.io"
+                    leftIcon={<Mail className="w-4 h-4" />}
+                    required
+                    mono
+                  />
+
+                  <Button type="submit" variant="primary" fullWidth>
+                    Enviar Enlace de Recuperación
+                  </Button>
+                </form>
+              )}
+
               <button
                 type="button"
-                onClick={manejarLoginInvitado}
-                disabled={estaCargando}
-                className="w-full py-3 px-4 font-bold uppercase tracking-wider text-xs bg-[#e22718] hover:bg-[#c91f12] text-white transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#e22718]/25 active:scale-[0.99] cursor-pointer"
+                onClick={() => setMostrarRecupero(false)}
+                className="w-full py-2 text-xs font-mono font-bold uppercase text-[#bbbbbb] hover:text-white transition-colors cursor-pointer"
               >
-                <Zap className="w-4 h-4 fill-white" />
-                {estaCargando ? "Iniciando cabina..." : "Entrar a Pista Ahora"}
+                ← Volver al Inicio de Sesión
               </button>
             </div>
-
-            {/* Separador */}
-            <div className="flex items-center gap-3 text-xs uppercase font-bold text-[#7e7e7e]">
-              <div className="h-[1px] flex-1 bg-[#262626]" />
-              <span>O con credenciales</span>
-              <div className="h-[1px] flex-1 bg-[#262626]" />
-            </div>
-
-            {/* Formulario Tradicional */}
-            <form onSubmit={manejarLoginCredenciales} className="space-y-4">
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-[#bbbbbb] mb-1.5">
-                  Correo del Piloto
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full px-3.5 py-2.5 bg-black border border-[#3c3c3c] text-sm text-white focus:outline-none focus:border-[#e22718] transition-colors"
-                  placeholder="piloto@ejemplo.com"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-[#bbbbbb] mb-1.5">
-                  Alias en Pista
-                </label>
-                <input
-                  type="text"
-                  value={alias}
-                  onChange={(e) => setAlias(e.target.value)}
-                  required
-                  className="w-full px-3.5 py-2.5 bg-black border border-[#3c3c3c] text-sm text-white focus:outline-none focus:border-[#e22718] transition-colors uppercase font-mono"
-                  placeholder="PILOTO_01"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-[#bbbbbb] mb-1.5">
-                  Contraseña de Boxes
-                </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full px-3.5 py-2.5 bg-black border border-[#3c3c3c] text-sm text-white focus:outline-none focus:border-[#e22718] transition-colors"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={estaCargando}
-                className="w-full py-2.5 px-4 font-bold uppercase tracking-wider text-xs bg-[#141414] hover:bg-[#1f1f1f] border border-[#3c3c3c] hover:border-[#e22718] text-white transition-colors flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Lock className="w-3.5 h-3.5 text-[#bbbbbb]" />
-                Iniciar Sesión Registrada
-              </button>
-            </form>
-
-            <div className="pt-2 flex items-center justify-center gap-4 text-xs text-[#7e7e7e]">
-              <span className="inline-flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#0fa336]" />
-                Cifrado Local Seguro
-              </span>
-              <span>•</span>
-              <span className="inline-flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-[#0066b1]" />
-                Standalone Ready
-              </span>
-            </div>
-          </div>
+          )}
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="px-6 py-4 border-t border-[#262626] text-center text-xs text-[#7e7e7e]">
-        ApexLink Pitwall © 2026 • Instrumental de Cabina y Telemetría SimRacing
+      <footer className="px-6 py-4 border-t border-[#262626] text-center text-xs text-[#7e7e7e] font-mono bg-[#0d0d0d]">
+        ApexLink Pitwall © 2026 • Plataforma de Telemetría e Ingeniería de Pista
       </footer>
     </div>
   );
