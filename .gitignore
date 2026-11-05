@@ -54,3 +54,5 @@ Thumbs.db
 sdk/
  
 .superpowers/
+.agents/
+skills-lock.json
