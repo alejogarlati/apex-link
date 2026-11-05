@@ -14,6 +14,7 @@ import {
   User,
   Trophy,
   Settings,
+  Cpu,
   Menu,
   X,
   ChevronRight,
@@ -28,64 +29,104 @@ import { UserNavDropdown } from "@/components/layout/UserNavDropdown";
 import { useToast } from "@/context/ToastContext";
 import { Skeleton } from "@/components/ui/Skeleton";
 
-const ENLACES_NAVEGACION = [
+interface EnlaceNav {
+  href: string;
+  etiqueta: string;
+  icono: React.ComponentType<{ className?: string }>;
+  descripcion: string;
+  destacado?: boolean;
+}
+
+interface GrupoNav {
+  id: string;
+  titulo: string;
+  enlaces: EnlaceNav[];
+}
+
+const GRUPOS_NAVEGACION: GrupoNav[] = [
   {
-    href: "/app",
-    etiqueta: "Dashboard & AI Coach",
-    icono: Gauge,
-    descripcion: "Resumen y diagnóstico",
+    id: "live-telemetria",
+    titulo: "Telemetría & En Vivo",
+    enlaces: [
+      {
+        href: "/app",
+        etiqueta: "Dashboard & AI Coach",
+        icono: Gauge,
+        descripcion: "Resumen y diagnóstico",
+      },
+      {
+        href: "/app/live",
+        etiqueta: "Pitwall en Vivo",
+        icono: Radio,
+        descripcion: "Telemetría en tiempo real @ 60 Hz",
+        destacado: true,
+      },
+      {
+        href: "/app/analysis",
+        etiqueta: "Laboratorio Analítico 2D",
+        icono: LineChart,
+        descripcion: "Telemetría y trazada",
+        destacado: true,
+      },
+      {
+        href: "/app/sessions",
+        etiqueta: "Historial de Tandas",
+        icono: FolderClock,
+        descripcion: "Vueltas guardadas",
+      },
+    ],
   },
   {
-    href: "/app/live",
-    etiqueta: "Live Pitwall @ 60 Hz",
-    icono: Radio,
-    descripcion: "Telemetría en tiempo real",
-    destacado: true,
+    id: "simulador-pista",
+    titulo: "Simulador & Pista",
+    enlaces: [
+      {
+        href: "/app/garaje",
+        etiqueta: "Garaje Virtual",
+        icono: Car,
+        descripcion: "Flota de monoplazas",
+      },
+      {
+        href: "/app/circuitos",
+        etiqueta: "Circuitos & Tiempos",
+        icono: MapPin,
+        descripcion: "Monza y récords",
+      },
+      {
+        href: "/hub",
+        etiqueta: "Enlace de Simulador",
+        icono: Cpu,
+        descripcion: "Assetto Corsa y Win32 MMF",
+      },
+    ],
   },
   {
-    href: "/app/analysis",
-    etiqueta: "Laboratorio Analítico 2D",
-    icono: LineChart,
-    descripcion: "Telemetría y trazada",
-    destacado: true,
-  },
-  {
-    href: "/app/sessions",
-    etiqueta: "Historial de Tandas",
-    icono: FolderClock,
-    descripcion: "Vueltas guardadas",
-  },
-  {
-    href: "/app/circuitos",
-    etiqueta: "Circuitos & Tiempos",
-    icono: MapPin,
-    descripcion: "Monza y récords",
-  },
-  {
-    href: "/app/garaje",
-    etiqueta: "Garaje Virtual",
-    icono: Car,
-    descripcion: "Flota de monoplazas",
-  },
-  {
-    href: "/app/perfil",
-    etiqueta: "Perfil & Rating",
-    icono: User,
-    descripcion: "Apex Rating y trofeos",
-  },
-  {
-    href: "/app/leaderboards",
-    etiqueta: "Tabla de Récords",
-    icono: Trophy,
-    descripcion: "Clasificación y deltas",
-  },
-  {
-    href: "/app/ajustes",
-    etiqueta: "Ajustes de Boxes",
-    icono: Settings,
-    descripcion: "Configuración y red",
+    id: "piloto-cuenta",
+    titulo: "Piloto & Ajustes",
+    enlaces: [
+      {
+        href: "/app/perfil",
+        etiqueta: "Perfil & Rating",
+        icono: User,
+        descripcion: "Apex Rating y trofeos",
+      },
+      {
+        href: "/app/leaderboards",
+        etiqueta: "Tabla de Récords",
+        icono: Trophy,
+        descripcion: "Clasificación y deltas",
+      },
+      {
+        href: "/app/ajustes",
+        etiqueta: "Ajustes de Boxes",
+        icono: Settings,
+        descripcion: "Configuración y red",
+      },
+    ],
   },
 ];
+
+const TODOS_LOS_ENLACES = GRUPOS_NAVEGACION.flatMap((g) => g.enlaces);
 
 export default function LayoutAppBoxes({
   children,
@@ -128,7 +169,10 @@ export default function LayoutAppBoxes({
     router.replace("/login");
   };
 
-  const enlaceActivo = ENLACES_NAVEGACION.find((e) => e.href === pathname);
+  const enlaceActivo = TODOS_LOS_ENLACES.find((e) => e.href === pathname);
+  const grupoActivo = GRUPOS_NAVEGACION.find((g) =>
+    g.enlaces.some((e) => e.href === pathname)
+  );
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col selection:bg-[#0066b1]">
@@ -175,7 +219,7 @@ export default function LayoutAppBoxes({
           {/* Breadcrumb de Orientación */}
           {enlaceActivo && (
             <div className="hidden lg:flex items-center gap-2 pl-3 border-l border-[#262626] text-xs font-mono text-[#8a8a8a]">
-              <span>Boxes</span>
+              <span>{grupoActivo?.titulo ?? "Boxes"}</span>
               <ChevronRight className="w-3.5 h-3.5 text-[#525252]" />
               <span className="text-white font-bold">{enlaceActivo.etiqueta}</span>
             </div>
@@ -219,61 +263,70 @@ export default function LayoutAppBoxes({
             sidebarAbierto ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="p-4 space-y-1 overflow-y-auto">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-[#7e7e7e] px-3 py-2 font-mono">
-              Boxes & Telemetría
-            </div>
+          <div className="p-3.5 space-y-4 overflow-y-auto">
+            {GRUPOS_NAVEGACION.map((grupo, indiceGrupo) => (
+              <div key={grupo.id} className="space-y-1">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-[#737373] px-3 py-1 font-mono">
+                  {grupo.titulo}
+                </div>
 
-            {ENLACES_NAVEGACION.map((enlace) => {
-              const Icono = enlace.icono;
-              const activo = pathname === enlace.href;
+                <div className="space-y-0.5">
+                  {grupo.enlaces.map((enlace) => {
+                    const Icono = enlace.icono;
+                    const activo = pathname === enlace.href;
 
-              return (
-                <Link
-                  key={enlace.href}
-                  href={enlace.href}
-                  aria-current={activo ? "page" : undefined}
-                  onClick={() => setSidebarAbierto(false)}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition-all group outline-none focus-visible:ring-2 focus-visible:ring-[#0066b1] ${
-                    activo
-                      ? "bg-[#0066b1] text-white shadow-lg shadow-[#0066b1]/20"
-                      : "text-[#bbbbbb] hover:text-white hover:bg-[#1a1a1a]"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Icono
-                      className={`w-4 h-4 ${
-                        activo
-                          ? "text-white"
-                          : enlace.destacado
-                          ? "text-[#0066b1]"
-                          : "text-[#7e7e7e] group-hover:text-white"
-                      }`}
-                    />
-                    <span>{enlace.etiqueta}</span>
-                  </div>
-                </Link>
-              );
-            })}
+                    return (
+                      <Link
+                        key={enlace.href}
+                        href={enlace.href}
+                        aria-current={activo ? "page" : undefined}
+                        onClick={() => setSidebarAbierto(false)}
+                        className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all group outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1] ${
+                          activo
+                            ? "bg-[#0066b1] text-white shadow-sm shadow-[#0066b1]/30"
+                            : "text-[#a3a3a3] hover:text-white hover:bg-[#18181b]"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <Icono
+                            className={`w-4 h-4 shrink-0 transition-colors ${
+                              activo
+                                ? "text-white"
+                                : enlace.destacado
+                                ? "text-[#0066b1] group-hover:text-white"
+                                : "text-[#737373] group-hover:text-white"
+                            }`}
+                          />
+                          <span className="truncate">{enlace.etiqueta}</span>
+                        </div>
 
-            <div className="pt-4 border-t border-[#262626] mt-4">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-[#7e7e7e] px-3 py-2 font-mono">
-                Entorno
+                        {enlace.href === "/app/live" && (
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                              activo ? "bg-white" : "bg-[#00E676] animate-pulse"
+                            }`}
+                            title="Canal en vivo @ 60 Hz"
+                          />
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {indiceGrupo < GRUPOS_NAVEGACION.length - 1 && (
+                  <div className="pt-2 border-b border-[#1f1f22]" />
+                )}
               </div>
-              <Link
-                href="/hub"
-                className="flex items-center justify-between px-3 py-2 rounded-lg text-xs text-[#bbbbbb] hover:text-white hover:bg-[#1a1a1a] transition-colors"
-              >
-                <span>Estado de Enlace Sim</span>
-                <ChevronRight className="w-3.5 h-3.5 text-[#7e7e7e]" />
-              </Link>
-            </div>
+            ))}
           </div>
 
           {/* Footer de Versión en Sidebar */}
-          <div className="p-4 border-t border-[#262626] bg-black/60 text-[11px] text-[#7e7e7e] font-mono">
-            <div className="font-bold text-[#bbbbbb]">ApexLink Pitwall v2.4</div>
-            <div className="text-[10px] text-[#666666] mt-0.5">
+          <div className="p-3.5 border-t border-[#262626] bg-black/60 text-[11px] text-[#7e7e7e] font-mono">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-[#bbbbbb]">ApexLink Pitwall</span>
+              <span className="text-[10px] text-[#666666]">v2.4</span>
+            </div>
+            <div className="text-[10px] text-[#666666] mt-0.5 truncate">
               Licencia: {usuario.alias}
             </div>
           </div>
