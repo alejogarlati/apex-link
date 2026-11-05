@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -19,8 +19,9 @@ import { useLiveTelemetryWebSocket } from "@/hooks/useLiveTelemetryWebSocket";
 import { PedalTelemetryBars } from "@/components/live/PedalTelemetryBars";
 import { KammFrictionCircle } from "@/components/live/KammFrictionCircle";
 import { TyreThermalsMatrix } from "@/components/live/TyreThermalsMatrix";
-import { LiveTrackCanvas2D } from "@/components/live/LiveTrackCanvas2D";
+import { MapaCircuitoCanvas } from "@/components/analisis/MapaCircuitoCanvas";
 import { LiveLapTimesList, type VueltaRegistrada } from "@/components/live/LiveLapTimesList";
+import { generarTelemetriaMonza } from "@/lib/mockTelemetria";
 import { solicitarPost } from "@/lib/apiClient";
 import type { EstadoMockDto } from "@/types/api";
 
@@ -162,6 +163,10 @@ export default function PaginaLivePitwall() {
   const deltaColor = deltaNegativo ? "text-[#0fa336]" : "text-[#e22718]";
   const deltaFondo = deltaNegativo ? "bg-[#0fa336]/10" : "bg-[#e22718]/10";
   const deltaBorde = deltaNegativo ? "border-[#0fa336]/30" : "border-[#e22718]/30";
+
+  const muestrasMonza = useMemo(() => generarTelemetriaMonza(1.0), []);
+  const longitudCircuito = 5793;
+  const distanciaEstimada = (timing.lapProgress || 0) * longitudCircuito;
 
   return (
     <div className="space-y-6 max-w-[1700px] mx-auto">
@@ -311,15 +316,23 @@ export default function PaginaLivePitwall() {
           </div>
         </div>
 
-        {/* COLUMNA DERECHA (50% Ancho hacia la derecha: Canvas 2D + Tiempos de Vuelta) */}
+        {/* COLUMNA DERECHA (50% Ancho hacia la derecha: Canvas 2D del Laboratorio Analítico + Tiempos de Vuelta) */}
         <div className="space-y-6">
-          {/* Canvas 2D como Sección Principal */}
-          <LiveTrackCanvas2D
-            timing={timing}
-            dynamics={dinamicas}
-            auto={auto}
-            trackName="Autodromo Nazionale Monza"
-          />
+          {/* Canvas 2D del Laboratorio Analítico como Sección Principal */}
+          <div className="border border-[#222225] rounded-xl overflow-hidden bg-[#09090b]">
+            <MapaCircuitoCanvas
+              muestras={muestrasMonza}
+              distanciaSeleccionada={distanciaEstimada}
+              nombreCircuito="Autodromo Nazionale Monza"
+              longitudMetros={longitudCircuito}
+              vueltaAInfo={{
+                ranura: "A",
+                numeroVuelta: timing.currentLap,
+                tiempoVueltaStr: timing.lapTimeStr,
+              }}
+              circuitoInicial="monza"
+            />
+          </div>
 
           {/* Debajo, Lista de Tiempos de Vuelta */}
           <LiveLapTimesList
