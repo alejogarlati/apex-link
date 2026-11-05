@@ -97,16 +97,10 @@ export default function PaginaLivePitwall() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* 1. Header con Telemetría en Vivo e Indicador de Estado */}
+      {/* 1. Header con Telemetría en Vivo e Indicador de Estado (Sin cards de fondo en items) */}
       <div className="surface-specular p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
         <div className="flex items-center gap-4">
-          <div
-            className={`p-3 rounded-xl border ${
-              conectado
-                ? "bg-[#0fa336]/10 border-[#0fa336]/30 text-[#0fa336]"
-                : "bg-[#e22718]/10 border-[#e22718]/30 text-[#e22718]"
-            }`}
-          >
+          <div className={conectado ? "text-[#0fa336]" : "text-[#e22718]"}>
             <Radio className={`w-6 h-6 ${conectado ? "animate-pulse" : ""}`} />
           </div>
 
@@ -133,12 +127,12 @@ export default function PaginaLivePitwall() {
           </div>
         </div>
 
-        {/* Panel derecho: Ping, Contador y Conmutador Mock */}
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          <div className="flex items-center gap-3 px-3 py-1.5 bg-black/60 rounded-xl border border-white/10 text-xs font-mono">
+        {/* Panel derecho: Ping, Contador y Conmutador Mock (Sin cards de fondo) */}
+        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+          <div className="flex items-center gap-3 text-xs font-mono">
             <span className="text-[#7e7e7e]">Ping:</span>
             <span className="text-white font-bold">{latenciaMs} ms</span>
-            <span className="text-[#7e7e7e]">|</span>
+            <span className="text-[#3c3c3c]">|</span>
             <span className="text-[#7e7e7e]">Cuadros:</span>
             <span className="text-[#0066b1] font-bold">{totalCuadrosRecibidos}</span>
           </div>
@@ -146,7 +140,7 @@ export default function PaginaLivePitwall() {
           <button
             onClick={manejarAlternarMock}
             disabled={conmutandoMock}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-bold font-mono uppercase bg-black/60 hover:bg-black/90 border border-white/10 text-white transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            className="px-3.5 py-1.5 rounded-lg text-xs font-bold font-mono uppercase border border-white/15 hover:border-white/30 hover:bg-white/[0.04] text-white transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
           >
             <Zap className="w-3.5 h-3.5 text-[#f4b400]" />
             {conmutandoMock ? "Conmutando..." : "Alternar Mock"}
@@ -155,7 +149,7 @@ export default function PaginaLivePitwall() {
           {!conectado && (
             <button
               onClick={reconectar}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold font-mono uppercase bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-1.5 rounded-lg text-xs font-bold font-mono uppercase bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-[#0066b1]/20"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               Reconectar
@@ -168,9 +162,7 @@ export default function PaginaLivePitwall() {
       {ultimoEventoVuelta && (
         <div className="p-4 surface-specular flex items-center justify-between shadow-lg">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-[#0066b1]/15 text-[#0066b1] border border-[#0066b1]/30">
-              <Trophy className="w-5 h-5" />
-            </div>
+            <Trophy className="w-6 h-6 text-[#f4b400] shrink-0" />
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#0066b1] font-mono">
                 {ultimoEventoVuelta.isPersonalBest ? "¡Récord Personal (PB)!" : "Vuelta Completada"}
@@ -191,10 +183,10 @@ export default function PaginaLivePitwall() {
         </div>
       )}
 
-      {/* 3. Instrumental Superior: Velocímetro, Tacómetro, Marcha y Delta */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      {/* 3. Instrumental Superior Unificado (Sin cards de fondo individuales en cada métrica) */}
+      <div className="surface-specular p-5 shadow-xl grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-0 md:divide-x md:divide-white/[0.06]">
         {/* Velocímetro */}
-        <div className="surface-specular p-4 shadow-sm">
+        <div className="md:pr-5">
           <span className="text-[10px] uppercase font-bold text-[#7e7e7e] font-mono tracking-wider">Velocidad</span>
           <div className="text-3xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
             {auto.speedKmh.toFixed(0)}
@@ -203,15 +195,15 @@ export default function PaginaLivePitwall() {
         </div>
 
         {/* Marcha */}
-        <div className="surface-specular p-4 flex flex-col justify-between shadow-sm">
+        <div className="md:px-5">
           <span className="text-[10px] uppercase font-bold text-[#7e7e7e] font-mono tracking-wider">Marcha</span>
-          <div className="text-3xl font-bold font-mono text-[#0066b1] tabular-nums tracking-tight">
+          <div className="text-3xl font-bold font-mono text-[#0066b1] mt-1 tabular-nums tracking-tight">
             {auto.gear === -1 ? "R" : auto.gear === 0 ? "N" : auto.gear}
           </div>
         </div>
 
         {/* Tacómetro / RPM */}
-        <div className="surface-specular p-4 shadow-sm">
+        <div className="md:px-5">
           <span className="text-[10px] uppercase font-bold text-[#7e7e7e] font-mono tracking-wider">Régimen de Giro</span>
           <div className="text-3xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
             {auto.rpms.toLocaleString("es-AR")}
@@ -220,7 +212,7 @@ export default function PaginaLivePitwall() {
         </div>
 
         {/* Cronómetro Actual */}
-        <div className="surface-specular p-4 shadow-sm">
+        <div className="md:px-5">
           <span className="text-[10px] uppercase font-bold text-[#7e7e7e] font-mono tracking-wider">Vuelta {timing.currentLap}</span>
           <div className="text-2xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
             {timing.lapTimeStr}
@@ -228,7 +220,7 @@ export default function PaginaLivePitwall() {
         </div>
 
         {/* Delta Time */}
-        <div className={`col-span-2 md:col-span-1 rounded-xl p-4 border ${deltaFondo} ${deltaBorde} shadow-sm`}>
+        <div className="col-span-2 md:col-span-1 md:pl-5">
           <span className="text-[10px] uppercase font-bold text-[#7e7e7e] font-mono tracking-wider">Delta vs Récord</span>
           <div className={`text-2xl font-bold font-mono mt-1 ${deltaColor} tabular-nums tracking-tight`}>
             {deltaNegativo ? deltaStr : `+${deltaStr}`} s

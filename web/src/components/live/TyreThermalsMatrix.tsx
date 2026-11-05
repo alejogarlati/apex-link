@@ -53,7 +53,7 @@ export function TyreThermalsMatrix({ tyres }: TyreThermalsMatrixProps) {
           return (
             <div
               key={clave}
-              className={`p-3 rounded border flex flex-col justify-between transition-colors ${estiloTemp.fondo} ${estiloTemp.borde}`}
+              className="p-2.5 flex flex-col justify-between"
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-white uppercase font-mono">{clave}</span>

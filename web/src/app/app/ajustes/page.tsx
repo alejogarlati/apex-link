@@ -79,7 +79,7 @@ export default function PaginaAjustes() {
                 type="text"
                 value={servidorUrl}
                 onChange={(e) => setServidorUrl(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-black/60 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-[#0066b1] focus:ring-1 focus:ring-[#0066b1] transition-all"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-transparent border border-white/15 text-xs font-mono text-white focus:outline-none focus:border-[#0066b1] focus:bg-white/[0.02] transition-all"
               />
             </div>
 
@@ -91,7 +91,7 @@ export default function PaginaAjustes() {
                 type="text"
                 value={wsUrl}
                 onChange={(e) => setWsUrl(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-black/60 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-[#0066b1] focus:ring-1 focus:ring-[#0066b1] transition-all"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-transparent border border-white/15 text-xs font-mono text-white focus:outline-none focus:border-[#0066b1] focus:bg-white/[0.02] transition-all"
               />
             </div>
           </div>

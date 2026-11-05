@@ -162,7 +162,7 @@ function Tarjeta({
 
 function DatoPiloto({ icono: Icono, etiqueta, valor }: { icono: LucideIcon; etiqueta: string; valor: string }) {
   return (
-    <div className="flex items-center gap-3 border border-[#3c3c3c] bg-[#262626] px-3 py-2">
+    <div className="flex items-center gap-3 py-1.5 px-0">
       <Icono className="h-4 w-4 shrink-0 text-[#8a8a8a]" aria-hidden />
       <div className="flex min-w-0 flex-col">
         <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#8a8a8a]">
