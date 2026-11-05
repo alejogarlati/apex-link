@@ -155,7 +155,7 @@ export default function PaginaDashboardBoxes() {
       {/* Banner de Bienvenida y Diagnóstico Rápido */}
       <div className="surface-specular p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-xl">
         <div className="flex items-start gap-4">
-          <div className="p-3 bg-black/60 border border-white/10 rounded-xl text-[#0066b1]">
+          <div className="text-[#0066b1] pt-1">
             <Gauge className="w-8 h-8" />
           </div>
           <div>
@@ -184,7 +184,7 @@ export default function PaginaDashboardBoxes() {
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           <Link
             href="/app/live"
-            className="w-full sm:w-auto px-5 py-2.5 rounded-lg font-bold uppercase tracking-wider text-xs bg-black/60 hover:bg-black/90 border border-white/10 hover:border-[#0066b1] text-white transition-all flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1]"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-lg font-bold uppercase tracking-wider text-xs border border-white/15 hover:border-white/30 hover:bg-white/[0.04] text-white transition-all flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1]"
           >
             <Radio className="w-4 h-4 text-[#00E676] animate-pulse" />
             Live Pitwall @ 60 Hz
@@ -219,51 +219,51 @@ export default function PaginaDashboardBoxes() {
             </div>
 
             {cargando ? (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-6">
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 py-6 border-b border-white/[0.06]">
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-6">
-                <div className="bg-black/50 border border-white/[0.06] p-3.5 rounded-xl">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 py-6 border-b border-white/[0.06]">
+                <div>
                   <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#7e7e7e]">
                     <span>Mejor Vuelta (PB)</span>
                     <Tooltip content="Mejor tiempo oficial de vuelta válida registrado en la sesión." />
                   </div>
-                  <div className="text-xl font-bold font-mono text-[#00E676] mt-1 tabular-nums tracking-tight">
+                  <div className="text-2xl font-bold font-mono text-[#00E676] mt-1 tabular-nums tracking-tight">
                     {formatearTiempoMs(mejorVueltaMs)}
                   </div>
                 </div>
 
-                <div className="bg-black/50 border border-white/[0.06] p-3.5 rounded-xl">
+                <div>
                   <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#7e7e7e]">
                     <span>Vuelta Óptima</span>
                     <Tooltip content="Suma teórica de los 3 mejores sectores individuales del piloto en la tanda." />
                   </div>
-                  <div className="text-xl font-bold font-mono text-[#0066b1] mt-1 tabular-nums tracking-tight">
+                  <div className="text-2xl font-bold font-mono text-[#0066b1] mt-1 tabular-nums tracking-tight">
                     {tiempoIdealStr}
                   </div>
                   <div className="text-[10px] text-[#0066b1] mt-0.5 font-mono tabular-nums">Delta: {deltaIdealStr}</div>
                 </div>
 
-                <div className="bg-black/50 border border-white/[0.06] p-3.5 rounded-xl">
+                <div>
                   <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#7e7e7e]">
                     <span>Top Speed</span>
                     <Tooltip content="Velocidad máxima alcanzada antes del punto de frenada." />
                   </div>
-                  <div className="text-xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
+                  <div className="text-2xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
                     {esGarlati ? "348.5" : "284.2"} <span className="text-xs text-[#7e7e7e] font-normal">km/h</span>
                   </div>
                 </div>
 
-                <div className="bg-black/50 border border-white/[0.06] p-3.5 rounded-xl">
+                <div>
                   <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#7e7e7e]">
                     <span>Consistencia</span>
                     <Tooltip content="Porcentaje de vueltas limpias con baja dispersión." />
                   </div>
-                  <div className="text-xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
+                  <div className="text-2xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
                     {consistenciaStr}
                   </div>
                   <div className="text-[10px] text-[#0fa336] mt-0.5 font-mono">{vueltasValidasStr}</div>
@@ -354,12 +354,10 @@ export default function PaginaDashboardBoxes() {
         </Link>
       </div>
 
-      {/* AI Race Coach: Diagnóstico Heurístico de Telemetría */}
+      {/* AI Race Coach: Diagnóstico Heurístico de Telemetría (Sin cards de fondo internas) */}
       <div className="surface-specular p-6 shadow-xl">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2.5 rounded-xl bg-black/60 border border-white/10 text-[#f4b400]">
-            <Lightbulb className="w-5 h-5" />
-          </div>
+        <div className="flex items-center gap-3 mb-5">
+          <Lightbulb className="w-5 h-5 text-[#f4b400]" />
           <div>
             <h3 className="text-base font-bold uppercase tracking-tight text-white">
               AI Race Coach • Diagnóstico de Telemetría
@@ -370,8 +368,8 @@ export default function PaginaDashboardBoxes() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 rounded-xl bg-black/50 border border-[#0fa336]/30">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="border-l-2 border-[#0fa336] pl-4 py-1">
             <div className="flex items-center gap-2 text-xs font-bold uppercase text-[#0fa336] mb-1.5 font-mono">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>{usuario.diagnosticoAi.puntoFuerteTitulo}</span>
@@ -381,7 +379,7 @@ export default function PaginaDashboardBoxes() {
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-black/50 border border-[#e22718]/30">
+          <div className="border-l-2 border-[#e22718] pl-4 py-1">
             <div className="flex items-center gap-2 text-xs font-bold uppercase text-[#e22718] mb-1.5 font-mono">
               <AlertTriangle className="w-4 h-4 shrink-0" />
               <span>{usuario.diagnosticoAi.oportunidadMejoraTitulo}</span>

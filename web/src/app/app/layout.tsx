@@ -216,34 +216,32 @@ export default function LayoutAppBoxes({
         <div className="h-full w-1/3 bg-[#e22718]" />
       </div>
 
-      {/* Header Superior de Mando */}
-      <header className="border-b border-[#262626] bg-[#0d0d0d] px-4 sm:px-6 py-2.5 flex items-center justify-between z-40">
-        <div className="flex items-center gap-3 sm:gap-4">
+      {/* Header Superior de Mando (Más alto, sin cards de fondo en ningún item) */}
+      <header className="border-b border-[#262626] bg-[#0d0d0d] px-6 sm:px-8 py-5 sm:py-6 min-h-[76px] sm:min-h-[82px] flex items-center justify-between z-40">
+        <div className="flex items-center gap-3 sm:gap-5">
           <button
             type="button"
             onClick={() => setSidebarAbierto(!sidebarAbierto)}
             aria-label={sidebarAbierto ? "Cerrar menú lateral" : "Abrir menú lateral"}
-            className="md:hidden p-2 rounded-lg bg-black border border-[#3c3c3c] text-white cursor-pointer"
+            className="md:hidden p-2 text-white hover:text-white/80 cursor-pointer"
           >
             {sidebarAbierto ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
-          <Link href="/app" className="flex items-center gap-2.5 sm:gap-3 group">
-            <div className="flex items-center px-2 py-1 bg-[#141414] border border-[#3c3c3c] group-hover:border-[#0066b1] rounded-lg transition-colors">
-              <Image
-                src="/logos/logo.webp"
-                alt="ApexLink"
-                width={95}
-                height={20}
-                className="h-4 sm:h-5 w-auto object-contain"
-                priority
-              />
-            </div>
+          <Link href="/app" className="flex items-center gap-3 sm:gap-4 group">
+            <Image
+              src="/logos/logo.webp"
+              alt="ApexLink"
+              width={105}
+              height={22}
+              className="h-5 sm:h-6 w-auto object-contain"
+              priority
+            />
             <div className="hidden sm:flex flex-col">
               <span className="text-xs font-bold uppercase tracking-wider text-white font-mono leading-none">
                 Pitwall
               </span>
-              <span className="text-[9px] text-[#7e7e7e] font-mono leading-none mt-1">
+              <span className="text-[10px] text-[#7e7e7e] font-mono leading-none mt-1">
                 {usuario.vehiculoPrincipal}
               </span>
             </div>
@@ -251,7 +249,7 @@ export default function LayoutAppBoxes({
 
           {/* Breadcrumb de Orientación */}
           {enlaceActivo && (
-            <div className="hidden lg:flex items-center gap-2 pl-3 border-l border-[#262626] text-xs font-mono text-[#8a8a8a]">
+            <div className="hidden lg:flex items-center gap-2 pl-4 border-l border-[#262626] text-xs font-mono text-[#8a8a8a]">
               <span>{grupoActivo?.titulo ?? "Boxes"}</span>
               <ChevronRight className="w-3.5 h-3.5 text-[#525252]" />
               <span className="text-white font-bold">{enlaceActivo.etiqueta}</span>
@@ -259,15 +257,15 @@ export default function LayoutAppBoxes({
           )}
         </div>
 
-        {/* Estado de Telemetría y Menú Desplegable del Piloto */}
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="hidden xl:flex items-center gap-3 text-xs font-mono px-3 py-1.5 rounded-lg bg-black border border-[#262626]">
+        {/* Estado de Telemetría y Menú Desplegable del Piloto (Sin card de fondo) */}
+        <div className="flex items-center gap-4 sm:gap-6">
+          <div className="hidden xl:flex items-center gap-3 text-xs font-mono">
             <span className="flex items-center gap-1.5 text-[#00E676]">
               <span className="w-2 h-2 rounded-full bg-[#00E676] animate-pulse" />
               60 Hz Shared Memory
             </span>
             <span className="text-[#3c3c3c]">|</span>
-            <span className="text-[#bbbbbb]">&lt; 0.8 ms</span>
+            <span className="text-[#8e8e93]">&lt; 0.8 ms</span>
           </div>
 
           {/* Menú de Usuario Estándar de Producción */}
@@ -292,7 +290,7 @@ export default function LayoutAppBoxes({
         {/* Sidebar Lateral de Boxes */}
         <aside
           aria-label="Navegación principal de boxes"
-          className={`fixed inset-y-0 left-0 z-30 w-64 bg-[#0d0d0d] border-r border-[#262626] flex flex-col justify-between pt-16 md:pt-0 transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0 ${
+          className={`fixed inset-y-0 left-0 z-30 w-64 bg-[#0d0d0d] border-r border-[#262626] flex flex-col justify-between pt-20 md:pt-0 transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0 ${
             sidebarAbierto ? "translate-x-0" : "-translate-x-full"
           }`}
         >

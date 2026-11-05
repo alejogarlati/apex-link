@@ -62,7 +62,7 @@ function ContenidoLeaderboards() {
         </div>
       </div>
 
-      {/* Selector de Circuito (Pestañas) */}
+      {/* Selector de Circuito (Pestañas limpias sin cards de fondo) */}
       <div className="flex flex-wrap items-center gap-2">
         {CIRCUITOS_TABS.map((tab) => {
           const activo = circuitoActivo === tab.id;
@@ -70,10 +70,10 @@ function ContenidoLeaderboards() {
             <button
               key={tab.id}
               onClick={() => setCircuitoActivo(tab.id)}
-              className={`px-4 py-2 rounded-xl font-mono text-xs font-bold transition-all cursor-pointer border flex items-center gap-2 ${
+              className={`px-4 py-2 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
                 activo
-                  ? "bg-[#0066b1] border-[#0066b1] text-white shadow-md shadow-[#0066b1]/20"
-                  : "bg-black/60 border-white/10 text-[#bbbbbb] hover:text-white hover:bg-black/90"
+                  ? "bg-[#0066b1] text-white shadow-md shadow-[#0066b1]/20"
+                  : "text-[#8e8e93] hover:text-white hover:bg-white/[0.04]"
               }`}
             >
               <Flag className="w-3.5 h-3.5" />
@@ -88,7 +88,7 @@ function ContenidoLeaderboards() {
 
       {/* Tabla de Clasificación con Superficie Especular */}
       <div className="surface-specular overflow-hidden shadow-xl">
-        <div className="p-4 bg-black/40 border-b border-white/[0.06] flex items-center justify-between">
+        <div className="p-4 border-b border-white/[0.06] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Trophy className="w-4 h-4 text-[#f4b400]" />
             <span className="text-xs font-bold uppercase tracking-wider text-white">

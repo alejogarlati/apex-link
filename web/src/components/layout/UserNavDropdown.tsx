@@ -68,7 +68,7 @@ export function UserNavDropdown({
         aria-expanded={abierto}
         aria-haspopup="menu"
         aria-label="Menú de cuenta del piloto"
-        className="flex items-center gap-2.5 pl-2 pr-2.5 py-1.5 rounded-lg bg-[#141414] hover:bg-[#1f1f1f] border border-[#262626] hover:border-[#3c3c3c] transition-all cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#0066b1]"
+        className="flex items-center gap-3 py-1.5 px-2 rounded-lg hover:bg-white/[0.04] transition-colors cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1]"
       >
         {/* Avatar con anillo de categoría */}
         <div
