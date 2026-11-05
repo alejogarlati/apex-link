@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -78,6 +78,12 @@ export default function PaginaLivePitwall() {
   const [conmutandoMock, setConmutandoMock] = useState(false);
   const [vueltasSesion, setVueltasSesion] = useState<VueltaRegistrada[]>(VUELTAS_INICIALES_MONZA);
 
+  // Mantener la velocidad actual en ref para evitar re-ejecuciones de effect en cada frame
+  const velocidadAutoRef = useRef(frame?.car.speedKmh ?? 340);
+  useEffect(() => {
+    velocidadAutoRef.current = frame?.car.speedKmh ?? 340;
+  }, [frame?.car.speedKmh]);
+
   // Sincronizar automáticamente nuevas vueltas cruzadas por meta vía WebSocket
   useEffect(() => {
     if (!ultimoEventoVuelta) return;
@@ -94,7 +100,7 @@ export default function PaginaLivePitwall() {
         isPersonalBest: ultimoEventoVuelta.isPersonalBest,
         isValidLap: ultimoEventoVuelta.isValidLap,
         sectors: ultimoEventoVuelta.sectors,
-        topSpeedKmh: Math.round(frame?.car.speedKmh ?? 340),
+        topSpeedKmh: Math.round(velocidadAutoRef.current),
       };
 
       const listaBase = ultimoEventoVuelta.isPersonalBest
@@ -103,7 +109,7 @@ export default function PaginaLivePitwall() {
 
       return [nuevaVuelta, ...listaBase];
     });
-  }, [ultimoEventoVuelta, frame?.car.speedKmh]);
+  }, [ultimoEventoVuelta]);
 
   const manejarAlternarMock = async () => {
     try {

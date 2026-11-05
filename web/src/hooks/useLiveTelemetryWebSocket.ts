@@ -30,19 +30,42 @@ export function useLiveTelemetryWebSocket(urlWs = DEFAULT_WS_URL): LiveTelemetry
   const contadorFramesRef = useRef<number>(0);
   const intervaloFpsRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Buffer y rAF para desacoplar el flujo de frames de 60 Hz del ciclo de renderizado de React
+  const ultimoFrameRef = useRef<TelemetryFrame | null>(null);
+  const rafIdRef = useRef<number | null>(null);
+  const deltaServidorRef = useRef<number>(0);
+
+  // Mantener urlWs fija mediante ref para evitar recreaciones de conectar
+  const urlWsRef = useRef(urlWs);
+  useEffect(() => {
+    urlWsRef.current = urlWs;
+  }, [urlWs]);
+
   const conectar = useCallback(() => {
     if (typeof window === "undefined") return;
 
+    // Cancelar cualquier temporizador de reconexión pendiente
+    if (reconectarTimeoutRef.current) {
+      clearTimeout(reconectarTimeoutRef.current);
+      reconectarTimeoutRef.current = null;
+    }
+
+    // Desconectar socket previo anulando listeners para evitar disparos en bucle
     if (socketRef.current) {
       try {
+        socketRef.current.onopen = null;
+        socketRef.current.onmessage = null;
+        socketRef.current.onerror = null;
+        socketRef.current.onclose = null;
         socketRef.current.close();
       } catch {
         // Ignorar fallo al cerrar socket previo
       }
+      socketRef.current = null;
     }
 
     try {
-      const ws = new WebSocket(urlWs);
+      const ws = new WebSocket(urlWsRef.current);
       socketRef.current = ws;
 
       ws.onopen = () => {
@@ -55,18 +78,29 @@ export function useLiveTelemetryWebSocket(urlWs = DEFAULT_WS_URL): LiveTelemetry
           const ahora = Date.now();
 
           if (mensaje.type === "FRAME") {
-            setFrame(mensaje);
-            setTotalCuadros((prev) => prev + 1);
+            ultimoFrameRef.current = mensaje;
             contadorFramesRef.current += 1;
 
             if (mensaje.timestamp) {
               const deltaServidor = ahora - mensaje.timestamp;
               if (deltaServidor >= 0 && deltaServidor < 5000) {
-                setLatenciaMs(deltaServidor);
+                deltaServidorRef.current = deltaServidor;
               }
             }
 
             ultimoTimestampFrameRef.current = ahora;
+
+            // Despachar a React sincronizado con la tasa de refresco (60-144 FPS)
+            if (rafIdRef.current === null) {
+              rafIdRef.current = requestAnimationFrame(() => {
+                rafIdRef.current = null;
+                if (ultimoFrameRef.current) {
+                  setFrame(ultimoFrameRef.current);
+                  setTotalCuadros(contadorFramesRef.current);
+                  setLatenciaMs(deltaServidorRef.current);
+                }
+              });
+            }
           } else if (mensaje.type === "LAP_COMPLETED") {
             setUltimoEventoVuelta(mensaje);
           }
@@ -92,7 +126,7 @@ export function useLiveTelemetryWebSocket(urlWs = DEFAULT_WS_URL): LiveTelemetry
         conectar();
       }, 2000);
     }
-  }, [urlWs]);
+  }, []);
 
   useEffect(() => {
     conectar();
@@ -104,11 +138,19 @@ export function useLiveTelemetryWebSocket(urlWs = DEFAULT_WS_URL): LiveTelemetry
     }, 1000);
 
     return () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
       if (reconectarTimeoutRef.current) clearTimeout(reconectarTimeoutRef.current);
       if (intervaloFpsRef.current) clearInterval(intervaloFpsRef.current);
       if (socketRef.current) {
+        socketRef.current.onopen = null;
+        socketRef.current.onmessage = null;
+        socketRef.current.onerror = null;
         socketRef.current.onclose = null;
         socketRef.current.close();
+        socketRef.current = null;
       }
     };
   }, [conectar]);
