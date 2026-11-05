@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import { Trophy, RefreshCw, Flag, Car, ShieldCheck, Loader2 } from "lucide-react";
 import { obtenerLeaderboard } from "@/lib/apiClient";
 import type { LeaderboardItemDto } from "@/types/api";
-import { BotonColapsarSidebar } from "@/components/layout/BotonColapsarSidebar";
 
 const CIRCUITOS_TABS = [
   { id: "monza", nombre: "Monza GP", sub: "5.793 m" },
@@ -54,7 +53,6 @@ function ContenidoLeaderboards() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#262626] pb-4">
         <div className="flex items-start gap-3.5">
-          <BotonColapsarSidebar />
           <div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
               Tabla de Récords

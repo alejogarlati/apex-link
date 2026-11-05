@@ -21,7 +21,6 @@ import { KammFrictionCircle } from "@/components/live/KammFrictionCircle";
 import { TyreThermalsMatrix } from "@/components/live/TyreThermalsMatrix";
 import { LiveMapaCircuitoCanvas } from "@/components/live/LiveMapaCircuitoCanvas";
 import { LiveLapTimesList, type VueltaRegistrada } from "@/components/live/LiveLapTimesList";
-import { BotonColapsarSidebar } from "@/components/layout/BotonColapsarSidebar";
 import { generarTelemetriaMonza } from "@/lib/mockTelemetria";
 import { solicitarPost } from "@/lib/apiClient";
 import type { EstadoMockDto } from "@/types/api";
@@ -184,9 +183,6 @@ export default function PaginaLivePitwall() {
           {/* 1. Header con Telemetría en Vivo e Indicador de Estado */}
           <div className="pb-5 border-b border-[#222225] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
-              {/* Botón único de colapsar sidebar en la esquina superior izquierda */}
-              <BotonColapsarSidebar />
-
               <div className={conectado ? "text-[#0fa336]" : "text-[#e22718]"}>
                 <Radio className={`w-5 h-5 ${conectado ? "animate-pulse" : ""}`} />
               </div>

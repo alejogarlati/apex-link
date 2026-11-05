@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Car, Gauge, ShieldCheck, RefreshCw, Zap, ArrowRight } from "lucide-react";
 import { obtenerSesionesPaginadas } from "@/lib/apiClient";
 import type { SesionResumenDto } from "@/types/api";
-import { BotonColapsarSidebar } from "@/components/layout/BotonColapsarSidebar";
 
 interface VehiculoGaraje {
   id: string;
@@ -122,7 +121,6 @@ export default function PaginaGaraje() {
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#262626] pb-4">
         <div className="flex items-start gap-3.5">
-          <BotonColapsarSidebar />
           <div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
               Garaje Virtual
