@@ -18,6 +18,10 @@ import {
   Menu,
   X,
   ChevronRight,
+  ChevronDown,
+  Activity,
+  Gamepad2,
+  UserCircle,
 } from "lucide-react";
 import {
   obtenerSesionLocal,
@@ -40,13 +44,15 @@ interface EnlaceNav {
 interface GrupoNav {
   id: string;
   titulo: string;
+  icono: React.ComponentType<{ className?: string }>;
   enlaces: EnlaceNav[];
 }
 
 const GRUPOS_NAVEGACION: GrupoNav[] = [
   {
     id: "live-telemetria",
-    titulo: "Telemetría & En Vivo",
+    titulo: "Telemetría & Live",
+    icono: Activity,
     enlaces: [
       {
         href: "/app",
@@ -77,8 +83,9 @@ const GRUPOS_NAVEGACION: GrupoNav[] = [
     ],
   },
   {
-    id: "simulador-pista",
-    titulo: "Simulador & Pista",
+    id: "simulador-juego",
+    titulo: "Simulador & Juego",
+    icono: Gamepad2,
     enlaces: [
       {
         href: "/app/garaje",
@@ -101,8 +108,9 @@ const GRUPOS_NAVEGACION: GrupoNav[] = [
     ],
   },
   {
-    id: "piloto-cuenta",
-    titulo: "Piloto & Ajustes",
+    id: "piloto-perfil",
+    titulo: "Piloto & Perfil",
+    icono: UserCircle,
     enlaces: [
       {
         href: "/app/perfil",
@@ -138,10 +146,35 @@ export default function LayoutAppBoxes({
   const toast = useToast();
 
   const [sidebarAbierto, setSidebarAbierto] = useState(false);
+  const [gruposAbiertos, setGruposAbiertos] = useState<Record<string, boolean>>({
+    "live-telemetria": true,
+    "simulador-juego": true,
+    "piloto-perfil": true,
+  });
+
   const [usuario, setUsuario] = useState<PerfilUsuario>(() => {
     const sesion = obtenerSesionLocal();
     return sesion?.usuario ?? USUARIO_ALEJO_GARLATI;
   });
+
+  const alternarGrupo = (grupoId: string) => {
+    setGruposAbiertos((prev) => ({
+      ...prev,
+      [grupoId]: !prev[grupoId],
+    }));
+  };
+
+  useEffect(() => {
+    const grupoActivo = GRUPOS_NAVEGACION.find((g) =>
+      g.enlaces.some((e) => e.href === pathname)
+    );
+    if (grupoActivo) {
+      setGruposAbiertos((prev) => ({
+        ...prev,
+        [grupoActivo.id]: true,
+      }));
+    }
+  }, [pathname]);
 
   useEffect(() => {
     const sincronizarUsuario = () => {
@@ -263,61 +296,97 @@ export default function LayoutAppBoxes({
             sidebarAbierto ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="p-3.5 space-y-4 overflow-y-auto">
-            {GRUPOS_NAVEGACION.map((grupo, indiceGrupo) => (
-              <div key={grupo.id} className="space-y-1">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-[#737373] px-3 py-1 font-mono">
-                  {grupo.titulo}
-                </div>
+          <div className="p-3 space-y-3 overflow-y-auto">
+            {GRUPOS_NAVEGACION.map((grupo, indiceGrupo) => {
+              const IconoGrupo = grupo.icono;
+              const estaAbierto = gruposAbiertos[grupo.id] ?? true;
+              const tieneEnlaceActivo = grupo.enlaces.some((e) => e.href === pathname);
 
-                <div className="space-y-0.5">
-                  {grupo.enlaces.map((enlace) => {
-                    const Icono = enlace.icono;
-                    const activo = pathname === enlace.href;
-
-                    return (
-                      <Link
-                        key={enlace.href}
-                        href={enlace.href}
-                        aria-current={activo ? "page" : undefined}
-                        onClick={() => setSidebarAbierto(false)}
-                        className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all group outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1] ${
-                          activo
-                            ? "bg-[#0066b1] text-white shadow-sm shadow-[#0066b1]/30"
-                            : "text-[#a3a3a3] hover:text-white hover:bg-[#18181b]"
+              return (
+                <div key={grupo.id} className="space-y-1">
+                  {/* Agrupador genérico sin enrutado (dropdown toggle) */}
+                  <button
+                    type="button"
+                    onClick={() => alternarGrupo(grupo.id)}
+                    aria-expanded={estaAbierto}
+                    aria-controls={`subgrupo-${grupo.id}`}
+                    className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-mono font-bold uppercase tracking-wider transition-colors cursor-pointer select-none outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1] ${
+                      tieneEnlaceActivo
+                        ? "text-white bg-[#151518]"
+                        : "text-[#88888e] hover:text-[#e0e0e0] hover:bg-[#121214]"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <IconoGrupo
+                        className={`w-3.5 h-3.5 transition-colors ${
+                          tieneEnlaceActivo ? "text-[#0066b1]" : "text-[#5e5e66]"
                         }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <Icono
-                            className={`w-4 h-4 shrink-0 transition-colors ${
+                      />
+                      <span>{grupo.titulo}</span>
+                    </div>
+
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-[#66666e] transition-transform duration-200 ${
+                        estaAbierto ? "rotate-0" : "-rotate-90"
+                      }`}
+                    />
+                  </button>
+
+                  {/* Submenú desplegable con enlaces enrutados */}
+                  {estaAbierto && (
+                    <div
+                      id={`subgrupo-${grupo.id}`}
+                      className="space-y-0.5 pl-2 ml-2.5 border-l border-[#222226]"
+                    >
+                      {grupo.enlaces.map((enlace) => {
+                        const Icono = enlace.icono;
+                        const activo = pathname === enlace.href;
+
+                        return (
+                          <Link
+                            key={enlace.href}
+                            href={enlace.href}
+                            aria-current={activo ? "page" : undefined}
+                            onClick={() => setSidebarAbierto(false)}
+                            className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all group outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1] ${
                               activo
-                                ? "text-white"
-                                : enlace.destacado
-                                ? "text-[#0066b1] group-hover:text-white"
-                                : "text-[#737373] group-hover:text-white"
+                                ? "bg-[#0066b1] text-white shadow-xs shadow-[#0066b1]/30"
+                                : "text-[#a3a3a3] hover:text-white hover:bg-[#18181b]"
                             }`}
-                          />
-                          <span className="truncate">{enlace.etiqueta}</span>
-                        </div>
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <Icono
+                                className={`w-3.5 h-3.5 shrink-0 transition-colors ${
+                                  activo
+                                    ? "text-white"
+                                    : enlace.destacado
+                                    ? "text-[#0066b1] group-hover:text-white"
+                                    : "text-[#737373] group-hover:text-white"
+                                }`}
+                              />
+                              <span className="truncate">{enlace.etiqueta}</span>
+                            </div>
 
-                        {enlace.href === "/app/live" && (
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                              activo ? "bg-white" : "bg-[#00E676] animate-pulse"
-                            }`}
-                            title="Canal en vivo @ 60 Hz"
-                          />
-                        )}
-                      </Link>
-                    );
-                  })}
+                            {enlace.href === "/app/live" && (
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                  activo ? "bg-white" : "bg-[#00E676] animate-pulse"
+                                }`}
+                                title="Canal en vivo @ 60 Hz"
+                              />
+                            )}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {indiceGrupo < GRUPOS_NAVEGACION.length - 1 && (
+                    <div className="pt-2 border-b border-[#1c1c1f]" />
+                  )}
                 </div>
-
-                {indiceGrupo < GRUPOS_NAVEGACION.length - 1 && (
-                  <div className="pt-2 border-b border-[#1f1f22]" />
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Footer de Versión en Sidebar */}
