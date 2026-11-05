@@ -231,27 +231,46 @@ export default function LayoutAppBoxes({
   );
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col selection:bg-[#0066b1]">
-      {/* Barra Tricolor M Superior */}
-      <div className="h-1 w-full flex sticky top-0 z-50">
-        <div className="h-full w-1/3 bg-[#0066b1]" />
-        <div className="h-full w-1/3 bg-[#1c69d4]" />
-        <div className="h-full w-1/3 bg-[#e22718]" />
-      </div>
+    <SidebarProvider
+      sidebarColapsado={sidebarColapsado}
+      alternarColapsoSidebar={alternarColapsoSidebar}
+    >
+      <div className="h-screen max-h-screen bg-black text-white flex flex-col selection:bg-[#0066b1] overflow-hidden">
+        {/* Barra Tricolor M Superior */}
+        <div className="h-1 w-full flex shrink-0 z-50">
+          <div className="h-full w-1/3 bg-[#0066b1]" />
+          <div className="h-full w-1/3 bg-[#1c69d4]" />
+          <div className="h-full w-1/3 bg-[#e22718]" />
+        </div>
 
-      {/* Header Superior de Mando (Más alto, sin cards de fondo en ningún item) */}
-      <header className="border-b border-[#262626] bg-[#0d0d0d] px-6 sm:px-8 py-5 sm:py-6 min-h-[76px] sm:min-h-[82px] flex items-center justify-between z-40">
-        <div className="flex items-center gap-3 sm:gap-5">
-          <button
-            type="button"
-            onClick={() => setSidebarAbierto(!sidebarAbierto)}
-            aria-label={sidebarAbierto ? "Cerrar menú lateral" : "Abrir menú lateral"}
-            className="md:hidden p-2 text-white hover:text-white/80 cursor-pointer"
-          >
-            {sidebarAbierto ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+        {/* Header Superior de Mando (Más alto, sin cards de fondo en ningún item) */}
+        <header className="border-b border-[#262626] bg-[#0d0d0d] px-6 sm:px-8 py-5 sm:py-6 min-h-[76px] sm:min-h-[82px] flex items-center justify-between z-40 shrink-0">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <button
+              type="button"
+              onClick={() => setSidebarAbierto(!sidebarAbierto)}
+              aria-label={sidebarAbierto ? "Cerrar menú lateral" : "Abrir menú lateral"}
+              className="md:hidden p-2 text-white hover:text-white/80 cursor-pointer"
+            >
+              {sidebarAbierto ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
 
-          <Link href="/app" className="flex items-center gap-3 sm:gap-4 group">
+            {/* Toggle Permanente para Colapsar/Expandir en Desktop */}
+            <button
+              type="button"
+              onClick={alternarColapsoSidebar}
+              title={sidebarColapsado ? "Expandir barra lateral" : "Colapsar barra lateral"}
+              aria-label={sidebarColapsado ? "Expandir barra lateral" : "Colapsar barra lateral"}
+              className="hidden md:inline-flex items-center justify-center p-2 rounded-lg text-[#8e8e93] hover:text-white hover:bg-white/[0.04] border border-[#262626] hover:border-[#3c3c3c] transition-colors cursor-pointer shrink-0"
+            >
+              {sidebarColapsado ? (
+                <PanelLeft className="w-4 h-4 text-[#0066b1]" />
+              ) : (
+                <PanelLeftClose className="w-4 h-4" />
+              )}
+            </button>
+
+            <Link href="/app" className="flex items-center gap-3 sm:gap-4 group">
             <Image
               src="/logos/logo.webp"
               alt="ApexLink"
@@ -300,7 +319,7 @@ export default function LayoutAppBoxes({
       </header>
 
       {/* Cuerpo Principal: Sidebar + Contenido */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 flex overflow-hidden min-h-0 relative">
         {/* Backdrop móvil */}
         {sidebarAbierto && (
           <div
@@ -310,16 +329,16 @@ export default function LayoutAppBoxes({
           />
         )}
 
-        {/* Sidebar Lateral de Boxes */}
+        {/* Sidebar Lateral de Boxes Permanente */}
         <aside
           aria-label="Navegación principal de boxes"
-          className={`fixed inset-y-0 left-0 z-30 bg-[#0d0d0d] border-r border-[#262626] flex flex-col justify-between pt-20 md:pt-0 transform transition-all duration-200 ease-in-out md:relative md:translate-x-0 ${
+          className={`fixed inset-y-0 left-0 z-30 bg-[#0d0d0d] border-r border-[#262626] flex flex-col justify-between pt-20 md:pt-0 transform transition-all duration-200 ease-in-out md:relative md:translate-x-0 h-full shrink-0 ${
             sidebarAbierto ? "translate-x-0 w-64" : "-translate-x-full"
           } ${sidebarColapsado ? "md:w-16" : "md:w-64"}`}
         >
           {/* MODO EXPANDIDO: Se muestra en móviles cuando se abre el drawer, o en desktop si no está colapsado */}
           <div
-            className={`flex-1 flex flex-col justify-between overflow-y-auto ${
+            className={`flex-1 flex flex-col justify-between overflow-y-auto min-h-0 ${
               sidebarColapsado ? "md:hidden" : ""
             }`}
           >
@@ -417,14 +436,14 @@ export default function LayoutAppBoxes({
             </div>
 
             {/* Info de Licencia sutil en Modo Expandido */}
-            <div className="px-3.5 py-2 text-[10px] text-[#555555] font-mono truncate">
+            <div className="px-3.5 py-2 text-[10px] text-[#555555] font-mono truncate shrink-0">
               Licencia: {usuario.alias}
             </div>
           </div>
 
           {/* MODO COLAPSADO: Solo se muestra en desktop cuando sidebarColapsado es true */}
           {sidebarColapsado && (
-            <div className="hidden md:flex flex-1 flex-col justify-between overflow-y-auto overflow-x-hidden py-3 px-2">
+            <div className="hidden md:flex flex-1 flex-col justify-between overflow-y-auto overflow-x-hidden py-3 px-2 min-h-0">
               <div className="flex flex-col items-center space-y-3">
                 {GRUPOS_NAVEGACION.map((grupo, indiceGrupo) => {
                   return (
@@ -481,8 +500,8 @@ export default function LayoutAppBoxes({
             </div>
           )}
 
-          {/* Botón de Colapsar Sidebar en el Margen Inferior */}
-          <div className="border-t border-[#262626] bg-[#09090b] p-2">
+          {/* Botón Permanente de Colapsar Sidebar en el Margen Inferior */}
+          <div className="shrink-0 border-t border-[#262626] bg-[#09090b] p-2">
             <button
               type="button"
               onClick={alternarColapsoSidebar}
@@ -514,16 +533,12 @@ export default function LayoutAppBoxes({
           </div>
         </aside>
 
-        {/* Contenido Dinámico con Proveedor de Sidebar */}
-        <SidebarProvider
-          sidebarColapsado={sidebarColapsado}
-          alternarColapsoSidebar={alternarColapsoSidebar}
-        >
-          <main className="flex-1 overflow-y-auto bg-black p-4 sm:p-6 lg:p-8">
-            {children}
-          </main>
-        </SidebarProvider>
+        {/* Contenido Dinámico con Scroll Independiente */}
+        <main className="flex-1 overflow-y-auto bg-black p-4 sm:p-6 lg:p-8 min-h-0">
+          {children}
+        </main>
       </div>
     </div>
-  );
+  </SidebarProvider>
+);
 }
