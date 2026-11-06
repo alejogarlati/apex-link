@@ -107,55 +107,117 @@ export function MapaCircuitoCanvas({
     return CIRCUITS_DATA[circuitoActivoId] || CIRCUITS_DATA.monza;
   }, [circuitoActivoId]);
 
-  // Trazada real a partir de telemetría de Vuelta A (reemplaza puntos estáticos por la línea real)
+  // Función que fusiona las muestras de telemetría real (velocidad, freno, acelerador, marcha, RPM)
+  // con las coordenadas del circuito, garantizando correspondencia 1:1 con el gráfico y el mapa oficial
+  const proyectarTelemetriaSobreCircuito = useCallback(
+    (serieMuestras: MuestraTelemetria[] | undefined) => {
+      const baseTrack = circuitoActual?.track ?? [];
+      if (!serieMuestras || serieMuestras.length <= 5) {
+        return null;
+      }
+
+      const totalDistCircuito = circuitoActual.lengthMeters || 5793;
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minZ = Infinity;
+      let maxZ = -Infinity;
+      let maxDistMuestra = 1;
+
+      for (let i = 0; i < serieMuestras.length; i++) {
+        const m = serieMuestras[i]!;
+        if (m.posicionMundo.x < minX) minX = m.posicionMundo.x;
+        if (m.posicionMundo.x > maxX) maxX = m.posicionMundo.x;
+        if (m.posicionMundo.z < minZ) minZ = m.posicionMundo.z;
+        if (m.posicionMundo.z > maxZ) maxZ = m.posicionMundo.z;
+        if (m.distanciaMetros > maxDistMuestra) maxDistMuestra = m.distanciaMetros;
+      }
+
+      const spanX = maxX - minX;
+      const spanZ = maxZ - minZ;
+      const bounds = circuitoActual.bounds;
+
+      // Verificar si las coordenadas (X, Z) provienen del mundo 3D real de Kunos para este circuito
+      const tieneCoordenadasKunosReales =
+        spanX >= bounds.width * 0.65 &&
+        spanZ >= bounds.depth * 0.65 &&
+        minZ <= bounds.minZ * 0.5 &&
+        maxZ >= bounds.maxZ * 0.5;
+
+      if (tieneCoordenadasKunosReales) {
+        return serieMuestras.map((m, idx) => {
+          const ratio = Math.max(0, Math.min(1, m.distanciaMetros / totalDistCircuito));
+          const refIdx = Math.min(baseTrack.length - 1, Math.floor(ratio * baseTrack.length));
+          const refPt = baseTrack[refIdx];
+          return {
+            index: idx,
+            t: ratio,
+            x: m.posicionMundo.x,
+            y: m.posicionMundo.y || (refPt?.y ?? 12),
+            z: m.posicionMundo.z,
+            dist: m.distanciaMetros,
+            yaw: refPt?.yaw ?? 0,
+            speed: m.velocidadKmh,
+            gear: m.marcha,
+            rpm: m.rpms,
+            throttle: m.acelerador,
+            brake: m.freno,
+            slope: refPt?.slope ?? 0,
+            section: refPt?.section ?? "",
+            drs: refPt?.drs ?? false,
+          };
+        });
+      }
+
+      // Si las coordenadas provienen de una sesión cuyas posiciones (x,z) no están calibradas con map.ini,
+      // interpolamos la telemetría real (velocidad, freno, acelerador, marcha, RPM) por distancia sobre la geometría oficial
+      const escalaDist = maxDistMuestra > totalDistCircuito * 0.5 ? maxDistMuestra : totalDistCircuito;
+      let cursorMuestra = 0;
+
+      return baseTrack.map((pt, idx) => {
+        const distObjetivo = (pt.dist / totalDistCircuito) * escalaDist;
+        while (
+          cursorMuestra + 1 < serieMuestras.length &&
+          serieMuestras[cursorMuestra + 1]!.distanciaMetros <= distObjetivo
+        ) {
+          cursorMuestra++;
+        }
+
+        const m0 = serieMuestras[cursorMuestra]!;
+        const m1 = serieMuestras[Math.min(serieMuestras.length - 1, cursorMuestra + 1)] ?? m0;
+        const tramo = m1.distanciaMetros - m0.distanciaMetros;
+        const factor = tramo > 0.05 ? Math.max(0, Math.min(1, (distObjetivo - m0.distanciaMetros) / tramo)) : 0;
+
+        return {
+          index: idx,
+          t: pt.t,
+          x: pt.x,
+          y: pt.y,
+          z: pt.z,
+          dist: pt.dist,
+          yaw: pt.yaw,
+          speed: m0.velocidadKmh + (m1.velocidadKmh - m0.velocidadKmh) * factor,
+          gear: factor < 0.5 ? m0.marcha : m1.marcha,
+          rpm: Math.round(m0.rpms + (m1.rpms - m0.rpms) * factor),
+          throttle: m0.acelerador + (m1.acelerador - m0.acelerador) * factor,
+          brake: m0.freno + (m1.freno - m0.freno) * factor,
+          slope: pt.slope,
+          section: pt.section,
+          drs: pt.drs,
+        };
+      });
+    },
+    [circuitoActual]
+  );
+
+  // Trazada real a partir de telemetría de Vuelta A
   const trackRealA = useMemo(() => {
-    if (muestras && muestras.length > 5) {
-      const totalDist = circuitoActual.lengthMeters || 5793;
-      return muestras.map((m, idx) => ({
-        index: idx,
-        t: m.distanciaMetros / totalDist,
-        x: m.posicionMundo.x,
-        y: m.posicionMundo.y ?? 12,
-        z: m.posicionMundo.z,
-        dist: m.distanciaMetros,
-        yaw: 0,
-        speed: m.velocidadKmh,
-        gear: m.marcha,
-        rpm: m.rpms,
-        throttle: m.acelerador,
-        brake: m.freno,
-        slope: 0,
-        section: "",
-        drs: false,
-      }));
-    }
-    return circuitoActual?.track ?? [];
-  }, [muestras, circuitoActual]);
+    return proyectarTelemetriaSobreCircuito(muestras) ?? circuitoActual?.track ?? [];
+  }, [muestras, circuitoActual, proyectarTelemetriaSobreCircuito]);
 
   // Trazada real a partir de telemetría de Vuelta B (comparativa)
   const trackRealB = useMemo(() => {
-    if (muestrasComparativas && muestrasComparativas.length > 5) {
-      const totalDist = circuitoActual.lengthMeters || 5793;
-      return muestrasComparativas.map((m, idx) => ({
-        index: idx,
-        t: m.distanciaMetros / totalDist,
-        x: m.posicionMundo.x,
-        y: m.posicionMundo.y ?? 12,
-        z: m.posicionMundo.z,
-        dist: m.distanciaMetros,
-        yaw: 0,
-        speed: m.velocidadKmh,
-        gear: m.marcha,
-        rpm: m.rpms,
-        throttle: m.acelerador,
-        brake: m.freno,
-        slope: 0,
-        section: "",
-        drs: false,
-      }));
-    }
-    return null;
-  }, [muestrasComparativas, circuitoActual]);
+    return proyectarTelemetriaSobreCircuito(muestrasComparativas);
+  }, [muestrasComparativas, proyectarTelemetriaSobreCircuito]);
 
   // Perfil temporal acumulado del circuito (dx / v a lo largo de cada segmento de pista)
   const tiemposAcumuladosPista = useMemo(() => {

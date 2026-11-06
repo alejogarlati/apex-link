@@ -186,6 +186,8 @@ export interface PerfilPilotoDetalleApiDto {
   puntajeGeneral: number;
   vueltasTotales: number;
   kilometrosTotales: number;
+  porcentajeVueltasValidas?: number;
+  velocidadMaximaKmh?: number;
   ultimaEvaluacion?: EvaluacionRendimientoApiDto;
   logros: Array<{
     id: string;

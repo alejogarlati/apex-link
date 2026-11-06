@@ -72,14 +72,17 @@ function ContenidoAnalisis() {
   const recargarTodo = useCallback(async () => {
     setRefrescando(true);
     try {
-      const res = await obtenerSesionesPaginadas(1, 50);
+      const perfil = obtenerSesionLocal();
+      const esAdmin = esUsuarioAdmin(perfil?.usuario);
+      const usuarioFiltro = esAdmin ? undefined : perfil?.usuario.id;
+      const res = await obtenerSesionesPaginadas(1, 50, usuarioFiltro);
       if (res.exitoso && res.datos?.elementos?.length) {
-        const perfil = obtenerSesionLocal();
-        const esAdmin = esUsuarioAdmin(perfil?.usuario);
         const disponibles = esAdmin
           ? res.datos.elementos
           : res.datos.elementos.filter((s) => !s.isMockSimulation);
         setSesiones(disponibles);
+      } else {
+        setSesiones([]);
       }
       if (sesionSeleccionadaId) {
         const resVueltas = await obtenerVueltasSesion(sesionSeleccionadaId);
@@ -98,17 +101,18 @@ function ContenidoAnalisis() {
     recargarTodo();
   }, [ultimoEventoVuelta, recargarTodo]);
 
-  // 1. Cargar el catálogo de tandas del piloto
+  // 1. Cargar el catálogo de tandas del piloto y escuchar cambios de usuario en cabina
   useEffect(() => {
     let cancelado = false;
-    setCargandoSesiones(true);
 
     async function cargarSesionesDisponibles() {
+      setCargandoSesiones(true);
       try {
-        const res = await obtenerSesionesPaginadas(1, 50);
+        const perfil = obtenerSesionLocal();
+        const esAdmin = esUsuarioAdmin(perfil?.usuario);
+        const usuarioFiltro = esAdmin ? undefined : perfil?.usuario.id;
+        const res = await obtenerSesionesPaginadas(1, 50, usuarioFiltro);
         if (!cancelado && res.exitoso && res.datos?.elementos?.length) {
-          const perfil = obtenerSesionLocal();
-          const esAdmin = esUsuarioAdmin(perfil?.usuario);
           const disponibles = esAdmin
             ? res.datos.elementos
             : res.datos.elementos.filter((s) => !s.isMockSimulation);
@@ -120,21 +124,29 @@ function ContenidoAnalisis() {
           } else if (disponibles.length > 0) {
             const conVueltas = disponibles.find((s) => (s.totalLaps ?? 0) > 0);
             setSesionSeleccionadaId(conVueltas ? conVueltas.id : (disponibles[0]?.id ?? null));
+          } else {
+            setSesionSeleccionadaId(null);
           }
         } else if (!cancelado) {
           setSesiones([]);
+          setSesionSeleccionadaId(null);
         }
       } catch {
-        if (!cancelado) setSesiones([]);
+        if (!cancelado) {
+          setSesiones([]);
+          setSesionSeleccionadaId(null);
+        }
       } finally {
         if (!cancelado) setCargandoSesiones(false);
       }
     }
 
     cargarSesionesDisponibles();
+    window.addEventListener("apexlink_usuario_cambiado", cargarSesionesDisponibles);
 
     return () => {
       cancelado = true;
+      window.removeEventListener("apexlink_usuario_cambiado", cargarSesionesDisponibles);
     };
   }, [sesionIdParam]);
 

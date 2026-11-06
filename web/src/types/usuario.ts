@@ -66,6 +66,8 @@ export interface PerfilUsuario {
   rating: ApexRating;
   vueltasTotales: number;
   kilometrosTotales: number;
+  porcentajeVueltasValidas?: number;
+  velocidadMaximaKmh?: number;
   logros: LogroGamificado[];
   habilidades: HabilidadDetalle[];
   records: RecordCircuitoPiloto[];

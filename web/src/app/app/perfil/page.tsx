@@ -585,22 +585,28 @@ function SeccionRecords({ records }: { records: RecordCircuitoPiloto[] }) {
 function SeccionInsignias({ logros }: { logros: LogroGamificado[] }) {
   return (
     <section aria-labelledby="titulo-insignias">
-      <TituloSeccion id="titulo-insignias" etiqueta="Logros técnicos" titulo="Insignias desbloqueadas" />
+      <TituloSeccion id="titulo-insignias" etiqueta="Logros técnicos" titulo="Insignias y progreso" />
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {logros.map((insignia) => {
           const Icono = iconoLogro(insignia.icono);
-          const acento =
-            insignia.id.includes("f1") || insignia.id.includes("monza")
-              ? COLORES.amarillo
-              : insignia.id.includes("freno")
-              ? COLORES.rojoM
-              : insignia.id.includes("ritmo")
-              ? COLORES.azulOscuro
-              : COLORES.verde;
+          const desbloqueada = insignia.desbloqueado !== false;
+          const acento = !desbloqueada
+            ? COLORES.borde
+            : insignia.id.includes("f1") || insignia.id.includes("monza") || insignia.id.includes("bautismo")
+            ? COLORES.amarillo
+            : insignia.id.includes("freno")
+            ? COLORES.rojoM
+            : insignia.id.includes("ritmo")
+            ? COLORES.azulOscuro
+            : COLORES.verde;
 
           return (
             <li key={insignia.id}>
-              <Tarjeta className="flex h-full flex-col items-center gap-4 p-6 text-center">
+              <Tarjeta
+                className={`flex h-full flex-col items-center gap-4 p-6 text-center transition-opacity ${
+                  desbloqueada ? "opacity-100" : "opacity-55"
+                }`}
+              >
                 <div className="relative flex h-16 w-16 items-center justify-center">
                   <span
                     aria-hidden
@@ -615,10 +621,16 @@ function SeccionInsignias({ logros }: { logros: LogroGamificado[] }) {
                   </h3>
                   <p className="text-xs leading-relaxed text-[#a8a8a8]">{insignia.descripcion}</p>
                 </div>
-                <span className="mt-auto inline-flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#0fa336]">
-                  <ShieldCheck className="h-3 w-3" aria-hidden />
-                  Desbloqueada {insignia.fechaDesbloqueo ? `(${insignia.fechaDesbloqueo})` : ""}
-                </span>
+                {desbloqueada ? (
+                  <span className="mt-auto inline-flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#0fa336]">
+                    <ShieldCheck className="h-3 w-3" aria-hidden />
+                    Desbloqueada {insignia.fechaDesbloqueo ? `(${insignia.fechaDesbloqueo})` : ""}
+                  </span>
+                ) : (
+                  <span className="mt-auto inline-flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a8a8a]">
+                    En progreso
+                  </span>
+                )}
               </Tarjeta>
             </li>
           );
@@ -657,39 +669,19 @@ export default function PaginaPerfil() {
     };
   }, []);
 
-  // Sincronización en vivo con backend Kestrel / PostgreSQL
+  // Sincronización unificada en vivo con backend Kestrel (PostgreSQL + Telemetría SQLite)
   useEffect(() => {
     let cancelado = false;
-    obtenerPerfilPiloto(usuario.id)
-      .then((res) => {
+
+    async function sincronizarPerfilYTelemetria() {
+      try {
+        const res = await obtenerPerfilPiloto(usuario.id);
         if (!cancelado && res.exitoso && res.datos) {
           const d = res.datos;
           const evalActual = d.ultimaEvaluacion;
-          setUsuario((prev) => ({
-            ...prev,
-            nombre: d.nombre || prev.nombre,
-            alias: d.alias || prev.alias,
-            email: d.email || prev.email,
-            licencia: d.licencia || prev.licencia,
-            vehiculoPrincipal: d.vehiculoPrincipal || prev.vehiculoPrincipal,
-            puntajeGeneral: d.puntajeGeneral ?? prev.puntajeGeneral,
-            vueltasTotales: d.vueltasTotales ?? prev.vueltasTotales,
-            kilometrosTotales: d.kilometrosTotales ?? prev.kilometrosTotales,
-            rating: {
-              paceRating: d.paceRating ?? prev.rating.paceRating,
-              safetyRating: d.safetyRating ?? prev.rating.safetyRating,
-              nivel: d.nivel ?? prev.rating.nivel,
-              metricas: evalActual
-                ? {
-                    velocidad: evalActual.velocidad,
-                    consistencia: evalActual.consistencia,
-                    frenada: evalActual.frenada,
-                    control: evalActual.control,
-                    agresividad: evalActual.agresividad,
-                  }
-                : prev.rating.metricas,
-            },
-            habilidades: evalActual
+
+          setUsuario((prev) => {
+            const habilidadesNuevas: HabilidadDetalle[] = evalActual
               ? [
                   {
                     id: "frenada",
@@ -697,7 +689,7 @@ export default function PaginaPerfil() {
                     etiquetaCorta: "FRENADA",
                     valor: evalActual.frenada,
                     descripcion: "Modulación de frenada de precisión.",
-                    consejo: evalActual.consejoFrenada,
+                    consejo: evalActual.consejoFrenada || prev.habilidades[0]?.consejo || "",
                   },
                   {
                     id: "traccion",
@@ -705,7 +697,7 @@ export default function PaginaPerfil() {
                     etiquetaCorta: "TRACCIÓN",
                     valor: evalActual.traccionSalida,
                     descripcion: "Despliegue de potencia a la salida de curvas.",
-                    consejo: evalActual.consejoTraccion,
+                    consejo: evalActual.consejoTraccion || prev.habilidades[1]?.consejo || "",
                   },
                   {
                     id: "apice",
@@ -713,7 +705,7 @@ export default function PaginaPerfil() {
                     etiquetaCorta: "ÁPICE",
                     valor: evalActual.velocidadApice,
                     descripcion: "Paso por curva en vértices.",
-                    consejo: evalActual.consejoApice,
+                    consejo: evalActual.consejoApice || prev.habilidades[2]?.consejo || "",
                   },
                   {
                     id: "consistencia",
@@ -721,7 +713,7 @@ export default function PaginaPerfil() {
                     etiquetaCorta: "CONSISTENCIA",
                     valor: evalActual.consistencia,
                     descripcion: "Dispersión de tiempos entre vueltas.",
-                    consejo: evalActual.consejoConsistencia,
+                    consejo: evalActual.consejoConsistencia || prev.habilidades[3]?.consejo || "",
                   },
                   {
                     id: "limites",
@@ -729,172 +721,86 @@ export default function PaginaPerfil() {
                     etiquetaCorta: "LÍMITES",
                     valor: evalActual.respetoLimites,
                     descripcion: "Uso de pianos y trazada reglamentaria.",
-                    consejo: evalActual.consejoLimites,
+                    consejo: evalActual.consejoLimites || prev.habilidades[4]?.consejo || "",
                   },
                 ]
-              : prev.habilidades,
-            diagnosticoAi: evalActual
-              ? {
-                  puntoFuerteTitulo: evalActual.puntoFuerteTitulo,
-                  puntoFuerteDesc: evalActual.puntoFuerteDesc,
-                  oportunidadMejoraTitulo: evalActual.oportunidadMejoraTitulo,
-                  oportunidadMejoraDesc: evalActual.oportunidadMejoraDesc,
-                }
-              : prev.diagnosticoAi,
-            records:
-              d.records && d.records.length > 0
-                ? d.records.map((r) => ({
-                    id: r.id,
-                    circuito: r.circuito,
-                    pais: r.pais,
-                    tiempo: r.tiempo,
-                    esRecordSesion: r.esRecordSesion,
-                  }))
-                : prev.records,
-            logros:
-              d.logros && d.logros.length > 0
-                ? d.logros.map((l) => ({
-                    id: l.id,
-                    titulo: l.titulo,
-                    descripcion: l.descripcion,
-                    icono: l.icono,
-                    desbloqueado: l.desbloqueado,
-                    fechaDesbloqueo: l.fechaDesbloqueo,
-                  }))
-                : prev.logros,
-          }));
-        }
-      })
-      .catch(() => {
-        // Fallback transparente a estado local si el backend está desconectado
-      });
+              : prev.habilidades;
 
-    return () => {
-      cancelado = true;
-    };
-  }, [usuario.id]);
-
-  // Sincronización con las tandas reales persistidas en SQLite para este piloto
-  useEffect(() => {
-    let cancelado = false;
-    obtenerSesionesPaginadas(1, 50, usuario.id)
-      .then((res) => {
-        if (!cancelado && res.exitoso && res.datos && res.datos.elementos.length > 0) {
-          const tandas = res.datos.elementos.filter((t) => !t.isMockSimulation);
-          if (tandas.length === 0) return;
-
-          const conteoAutos: Record<string, number> = {};
-          let totalVueltasReales = 0;
-          let mejorTiempoMonza = Infinity;
-          let mejorTiempoSpa = Infinity;
-          let mejorTiempoRedBull = Infinity;
-
-          for (const tanda of tandas) {
-            const auto = tanda.carModel || tanda.modeloVehiculo;
-            const vueltas = tanda.totalLaps ?? tanda.totalVueltas ?? 1;
-            if (auto) {
-              conteoAutos[auto] = (conteoAutos[auto] || 0) + vueltas;
-            }
-            totalVueltasReales += vueltas;
-
-            const circuito = (tanda.circuit || tanda.circuito || "").toLowerCase();
-            const mejor = tanda.bestLapTimeMs || tanda.mejorTiempoMs || 0;
-            if (mejor > 0) {
-              if (circuito.includes("monza") && mejor < mejorTiempoMonza) mejorTiempoMonza = mejor;
-              if (circuito.includes("spa") && mejor < mejorTiempoSpa) mejorTiempoSpa = mejor;
-              if ((circuito.includes("redbull") || circuito.includes("spielberg")) && mejor < mejorTiempoRedBull) mejorTiempoRedBull = mejor;
-            }
-          }
-
-          const mejorAutoKey = Object.entries(conteoAutos).sort((a, b) => b[1] - a[1])[0]?.[0];
-          const autoFormateado = mejorAutoKey ? formatearModeloAuto(mejorAutoKey) : undefined;
-
-          const recordsActualizados: RecordCircuitoPiloto[] = [];
-          if (mejorTiempoMonza !== Infinity) {
-            recordsActualizados.push({
-              id: "monza",
-              circuito: "Autodromo Nazionale Monza",
-              pais: "ITA",
-              tiempo: formatearTiempoMs(mejorTiempoMonza),
-              esRecordSesion: true,
-            });
-          }
-          if (mejorTiempoSpa !== Infinity) {
-            recordsActualizados.push({
-              id: "spa",
-              circuito: "Circuit de Spa-Francorchamps",
-              pais: "BEL",
-              tiempo: formatearTiempoMs(mejorTiempoSpa),
-              esRecordSesion: true,
-            });
-          }
-          if (mejorTiempoRedBull !== Infinity) {
-            recordsActualizados.push({
-              id: "redbullring",
-              circuito: "Red Bull Ring (Spielberg)",
-              pais: "AUT",
-              tiempo: formatearTiempoMs(mejorTiempoRedBull),
-              esRecordSesion: true,
-            });
-          }
-
-          const logrosDinamicos: LogroGamificado[] = [
-            {
-              id: "bautismo-pista",
-              titulo: "Bautismo de Pista",
-              descripcion: "Primera tanda de telemetría física completada en simulador.",
-              icono: "zap",
-              desbloqueado: totalVueltasReales >= 1,
-              fechaDesbloqueo: tandas[0]?.startTime ? tandas[0].startTime.slice(0, 10) : "2026-11-06",
-            },
-            {
-              id: "ritmo-carrera",
-              titulo: "Ritmo de Carrera",
-              descripcion: "Más de 10 vueltas completadas con adquisición continua a 60 Hz.",
-              icono: "crosshair",
-              desbloqueado: totalVueltasReales >= 10,
-              fechaDesbloqueo: totalVueltasReales >= 10 ? "2026-11-06" : undefined,
-            },
-            {
-              id: "record-monza",
-              titulo: "Récord en Monza",
-              descripcion: "Vuelta rápida oficial registrada en el Templo de la Velocidad.",
-              icono: "timer",
-              desbloqueado: mejorTiempoMonza !== Infinity,
-              fechaDesbloqueo: mejorTiempoMonza !== Infinity ? "2026-11-06" : undefined,
-            },
-            {
-              id: "fappe-showcase",
-              titulo: "Piloto Oficial ApexLink",
-              descripcion: "Conducción en pista con telemetría de boxes activa.",
-              icono: "award",
-              desbloqueado: true,
-              fechaDesbloqueo: "2026-11-06",
-            },
-          ];
-
-          setUsuario((prev) => {
             const promHabilidades =
-              prev.habilidades.length > 0
-                ? Math.round((prev.habilidades.reduce((acc, h) => acc + h.valor, 0) / prev.habilidades.length) * 10) / 10
-                : prev.puntajeGeneral;
+              habilidadesNuevas.length > 0
+                ? Math.round((habilidadesNuevas.reduce((acc, h) => acc + h.valor, 0) / habilidadesNuevas.length) * 10) / 10
+                : 88.0;
+
+            const puntajeConsolidado =
+              d.puntajeGeneral && Math.abs(d.puntajeGeneral - 75.0) > 0.1
+                ? d.puntajeGeneral
+                : promHabilidades;
 
             return {
               ...prev,
-              vehiculoPrincipal: autoFormateado || prev.vehiculoPrincipal,
-              vueltasTotales: Math.max(prev.vueltasTotales, totalVueltasReales),
-              kilometrosTotales: Math.max(
-                prev.kilometrosTotales,
-                parseFloat((totalVueltasReales * 5.793).toFixed(1))
-              ),
-              puntajeGeneral: promHabilidades,
-              records: recordsActualizados.length > 0 ? recordsActualizados : prev.records,
-              logros: logrosDinamicos,
+              nombre: d.nombre || prev.nombre,
+              alias: d.alias || prev.alias,
+              email: d.email || prev.email,
+              licencia: d.licencia || prev.licencia,
+              vehiculoPrincipal: formatearModeloAuto(d.vehiculoPrincipal || prev.vehiculoPrincipal),
+              puntajeGeneral: puntajeConsolidado,
+              vueltasTotales: d.vueltasTotales ?? prev.vueltasTotales,
+              kilometrosTotales: d.kilometrosTotales ?? prev.kilometrosTotales,
+              porcentajeVueltasValidas: d.porcentajeVueltasValidas ?? prev.porcentajeVueltasValidas,
+              velocidadMaximaKmh: d.velocidadMaximaKmh ?? prev.velocidadMaximaKmh,
+              rating: {
+                paceRating: d.paceRating ?? prev.rating.paceRating,
+                safetyRating: d.safetyRating ?? prev.rating.safetyRating,
+                nivel: d.nivel ?? prev.rating.nivel,
+                metricas: evalActual
+                  ? {
+                      velocidad: evalActual.velocidad,
+                      consistencia: evalActual.consistencia,
+                      frenada: evalActual.frenada,
+                      control: evalActual.control,
+                      agresividad: evalActual.agresividad,
+                    }
+                  : prev.rating.metricas,
+              },
+              habilidades: habilidadesNuevas,
+              diagnosticoAi: evalActual
+                ? {
+                    puntoFuerteTitulo: evalActual.puntoFuerteTitulo,
+                    puntoFuerteDesc: evalActual.puntoFuerteDesc,
+                    oportunidadMejoraTitulo: evalActual.oportunidadMejoraTitulo,
+                    oportunidadMejoraDesc: evalActual.oportunidadMejoraDesc,
+                  }
+                : prev.diagnosticoAi,
+              records:
+                d.records && d.records.length > 0
+                  ? d.records.map((r) => ({
+                      id: r.id,
+                      circuito: r.circuito,
+                      pais: r.pais,
+                      tiempo: r.tiempo,
+                      esRecordSesion: r.esRecordSesion,
+                    }))
+                  : prev.records,
+              logros:
+                d.logros && d.logros.length > 0
+                  ? d.logros.map((l) => ({
+                      id: l.id,
+                      titulo: l.titulo,
+                      descripcion: l.descripcion,
+                      icono: l.icono,
+                      desbloqueado: l.desbloqueado,
+                      fechaDesbloqueo: l.fechaDesbloqueo,
+                    }))
+                  : prev.logros,
             };
           });
         }
-      })
-      .catch(() => {});
+      } catch {
+        // Fallback transparente a estado local si el backend está desconectado
+      }
+    }
+
+    sincronizarPerfilYTelemetria();
 
     return () => {
       cancelado = true;
@@ -907,14 +813,26 @@ export default function PaginaPerfil() {
     usuario.vehiculoPrincipal.toLowerCase().includes("supreme") ||
     usuario.vehiculoPrincipal.toLowerCase().includes("formula");
 
-  const velocidadCalculada = esVehiculoMonoplaza ? "348.5" : "284.2";
-  const detalleVelocidad = esVehiculoMonoplaza
-    ? "Alcanzada en Monza (Rettifilo con DRS)"
-    : "Alcanzada en Monza (Variante Ascari)";
+  const velocidadCalculada =
+    usuario.velocidadMaximaKmh && usuario.velocidadMaximaKmh > 0
+      ? usuario.velocidadMaximaKmh.toFixed(1)
+      : esVehiculoMonoplaza
+      ? "342.8"
+      : "278.4";
 
-  const porcentajeValidas = usuario.vueltasTotales > 0
-    ? (Math.min(99.0, Math.max(88.0, 95.0 + (usuario.puntajeGeneral > 90 ? 2.5 : -1.5)))).toFixed(1)
-    : "95.0";
+  const detalleVelocidad =
+    usuario.velocidadMaximaKmh && usuario.velocidadMaximaKmh > 0
+      ? `Pico de telemetría real (${usuario.vehiculoPrincipal})`
+      : esVehiculoMonoplaza
+      ? "Alcanzada en Monza (Rettifilo con DRS)"
+      : "Alcanzada en Monza (Variante Ascari)";
+
+  const porcentajeValidas =
+    usuario.porcentajeVueltasValidas !== undefined && usuario.porcentajeVueltasValidas > 0
+      ? usuario.porcentajeVueltasValidas.toFixed(1)
+      : usuario.vueltasTotales > 0
+      ? Math.min(99.0, Math.max(88.0, 95.0 + (usuario.puntajeGeneral > 90 ? 2.5 : -1.5))).toFixed(1)
+      : "95.0";
 
   const estadisticas: readonly EstadisticaGlobal[] = [
     {
