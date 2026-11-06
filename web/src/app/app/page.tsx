@@ -18,8 +18,6 @@ import {
 import {
   obtenerSesionLocal,
   esUsuarioAdmin,
-  USUARIO_ALEJO_GARLATI,
-  USUARIO_ALEJO_SALAS,
 } from "@/lib/auth";
 import type { PerfilUsuario } from "@/types/usuario";
 import {
@@ -34,7 +32,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { Tooltip } from "@/components/ui/Tooltip";
 
 export default function PaginaDashboardBoxes() {
-  const [usuario, setUsuario] = useState<PerfilUsuario>(USUARIO_ALEJO_GARLATI);
+  const [usuario, setUsuario] = useState<PerfilUsuario | null>(null);
 
   const [estadoServicio, setEstadoServicio] = useState<EstadoServicioDto | null>(null);
   const [ultimaSesion, setUltimaSesion] = useState<SesionResumenDto | null>(null);
@@ -64,7 +62,6 @@ export default function PaginaDashboardBoxes() {
     };
   }, []);
 
-  const metricas = usuario.rating.metricas;
   const esAdmin = esUsuarioAdmin(usuario);
 
   const formatearTiempoMs = (ms: number) => {
@@ -76,6 +73,7 @@ export default function PaginaDashboardBoxes() {
   };
 
   useEffect(() => {
+    if (!usuario?.id) return;
     let cancelado = false;
     setCargando(true);
 
@@ -88,44 +86,47 @@ export default function PaginaDashboardBoxes() {
         }
 
         // 2. Sincronizar perfil y métricas reales desde el backend
-        const resPerfil = await obtenerPerfilPiloto(usuario.id).catch(() => null);
+        const resPerfil = await obtenerPerfilPiloto(usuario!.id).catch(() => null);
         if (!cancelado && resPerfil?.exitoso && resPerfil.datos) {
           const d = resPerfil.datos;
           const evalActual = d.ultimaEvaluacion;
           if (d.velocidadMaximaKmh && d.velocidadMaximaKmh > 0) {
             setTopSpeedStr(d.velocidadMaximaKmh.toFixed(1));
           }
-          setUsuario((prev) => ({
-            ...prev,
-            vehiculoPrincipal: d.vehiculoPrincipal || prev.vehiculoPrincipal,
-            puntajeGeneral: d.puntajeGeneral ?? prev.puntajeGeneral,
-            rating: {
-              paceRating: d.paceRating ?? prev.rating.paceRating,
-              safetyRating: d.safetyRating ?? prev.rating.safetyRating,
-              nivel: d.nivel ?? prev.rating.nivel,
-              metricas: evalActual
+          setUsuario((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              vehiculoPrincipal: d.vehiculoPrincipal || prev.vehiculoPrincipal,
+              puntajeGeneral: d.puntajeGeneral ?? prev.puntajeGeneral,
+              rating: {
+                paceRating: d.paceRating ?? prev.rating.paceRating,
+                safetyRating: d.safetyRating ?? prev.rating.safetyRating,
+                nivel: d.nivel ?? prev.rating.nivel,
+                metricas: evalActual
+                  ? {
+                      velocidad: evalActual.velocidad,
+                      consistencia: evalActual.consistencia,
+                      frenada: evalActual.frenada,
+                      control: evalActual.control,
+                      agresividad: evalActual.agresividad,
+                    }
+                  : prev.rating.metricas,
+              },
+              diagnosticoAi: evalActual
                 ? {
-                    velocidad: evalActual.velocidad,
-                    consistencia: evalActual.consistencia,
-                    frenada: evalActual.frenada,
-                    control: evalActual.control,
-                    agresividad: evalActual.agresividad,
+                    puntoFuerteTitulo: evalActual.puntoFuerteTitulo,
+                    puntoFuerteDesc: evalActual.puntoFuerteDesc,
+                    oportunidadMejoraTitulo: evalActual.oportunidadMejoraTitulo,
+                    oportunidadMejoraDesc: evalActual.oportunidadMejoraDesc,
                   }
-                : prev.rating.metricas,
-            },
-            diagnosticoAi: evalActual
-              ? {
-                  puntoFuerteTitulo: evalActual.puntoFuerteTitulo,
-                  puntoFuerteDesc: evalActual.puntoFuerteDesc,
-                  oportunidadMejoraTitulo: evalActual.oportunidadMejoraTitulo,
-                  oportunidadMejoraDesc: evalActual.oportunidadMejoraDesc,
-                }
-              : prev.diagnosticoAi,
-          }));
+                : prev.diagnosticoAi,
+            };
+          });
         }
 
         // 3. Consultar la última tanda registrada del piloto
-        const usuarioFiltro = esAdmin ? undefined : usuario.id;
+        const usuarioFiltro = esAdmin ? undefined : usuario!.id;
         const resSesiones = await obtenerSesionesPaginadas(1, 10, usuarioFiltro).catch(() => null);
         if (!cancelado && resSesiones?.exitoso && resSesiones.datos?.elementos?.length) {
           const sesion = resSesiones.datos.elementos.find((s) => esAdmin || !s.isMockSimulation);
@@ -182,8 +183,22 @@ export default function PaginaDashboardBoxes() {
     return () => {
       cancelado = true;
     };
-  }, [esAdmin, usuario.id]);
+  }, [esAdmin, usuario?.id]);
 
+  if (!usuario) {
+    return (
+      <div className="space-y-8 max-w-7xl mx-auto">
+        <Skeleton className="h-24 w-full rounded-xl" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <Skeleton className="h-64 w-full lg:col-span-2 rounded-xl" />
+          <Skeleton className="h-64 w-full rounded-xl" />
+        </div>
+        <Skeleton className="h-44 w-full rounded-xl" />
+      </div>
+    );
+  }
+
+  const metricas = usuario.rating.metricas;
   const enlaceActivo = esAdmin
     ? Boolean(estadoServicio?.isConnected || estadoServicio?.isMockMode)
     : Boolean(estadoServicio?.isConnected && !estadoServicio?.isMockMode);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -14,7 +14,7 @@ import {
   Radio,
   Activity,
 } from "lucide-react";
-import { obtenerSesionLocal, cerrarSesion, PILOTO_INVITADO_FAPPE } from "@/lib/auth";
+import { obtenerSesionLocal, cerrarSesion } from "@/lib/auth";
 import type { PerfilUsuario } from "@/types/usuario";
 
 interface SimuladorFila {
@@ -92,10 +92,14 @@ const LISTA_SIMULADORES: SimuladorFila[] = [
 
 export default function PaginaHubSimuladores() {
   const router = useRouter();
-  const [usuario] = useState<PerfilUsuario>(() => {
+  const [usuario, setUsuario] = useState<PerfilUsuario | null>(null);
+
+  useEffect(() => {
     const sesion = obtenerSesionLocal();
-    return sesion ? sesion.usuario : PILOTO_INVITADO_FAPPE;
-  });
+    if (sesion?.usuario) {
+      setUsuario(sesion.usuario);
+    }
+  }, []);
 
   const manejarCerrarSesion = () => {
     cerrarSesion();

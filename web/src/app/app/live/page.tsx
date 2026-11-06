@@ -27,12 +27,12 @@ import {
   obtenerSesionesPaginadas,
   obtenerVueltasSesion,
 } from "@/lib/apiClient";
-import { obtenerSesionLocal, esUsuarioAdmin, USUARIO_ALEJO_GARLATI } from "@/lib/auth";
+import { obtenerSesionLocal, esUsuarioAdmin } from "@/lib/auth";
 import type { PerfilUsuario } from "@/types/usuario";
 import type { EstadoMockDto, EstadoServicioDto } from "@/types/api";
 
 export default function PaginaLivePitwall() {
-  const [usuario, setUsuario] = useState<PerfilUsuario>(USUARIO_ALEJO_GARLATI);
+  const [usuario, setUsuario] = useState<PerfilUsuario | null>(null);
 
   useEffect(() => {
     const sincronizar = () => {
@@ -101,7 +101,7 @@ export default function PaginaLivePitwall() {
 
     async function precargarVueltasSesionActiva() {
       try {
-        const usuarioFiltro = esAdmin ? undefined : usuario.id;
+        const usuarioFiltro = esAdmin ? undefined : usuario?.id;
         const resSesiones = await obtenerSesionesPaginadas(1, 5, usuarioFiltro);
         if (cancelado || !resSesiones.exitoso || !resSesiones.datos?.elementos?.length) return;
 
@@ -152,7 +152,7 @@ export default function PaginaLivePitwall() {
     return () => {
       cancelado = true;
     };
-  }, [telemetriaValidaParaUsuario, esAdmin, usuario.id]);
+  }, [telemetriaValidaParaUsuario, esAdmin, usuario?.id]);
 
   // Mantener la velocidad actual en ref para evitar re-ejecuciones de effect en cada frame
   const velocidadAutoRef = useRef(frameEfectivo?.car.speedKmh ?? 0);
@@ -253,7 +253,7 @@ export default function PaginaLivePitwall() {
     flag: "GREEN",
     position: 1,
     track: "monza",
-    carModel: usuario.vehiculoPrincipal || "Ferrari SF70H",
+    carModel: usuario?.vehiculoPrincipal || "Sin vehículo en pista",
   };
 
   const deltaNegativo = timing.deltaMs < 0;

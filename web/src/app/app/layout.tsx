@@ -28,7 +28,6 @@ import {
 import {
   obtenerSesionLocal,
   cerrarSesion,
-  USUARIO_ALEJO_GARLATI,
 } from "@/lib/auth";
 import { declararPilotoActivo } from "@/lib/apiClient";
 import type { PerfilUsuario } from "@/types/usuario";
@@ -152,7 +151,7 @@ export default function LayoutAppBoxes({
   });
 
   const [montado, setMontado] = useState(false);
-  const [usuario, setUsuario] = useState<PerfilUsuario>(USUARIO_ALEJO_GARLATI);
+  const [usuario, setUsuario] = useState<PerfilUsuario | null>(null);
 
   useEffect(() => {
     setMontado(true);
@@ -312,10 +311,14 @@ export default function LayoutAppBoxes({
 
         {/* Menú Desplegable del Piloto */}
         <div className="flex items-center gap-4 sm:gap-6">
-          <UserNavDropdown
-            usuario={usuario}
-            onCerrarSesion={manejarCerrarSesion}
-          />
+          {usuario ? (
+            <UserNavDropdown
+              usuario={usuario}
+              onCerrarSesion={manejarCerrarSesion}
+            />
+          ) : (
+            <Skeleton className="h-9 w-36 rounded-lg" />
+          )}
         </div>
       </header>
 
@@ -438,7 +441,7 @@ export default function LayoutAppBoxes({
 
             {/* Info de Licencia sutil en Modo Expandido */}
             <div className="px-3.5 py-2 text-[10px] text-[#555555] font-mono truncate shrink-0">
-              Licencia: {usuario.alias}
+              Licencia: {usuario?.alias ?? "---"}
             </div>
           </div>
 
