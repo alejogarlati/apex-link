@@ -102,12 +102,6 @@ const GRUPOS_NAVEGACION: GrupoNav[] = [
         icono: MapPin,
         descripcion: "Monza y récords",
       },
-      {
-        href: "/hub",
-        etiqueta: "Enlace de Simulador",
-        icono: Cpu,
-        descripcion: "Assetto Corsa y Win32 MMF",
-      },
     ],
   },
   {
@@ -156,10 +150,16 @@ export default function LayoutAppBoxes({
     "piloto-perfil": true,
   });
 
-  const [usuario, setUsuario] = useState<PerfilUsuario>(() => {
+  const [montado, setMontado] = useState(false);
+  const [usuario, setUsuario] = useState<PerfilUsuario>(USUARIO_ALEJO_GARLATI);
+
+  useEffect(() => {
+    setMontado(true);
     const sesion = obtenerSesionLocal();
-    return sesion?.usuario ?? USUARIO_ALEJO_GARLATI;
-  });
+    if (sesion?.usuario) {
+      setUsuario(sesion.usuario);
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -269,7 +269,7 @@ export default function LayoutAppBoxes({
                 Pitwall
               </span>
               <span className="text-[10px] text-[#7e7e7e] font-mono leading-none mt-1">
-                {usuario.vehiculoPrincipal}
+                Telemetry & AI Coach
               </span>
             </div>
           </Link>
@@ -284,18 +284,8 @@ export default function LayoutAppBoxes({
           )}
         </div>
 
-        {/* Estado de Telemetría y Menú Desplegable del Piloto (Sin card de fondo) */}
+        {/* Menú Desplegable del Piloto */}
         <div className="flex items-center gap-4 sm:gap-6">
-          <div className="hidden xl:flex items-center gap-3 text-xs font-mono">
-            <span className="flex items-center gap-1.5 text-[#00E676]">
-              <span className="w-2 h-2 rounded-full bg-[#00E676] animate-pulse" />
-              60 Hz Shared Memory
-            </span>
-            <span className="text-[#3c3c3c]">|</span>
-            <span className="text-[#8e8e93]">&lt; 0.8 ms</span>
-          </div>
-
-          {/* Menú de Usuario Estándar de Producción */}
           <UserNavDropdown
             usuario={usuario}
             onCerrarSesion={manejarCerrarSesion}

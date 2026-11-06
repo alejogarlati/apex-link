@@ -31,7 +31,7 @@ export function KammFrictionCircle({ dynamics }: KammFrictionCircleProps) {
     const h = canvas.height;
     const centroX = w / 2;
     const centroY = h / 2;
-    const maxG = 2.0; // Radio exterior = 2.0G
+    const maxG = 4.5; // Escala máxima ampliada a 4.5G para autos de alta carga aerodinámica y frenadas extremas
     const radioPixel = (w / 2) - 15;
 
     ctx.clearRect(0, 0, w, h);
@@ -40,20 +40,20 @@ export function KammFrictionCircle({ dynamics }: KammFrictionCircleProps) {
     ctx.fillStyle = "#0a0a0a";
     ctx.fillRect(0, 0, w, h);
 
-    // Círculos concéntricos de referencia (0.5G, 1.0G, 1.5G, 2.0G)
-    const radiosG = [0.5, 1.0, 1.5, 2.0];
+    // Círculos concéntricos de referencia (1.0G, 2.0G, 3.0G, 4.0G)
+    const radiosG = [1.0, 2.0, 3.0, 4.0];
     radiosG.forEach((g) => {
       const r = (g / maxG) * radioPixel;
       ctx.beginPath();
       ctx.arc(centroX, centroY, r, 0, Math.PI * 2);
-      ctx.strokeStyle = g === 1.0 ? "#3c3c3c" : "#1f1f1f";
-      ctx.lineWidth = g === 1.0 ? 1.5 : 1;
+      ctx.strokeStyle = g === 2.0 ? "#3c3c3c" : "#1a1a1a";
+      ctx.lineWidth = g === 2.0 ? 1.5 : 1;
       ctx.stroke();
 
       // Etiqueta de G
       ctx.fillStyle = "#666666";
-      ctx.font = "9px monospace";
-      ctx.fillText(`${g.toFixed(1)}G`, centroX + 4, centroY - r + 10);
+      ctx.font = "8px monospace";
+      ctx.fillText(`${g.toFixed(0)}G`, centroX + 4, centroY - r + 9);
     });
 
     // Ejes cartesianos cruzados
@@ -66,11 +66,14 @@ export function KammFrictionCircle({ dynamics }: KammFrictionCircleProps) {
     ctx.lineWidth = 1;
     ctx.stroke();
 
+    // Función auxiliar para confinar G dentro del domo visual
+    const limitarG = (valor: number) => Math.max(-maxG, Math.min(maxG, valor));
+
     // Rastro de puntos anteriores (Ghost trail con desvanecimiento alfa)
     historialPuntosRef.current.forEach((pt, index) => {
       const alpha = (index + 1) / historialPuntosRef.current.length;
-      const px = centroX + (pt.x / maxG) * radioPixel;
-      const py = centroY - (pt.y / maxG) * radioPixel;
+      const px = centroX + (limitarG(pt.x) / maxG) * radioPixel;
+      const py = centroY - (limitarG(pt.y) / maxG) * radioPixel;
 
       ctx.beginPath();
       ctx.arc(px, py, 2.5, 0, Math.PI * 2);
@@ -79,8 +82,8 @@ export function KammFrictionCircle({ dynamics }: KammFrictionCircleProps) {
     });
 
     // Punto dinámico activo
-    const actualX = centroX + (gLat / maxG) * radioPixel;
-    const actualY = centroY - (gLon / maxG) * radioPixel;
+    const actualX = centroX + (limitarG(gLat) / maxG) * radioPixel;
+    const actualY = centroY - (limitarG(gLon) / maxG) * radioPixel;
 
     // Resplandor neón
     ctx.shadowBlur = 12;
