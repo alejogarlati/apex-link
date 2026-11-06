@@ -32,10 +32,7 @@ import type { PerfilUsuario } from "@/types/usuario";
 import type { EstadoMockDto, EstadoServicioDto } from "@/types/api";
 
 export default function PaginaLivePitwall() {
-  const [usuario, setUsuario] = useState<PerfilUsuario>(() => {
-    const sesion = obtenerSesionLocal();
-    return sesion ? sesion.usuario : USUARIO_ALEJO_GARLATI;
-  });
+  const [usuario, setUsuario] = useState<PerfilUsuario>(USUARIO_ALEJO_GARLATI);
 
   useEffect(() => {
     const sincronizar = () => {

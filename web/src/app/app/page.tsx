@@ -34,10 +34,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { Tooltip } from "@/components/ui/Tooltip";
 
 export default function PaginaDashboardBoxes() {
-  const [usuario, setUsuario] = useState<PerfilUsuario>(() => {
-    const sesion = obtenerSesionLocal();
-    return sesion ? sesion.usuario : USUARIO_ALEJO_GARLATI;
-  });
+  const [usuario, setUsuario] = useState<PerfilUsuario>(USUARIO_ALEJO_GARLATI);
 
   const [estadoServicio, setEstadoServicio] = useState<EstadoServicioDto | null>(null);
   const [ultimaSesion, setUltimaSesion] = useState<SesionResumenDto | null>(null);

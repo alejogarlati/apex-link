@@ -38,10 +38,7 @@ import { useToast } from "@/context/ToastContext";
 
 export default function PaginaSesiones() {
   const toast = useToast();
-  const [usuario, setUsuario] = useState<PerfilUsuario>(() => {
-    const sesion = obtenerSesionLocal();
-    return sesion ? sesion.usuario : USUARIO_ALEJO_GARLATI;
-  });
+  const [usuario, setUsuario] = useState<PerfilUsuario>(USUARIO_ALEJO_GARLATI);
   const [sesiones, setSesiones] = useState<SesionResumenDto[]>([]);
   const [cargando, setCargando] = useState(true);
   const [errorApi, setErrorApi] = useState<string | null>(null);

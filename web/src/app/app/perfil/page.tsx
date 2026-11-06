@@ -202,9 +202,7 @@ function TarjetaPiloto({
 }: {
   usuario: PerfilUsuario;
 }) {
-  const esGarlati = usuario.id === USUARIO_ALEJO_GARLATI.id || usuario.email.includes("garlati");
-  const iniciales = esGarlati ? "AG" : "AS";
-
+  const iniciales = usuario.nombre.substring(0, 2).toUpperCase();
   return (
     <div className="flex flex-col gap-4">
       <section
@@ -646,10 +644,7 @@ function SeccionInsignias({ logros }: { logros: LogroGamificado[] }) {
 
 export default function PaginaPerfil() {
   const router = useRouter();
-  const [usuario, setUsuario] = useState<PerfilUsuario>(() => {
-    const sesion = obtenerSesionLocal();
-    return sesion ? sesion.usuario : USUARIO_ALEJO_GARLATI;
-  });
+  const [usuario, setUsuario] = useState<PerfilUsuario>(USUARIO_ALEJO_GARLATI);
 
   useEffect(() => {
     const sincronizarUsuario = () => {
@@ -884,7 +879,7 @@ export default function PaginaPerfil() {
             <li aria-hidden>
               <ChevronRight className="h-3 w-3" />
             </li>
-            <li aria-current="page" className="text-white">
+            <li aria-current="page" className="text-white" suppressHydrationWarning>
               Perfil de piloto • {usuario.nombre} ({usuario.alias})
             </li>
           </ol>
