@@ -10,7 +10,8 @@ import { CtaBand } from "@/components/landing/CtaBand";
 import { gsap, ScrollTrigger, ScrollToPlugin, useGSAP } from "@/lib/gsap";
 
 const HERO_VIDEO_FPS = 24;
-const HERO_VIDEO_STOP_FRAME = 300;
+const HERO_VIDEO_TOTAL_FRAMES = 124;
+const HERO_VIDEO_STOP_FRAME = 123; // Último frame exacto (0-indexed) de la rotación 2K
 const HERO_VIDEO_STOP_TIME = HERO_VIDEO_STOP_FRAME / HERO_VIDEO_FPS;
 const HERO_LOCK_SCROLL_PX = 500;   // Bloqueo de 500px tras finalizar el video
 const HERO_VIDEO_SCROLL_PX = 1300; // Scroll para el giro del auto
@@ -84,42 +85,76 @@ export default function PaginaInicio() {
         video.currentTime = 0;
 
         const playhead = { frame: 0 };
-        let desiredTime = 0;
+        let pendingTargetTime: number | null = null;
+        let isSeeking = false;
+        let rafId: number | null = null;
 
-        const syncVideoFrame = () => {
-          if (!video) return;
-          const duration = video.duration || HERO_VIDEO_STOP_TIME;
-          const target = Math.min(Math.max(0, desiredTime), duration);
-          if (!video.seeking && Math.abs(video.currentTime - target) > 0.004) {
+        const performSeek = () => {
+          if (!video || isSeeking || pendingTargetTime === null) return;
+          const target = pendingTargetTime;
+          pendingTargetTime = null;
+
+          // Si el delta respecto a currentTime es menor a medio frame (0.02s a 24fps), no re-buscar
+          if (Math.abs(video.currentTime - target) < 0.02) {
+            return;
+          }
+
+          isSeeking = true;
+
+          // fastSeek aprovecha decodificación instantánea en All-Intra en navegadores modernos
+          const vAny = video as unknown as { fastSeek?: (time: number) => void };
+          if (typeof vAny.fastSeek === "function") {
+            try {
+              vAny.fastSeek(target);
+            } catch {
+              try {
+                video.currentTime = target;
+              } catch {
+                isSeeking = false;
+              }
+            }
+          } else {
             try {
               video.currentTime = target;
             } catch {
-              // Ignorar buffers transitorios
+              isSeeking = false;
             }
           }
         };
 
-        const handleSeeked = () => {
+        const requestVideoSeek = (targetTime: number) => {
           if (!video) return;
-          const duration = video.duration || HERO_VIDEO_STOP_TIME;
-          const target = Math.min(Math.max(0, desiredTime), duration);
-          if (Math.abs(video.currentTime - target) > 0.004) {
-            try {
-              video.currentTime = target;
-            } catch {
-              // Ignorar buffers transitorios
-            }
+          const maxDuration = video.duration
+            ? Math.max(0, video.duration - 0.02)
+            : HERO_VIDEO_STOP_TIME;
+          const clampedTarget = Math.min(Math.max(0, targetTime), maxDuration);
+
+          pendingTargetTime = clampedTarget;
+
+          if (!isSeeking) {
+            performSeek();
+          }
+        };
+
+        const handleSeeked = () => {
+          isSeeking = false;
+          // Deferir el siguiente seek al próximo AnimationFrame para permitir
+          // que el compositor de la GPU pinte el frame en pantalla sin micro-cortes
+          if (pendingTargetTime !== null) {
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = requestAnimationFrame(() => {
+              performSeek();
+            });
           }
         };
 
         const handleLoadedMetadata = () => {
           video.pause();
-          const targetFrame = Math.min(
+          const clampedFrame = Math.min(
             HERO_VIDEO_STOP_FRAME,
-            Math.max(0, Math.round(playhead.frame))
+            Math.max(0, playhead.frame)
           );
-          desiredTime = targetFrame / HERO_VIDEO_FPS;
-          syncVideoFrame();
+          requestVideoSeek(clampedFrame / HERO_VIDEO_FPS);
           ScrollTrigger.refresh();
         };
 
@@ -162,7 +197,7 @@ export default function PaginaInicio() {
           );
         }
 
-        // Fase 1 (0 -> 1.3s del TL ~ 1300px): Girar auto hasta frame 300 y aplicar zoom de hasta el 30% (scale 1.30)
+        // Fase 1 (0 -> 1.3s del TL ~ 1300px): Girar auto a lo largo de los 124 frames y zoom del 30%
         stageTl.to(playhead, {
           frame: HERO_VIDEO_STOP_FRAME,
           duration: 1.3,
@@ -170,10 +205,9 @@ export default function PaginaInicio() {
           onUpdate: () => {
             const clampedFrame = Math.min(
               HERO_VIDEO_STOP_FRAME,
-              Math.max(0, Math.round(playhead.frame))
+              Math.max(0, playhead.frame)
             );
-            desiredTime = clampedFrame / HERO_VIDEO_FPS;
-            syncVideoFrame();
+            requestVideoSeek(clampedFrame / HERO_VIDEO_FPS);
           },
         }, 0);
 
@@ -222,6 +256,7 @@ export default function PaginaInicio() {
         stageTl.to({}, { duration: 0.3 }, 1.5);
 
         cleanupVideoListeners = () => {
+          if (rafId) cancelAnimationFrame(rafId);
           video.removeEventListener("seeked", handleSeeked);
           video.removeEventListener("loadedmetadata", handleLoadedMetadata);
         };
