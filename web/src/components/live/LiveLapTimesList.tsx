@@ -5,6 +5,8 @@ import { Clock, Trophy, LineChart, CheckCircle2, ChevronRight, Activity } from "
 import type { LapCompletedEvent, TelemetriaCronometraje } from "@/types/telemetria";
 
 export interface VueltaRegistrada {
+  id?: string;
+  sesionId?: string;
   lapNumber: number;
   lapTimeMs: number;
   lapTimeStr: string;
@@ -168,8 +170,12 @@ export function LiveLapTimesList({
                   </div>
 
                   <Link
-                    href={`/app/analysis?vuelta=${v.lapNumber}`}
-                    title="Analizar vuelta en uPlot"
+                    href={
+                      v.id && v.sesionId
+                        ? `/app/analysis?sesionId=${v.sesionId}&vueltaId=${v.id}`
+                        : `/app/analysis`
+                    }
+                    title="Analizar vuelta en Laboratorio 2D"
                     className="p-1.5 rounded text-[#7e7e7e] hover:text-white hover:bg-white/[0.06] transition-colors"
                   >
                     <LineChart className="w-3.5 h-3.5" />

@@ -21,7 +21,12 @@ import { KammFrictionCircle } from "@/components/live/KammFrictionCircle";
 import { TyreThermalsMatrix } from "@/components/live/TyreThermalsMatrix";
 import { LiveMapaCircuitoCanvas } from "@/components/live/LiveMapaCircuitoCanvas";
 import { LiveLapTimesList, type VueltaRegistrada } from "@/components/live/LiveLapTimesList";
-import { solicitarPost, obtenerEstadoServicio } from "@/lib/apiClient";
+import {
+  solicitarPost,
+  obtenerEstadoServicio,
+  obtenerSesionesPaginadas,
+  obtenerVueltasSesion,
+} from "@/lib/apiClient";
 import { obtenerSesionLocal, esUsuarioAdmin, USUARIO_ALEJO_GARLATI } from "@/lib/auth";
 import type { PerfilUsuario } from "@/types/usuario";
 import type { EstadoMockDto, EstadoServicioDto } from "@/types/api";
@@ -79,6 +84,58 @@ export default function PaginaLivePitwall() {
   const [conmutandoMock, setConmutandoMock] = useState(false);
   const [vueltasSesion, setVueltasSesion] = useState<VueltaRegistrada[]>([]);
 
+  // Precargar vueltas ya registradas en la sesión activa al abrir o recargar (F5) Pitwall
+  useEffect(() => {
+    let cancelado = false;
+
+    async function precargarVueltasSesionActiva() {
+      try {
+        const resSesiones = await obtenerSesionesPaginadas(1, 5);
+        if (cancelado || !resSesiones.exitoso || !resSesiones.datos?.elementos?.length) return;
+
+        const primeraSesion = resSesiones.datos.elementos[0];
+        if (!primeraSesion) return;
+
+        const resVueltas = await obtenerVueltasSesion(primeraSesion.id);
+        if (cancelado || !resVueltas.exitoso || !Array.isArray(resVueltas.datos)) return;
+
+        const vueltasMapeadas: VueltaRegistrada[] = resVueltas.datos.map((v) => ({
+          id: v.id,
+          sesionId: primeraSesion.id,
+          lapNumber: v.lapNumber ?? v.numeroVuelta ?? 1,
+          lapTimeMs: v.lapTimeMs ?? v.tiempoVueltaMs ?? 0,
+          lapTimeStr: v.lapTimeStr ?? v.tiempoVueltaTexto ?? "--:--.---",
+          isPersonalBest: v.isBestLap ?? v.esMejorVuelta ?? false,
+          isValidLap: v.isValidLap ?? v.esValida ?? true,
+          sectors: [
+            (v.sector1Ms ?? 0) > 100 ? (v.sector1Ms ?? 0) / 1000 : (v.sector1Ms ?? 0),
+            (v.sector2Ms ?? 0) > 100 ? (v.sector2Ms ?? 0) / 1000 : (v.sector2Ms ?? 0),
+            (v.sector3Ms ?? 0) > 100 ? (v.sector3Ms ?? 0) / 1000 : (v.sector3Ms ?? 0),
+          ],
+          topSpeedKmh: 0,
+        }));
+
+        vueltasMapeadas.sort((a, b) => b.lapNumber - a.lapNumber);
+
+        setVueltasSesion((prev) => {
+          const idsExistentes = new Set(prev.map((p) => p.lapNumber));
+          const faltantes = vueltasMapeadas.filter((vm) => !idsExistentes.has(vm.lapNumber));
+          const combinadas = [...prev, ...faltantes];
+          combinadas.sort((a, b) => b.lapNumber - a.lapNumber);
+          return combinadas;
+        });
+      } catch {
+        // Manejado defensivamente
+      }
+    }
+
+    precargarVueltasSesionActiva();
+
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
   // Aislar datos del modo mock: los pilotos regulares no ingieren vueltas sintéticas
   const simulacionMockActiva = Boolean(estadoServicio?.isMockMode);
   const telemetriaValidaParaUsuario = esAdmin || (!simulacionMockActiva && conectado);
@@ -100,13 +157,20 @@ export default function PaginaLivePitwall() {
         return prev;
       }
 
+      const sectoresNormalizados: [number, number, number] = [
+        (ultimoEventoVuelta.sectors[0] ?? 0) > 100 ? (ultimoEventoVuelta.sectors[0] ?? 0) / 1000 : (ultimoEventoVuelta.sectors[0] ?? 0),
+        (ultimoEventoVuelta.sectors[1] ?? 0) > 100 ? (ultimoEventoVuelta.sectors[1] ?? 0) / 1000 : (ultimoEventoVuelta.sectors[1] ?? 0),
+        (ultimoEventoVuelta.sectors[2] ?? 0) > 100 ? (ultimoEventoVuelta.sectors[2] ?? 0) / 1000 : (ultimoEventoVuelta.sectors[2] ?? 0),
+      ];
+
       const nuevaVuelta: VueltaRegistrada = {
+        id: ultimoEventoVuelta.sessionLapId,
         lapNumber: ultimoEventoVuelta.lapNumber,
         lapTimeMs: ultimoEventoVuelta.lapTimeMs,
         lapTimeStr: ultimoEventoVuelta.lapTimeStr,
         isPersonalBest: ultimoEventoVuelta.isPersonalBest,
         isValidLap: ultimoEventoVuelta.isValidLap,
-        sectors: ultimoEventoVuelta.sectors,
+        sectors: sectoresNormalizados,
         topSpeedKmh: Math.round(velocidadAutoRef.current),
       };
 

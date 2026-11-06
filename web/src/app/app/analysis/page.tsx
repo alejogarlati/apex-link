@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, Suspense } from "react";
+import { useState, useMemo, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { SelectorVueltas } from "@/components/analisis/SelectorVueltas";
@@ -14,6 +14,8 @@ import {
   Radio,
   RefreshCw,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useLiveTelemetryWebSocket } from "@/hooks/useLiveTelemetryWebSocket";
 import {
   obtenerSesionesPaginadas,
   obtenerVueltasSesion,
@@ -62,6 +64,39 @@ function ContenidoAnalisis() {
   // Muestras reales cargadas desde API Kestrel (PostgreSQL / SQLite)
   const [muestrasRealesA, setMuestrasRealesA] = useState<MuestraTelemetria[] | null>(null);
   const [muestrasRealesB, setMuestrasRealesB] = useState<MuestraTelemetria[] | null>(null);
+
+  // Conexión WebSocket en vivo para actualización automática al cruzar meta
+  const { ultimoEventoVuelta, conectado } = useLiveTelemetryWebSocket();
+  const [refrescando, setRefrescando] = useState(false);
+
+  const recargarTodo = useCallback(async () => {
+    setRefrescando(true);
+    try {
+      const res = await obtenerSesionesPaginadas(1, 50);
+      if (res.exitoso && res.datos?.elementos?.length) {
+        const perfil = obtenerSesionLocal();
+        const esAdmin = esUsuarioAdmin(perfil?.usuario);
+        const disponibles = esAdmin
+          ? res.datos.elementos
+          : res.datos.elementos.filter((s) => !s.isMockSimulation);
+        setSesiones(disponibles);
+      }
+      if (sesionSeleccionadaId) {
+        const resVueltas = await obtenerVueltasSesion(sesionSeleccionadaId);
+        if (resVueltas.exitoso && Array.isArray(resVueltas.datos)) {
+          setVueltas(resVueltas.datos.map(mapearVueltaDtoAResumen));
+        }
+      }
+    } finally {
+      setRefrescando(false);
+    }
+  }, [sesionSeleccionadaId]);
+
+  // Actualización reactiva instantánea cuando el simulador despacha un evento de vuelta terminada
+  useEffect(() => {
+    if (!ultimoEventoVuelta) return;
+    recargarTodo();
+  }, [ultimoEventoVuelta, recargarTodo]);
 
   // 1. Cargar el catálogo de tandas del piloto
   useEffect(() => {
@@ -244,14 +279,22 @@ function ContenidoAnalisis() {
   const longitudMetrosPista = circuitoIdNormalizado === "rbr" ? 4318 : circuitoIdNormalizado === "imola" ? 4909 : 5793;
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-[1700px] mx-auto px-2 sm:px-4">
       {/* 1. Encabezado de la Sesión de Telemetría */}
       <div className="flex flex-col justify-between gap-4 border-b border-[#262626] pb-4 sm:flex-row sm:items-end">
         <div className="flex items-start gap-3.5">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
-              Laboratorio Analítico 2D
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
+                Laboratorio Analítico 2D
+              </h1>
+              {conectado && (
+                <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#0fa336]/15 border border-[#0fa336]/30 text-[#0fa336] text-[10px] font-mono font-bold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#0fa336] animate-pulse" />
+                  EN VIVO
+                </span>
+              )}
+            </div>
             <div className="mt-2 flex flex-wrap items-center gap-4 text-xs font-semibold tracking-wider text-[#bbbbbb] uppercase font-mono">
               <span className="flex items-center gap-1.5 text-white">
                 <Flag className="h-3.5 w-3.5 text-[#0066b1]" />
@@ -271,23 +314,36 @@ function ContenidoAnalisis() {
           </div>
         </div>
 
-        {/* Selector de Tanda Activa */}
-        {sesiones.length > 0 && (
-          <div className="flex items-center gap-2.5">
-            <span className="text-xs font-mono uppercase text-[#8e8e93]">Tanda:</span>
-            <select
-              value={sesionSeleccionadaId || ""}
-              onChange={(e) => setSesionSeleccionadaId(e.target.value)}
-              className="bg-[#141414] border border-[#3c3c3c] hover:border-[#0066b1] text-xs font-mono text-white rounded-lg px-3 py-2 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1]"
-            >
-              {sesiones.map((s) => (
-                <option key={s.id} value={s.id} className="bg-[#141414] text-white">
-                  {s.circuit} • {s.carModel} ({s.totalLaps} V)
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        {/* Acciones y Selector de Tanda Activa */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={recargarTodo}
+            disabled={refrescando}
+            title="Sincronizar telemetría con boxes"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#141414] border border-[#3c3c3c] hover:border-[#0066b1] text-xs font-mono text-[#bbbbbb] hover:text-white transition-colors cursor-pointer"
+          >
+            <RefreshCw className={cn("w-3.5 h-3.5 text-[#0066b1]", refrescando && "animate-spin")} />
+            <span className="hidden sm:inline">Sincronizar</span>
+          </button>
+
+          {sesiones.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono uppercase text-[#8e8e93]">Tanda:</span>
+              <select
+                value={sesionSeleccionadaId || ""}
+                onChange={(e) => setSesionSeleccionadaId(e.target.value)}
+                className="bg-[#141414] border border-[#3c3c3c] hover:border-[#0066b1] text-xs font-mono text-white rounded-lg px-3 py-2 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0066b1]"
+              >
+                {sesiones.map((s) => (
+                  <option key={s.id} value={s.id} className="bg-[#141414] text-white">
+                    {s.circuit} • {s.carModel} ({s.totalLaps} V)
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
       </div>
 
       {cargandoSesiones ? (
@@ -327,16 +383,17 @@ function ContenidoAnalisis() {
           </div>
         </div>
       ) : (
-        <div className="space-y-6">
-          {/* 2. Selector de Vueltas Superior */}
-          <section className="relative">
+        /* Layout de 2 Columnas: Margen Izquierdo (Vueltas) + Margen Derecho (Canvas + Telemetría) */
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Columna Izquierda: Listado de Vueltas de la Tanda */}
+          <div className="lg:col-span-4 xl:col-span-3 space-y-4">
             {cargandoVueltas && (
-              <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-xl">
+              <div className="flex items-center justify-center p-8 bg-[#0c0c0e] rounded-xl border border-[#262626]">
                 <Loader2 className="w-6 h-6 animate-spin text-[#0066b1]" />
               </div>
             )}
             {vueltas.length === 0 && !cargandoVueltas ? (
-              <div className="py-8 text-center space-y-2 border border-white/10 rounded-xl bg-white/[0.02]">
+              <div className="py-8 text-center space-y-2 border border-white/10 rounded-xl bg-white/[0.02] p-4">
                 <Flag className="w-6 h-6 text-[#7e7e7e] mx-auto" />
                 <p className="text-xs font-mono uppercase text-[#bbbbbb]">
                   Esta tanda no contiene vueltas válidas registradas en pista
@@ -349,64 +406,68 @@ function ContenidoAnalisis() {
                 vueltaBId={vueltaBId}
                 enSeleccionarVueltaA={setVueltaAId}
                 enSeleccionarVueltaB={setVueltaBId}
+                orientacion="vertical"
               />
             )}
-          </section>
+          </div>
 
-          {/* 3. Core Central de Análisis: Mapa de Trazadas 2D */}
-          <section className="relative">
-            {(cargandoTelemetriaA || cargandoTelemetriaB) && (
-              <div className="absolute top-4 right-4 z-20 flex items-center gap-2 px-3 py-1 bg-black/80 border border-[#0066b1] rounded text-xs text-[#0066b1] font-mono">
-                <RefreshCw className="w-3 h-3 animate-spin" />
-                Descargando series métricas de boxes...
-              </div>
-            )}
-            <MapaCircuitoCanvas
-              muestras={muestrasMapa}
-              muestrasComparativas={muestrasVueltaB}
-              distanciaSeleccionada={distanciaActiva}
-              onSeleccionarDistancia={setDistanciaActiva}
-              nombreCircuito={sesionActiva?.circuit || "Circuito"}
-              longitudMetros={longitudMetrosPista}
-              circuitoInicial={circuitoIdNormalizado}
-              vueltaAInfo={
-                vueltaA
-                  ? {
-                      ranura: "A",
-                      numeroVuelta: vueltaA.numeroVuelta,
-                      tiempoVueltaStr: vueltaA.tiempoVueltaStr,
-                    }
-                  : undefined
-              }
-              vueltaBInfo={
-                vueltaB
-                  ? {
-                      ranura: "B",
-                      numeroVuelta: vueltaB.numeroVuelta,
-                      tiempoVueltaStr: vueltaB.tiempoVueltaStr,
-                    }
-                  : undefined
-              }
-              ranuraActiva={ranuraEfectiva}
-              onCambiarRanura={setRanuraMapa}
-            />
-          </section>
+          {/* Columna Derecha: Core de Mapa 2D con Dock Flotante + Gráficos Recharts */}
+          <div className="lg:col-span-8 xl:col-span-9 space-y-6 min-w-0">
+            {/* Mapa 2D */}
+            <section className="relative">
+              {(cargandoTelemetriaA || cargandoTelemetriaB) && (
+                <div className="absolute top-4 right-4 z-20 flex items-center gap-2 px-3 py-1 bg-black/80 border border-[#0066b1] rounded text-xs text-[#0066b1] font-mono">
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                  Descargando series métricas de boxes...
+                </div>
+              )}
+              <MapaCircuitoCanvas
+                muestras={muestrasMapa}
+                muestrasComparativas={muestrasVueltaB}
+                distanciaSeleccionada={distanciaActiva}
+                onSeleccionarDistancia={setDistanciaActiva}
+                nombreCircuito={sesionActiva?.circuit || "Circuito"}
+                longitudMetros={longitudMetrosPista}
+                circuitoInicial={circuitoIdNormalizado}
+                vueltaAInfo={
+                  vueltaA
+                    ? {
+                        ranura: "A",
+                        numeroVuelta: vueltaA.numeroVuelta,
+                        tiempoVueltaStr: vueltaA.tiempoVueltaStr,
+                      }
+                    : undefined
+                }
+                vueltaBInfo={
+                  vueltaB
+                    ? {
+                        ranura: "B",
+                        numeroVuelta: vueltaB.numeroVuelta,
+                        tiempoVueltaStr: vueltaB.tiempoVueltaStr,
+                      }
+                    : undefined
+                }
+                ranuraActiva={ranuraEfectiva}
+                onCambiarRanura={setRanuraMapa}
+              />
+            </section>
 
-          {/* 4. Gráficos de Telemetría Sincronizados Multieje */}
-          <section>
-            <GraficoTelemetria
-              muestrasVueltaA={muestrasVueltaA}
-              muestrasVueltaB={muestrasVueltaB}
-              nombreVueltaA={
-                vueltaA ? `V${vueltaA.numeroVuelta} (${vueltaA.tiempoVueltaStr})` : "Vuelta A"
-              }
-              nombreVueltaB={
-                vueltaB ? `V${vueltaB.numeroVuelta} (${vueltaB.tiempoVueltaStr})` : undefined
-              }
-              distanciaActiva={distanciaActiva}
-              onHoverDistancia={setDistanciaActiva}
-            />
-          </section>
+            {/* Gráficos de Telemetría Sincronizados Multieje */}
+            <section>
+              <GraficoTelemetria
+                muestrasVueltaA={muestrasVueltaA}
+                muestrasVueltaB={muestrasVueltaB}
+                nombreVueltaA={
+                  vueltaA ? `V${vueltaA.numeroVuelta} (${vueltaA.tiempoVueltaStr})` : "Vuelta A"
+                }
+                nombreVueltaB={
+                  vueltaB ? `V${vueltaB.numeroVuelta} (${vueltaB.tiempoVueltaStr})` : undefined
+                }
+                distanciaActiva={distanciaActiva}
+                onHoverDistancia={setDistanciaActiva}
+              />
+            </section>
+          </div>
         </div>
       )}
     </div>

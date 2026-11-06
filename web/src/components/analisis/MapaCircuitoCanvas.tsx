@@ -54,6 +54,7 @@ export function MapaCircuitoCanvas({
   distanciaSeleccionada = null,
   onSeleccionarDistancia,
   nombreCircuito,
+  longitudMetros,
   vueltaAInfo,
   vueltaBInfo,
   ranuraActiva = "A",
@@ -68,6 +69,11 @@ export function MapaCircuitoCanvas({
   const [modoRender, setModoRender] = useState<ModoRender>("map_png");
   const [modoHeatmap, setModoHeatmap] = useState<ModoHeatmap>("throttle_brake");
   const [estaReproduciendo, setEstaReproduciendo] = useState<boolean>(false);
+  const [velocidadMultiplicador, setVelocidadMultiplicador] = useState<number>(1);
+  const velocidadMultRef = useRef<number>(1);
+  useEffect(() => {
+    velocidadMultRef.current = velocidadMultiplicador;
+  }, [velocidadMultiplicador]);
 
   // Sincronizar si cambia el circuito provisto externamente (ej: Live Pitwall)
   useEffect(() => {
@@ -101,9 +107,59 @@ export function MapaCircuitoCanvas({
     return CIRCUITS_DATA[circuitoActivoId] || CIRCUITS_DATA.monza;
   }, [circuitoActivoId]);
 
+  // Trazada real a partir de telemetría de Vuelta A (reemplaza puntos estáticos por la línea real)
+  const trackRealA = useMemo(() => {
+    if (muestras && muestras.length > 5) {
+      const totalDist = circuitoActual.lengthMeters || 5793;
+      return muestras.map((m, idx) => ({
+        index: idx,
+        t: m.distanciaMetros / totalDist,
+        x: m.posicionMundo.x,
+        y: m.posicionMundo.y ?? 12,
+        z: m.posicionMundo.z,
+        dist: m.distanciaMetros,
+        yaw: 0,
+        speed: m.velocidadKmh,
+        gear: m.marcha,
+        rpm: m.rpms,
+        throttle: m.acelerador,
+        brake: m.freno,
+        slope: 0,
+        section: "",
+        drs: false,
+      }));
+    }
+    return circuitoActual?.track ?? [];
+  }, [muestras, circuitoActual]);
+
+  // Trazada real a partir de telemetría de Vuelta B (comparativa)
+  const trackRealB = useMemo(() => {
+    if (muestrasComparativas && muestrasComparativas.length > 5) {
+      const totalDist = circuitoActual.lengthMeters || 5793;
+      return muestrasComparativas.map((m, idx) => ({
+        index: idx,
+        t: m.distanciaMetros / totalDist,
+        x: m.posicionMundo.x,
+        y: m.posicionMundo.y ?? 12,
+        z: m.posicionMundo.z,
+        dist: m.distanciaMetros,
+        yaw: 0,
+        speed: m.velocidadKmh,
+        gear: m.marcha,
+        rpm: m.rpms,
+        throttle: m.acelerador,
+        brake: m.freno,
+        slope: 0,
+        section: "",
+        drs: false,
+      }));
+    }
+    return null;
+  }, [muestrasComparativas, circuitoActual]);
+
   // Perfil temporal acumulado del circuito (dx / v a lo largo de cada segmento de pista)
   const tiemposAcumuladosPista = useMemo(() => {
-    const track = circuitoActual?.track ?? [];
+    const track = trackRealA;
     if (track.length === 0) return [];
     const times: number[] = [0];
     let acumSec = 0;
@@ -117,7 +173,7 @@ export function MapaCircuitoCanvas({
       times.push(acumSec * 1000);
     }
     return times;
-  }, [circuitoActual]);
+  }, [trackRealA]);
 
   // Si se dispone del tiempo oficial de vuelta (ej. "01:21.042"), sincronizar escala exacta de meta
   const duracionObjetivoMs = useMemo(() => {
@@ -216,27 +272,45 @@ export function MapaCircuitoCanvas({
       !estadoCamara.current.reproduciendo &&
       typeof distanciaSeleccionada === "number" &&
       Number.isFinite(distanciaSeleccionada) &&
-      circuitoActual.track.length > 0
+      trackRealA.length > 0
     ) {
-      const totalMetros = circuitoActual.lengthMeters || 1;
-      const ratio = Math.max(0, Math.min(1, distanciaSeleccionada / totalMetros));
-      const targetPoint = ratio * (circuitoActual.track.length - 1);
-      estadoCamara.current.carProgressA = targetPoint;
+      const totalMetros = circuitoActual.lengthMeters || (trackRealA[trackRealA.length - 1]?.dist ?? 1);
+      const distClamped = Math.max(0, Math.min(totalMetros, distanciaSeleccionada));
 
-      // Si hay comparativa, desfasamos ligeramente el coche B según el factor de rendimiento
-      estadoCamara.current.carProgressB = Math.max(0, targetPoint - 12);
+      // Búsqueda binaria o indexada del punto más cercano sobre la trazada real
+      let targetPointA = 0;
+      for (let i = 0; i < trackRealA.length; i++) {
+        if (trackRealA[i]!.dist >= distClamped) {
+          targetPointA = i;
+          break;
+        }
+      }
+      estadoCamara.current.carProgressA = targetPointA;
+
+      if (trackRealB && trackRealB.length > 0) {
+        let targetPointB = 0;
+        for (let i = 0; i < trackRealB.length; i++) {
+          if (trackRealB[i]!.dist >= distClamped) {
+            targetPointB = i;
+            break;
+          }
+        }
+        estadoCamara.current.carProgressB = targetPointB;
+      } else {
+        estadoCamara.current.carProgressB = Math.max(0, targetPointA - 12);
+      }
 
       if (timestampRef.current && tiemposEscalados.length > 0) {
-        const idx0 = Math.floor(targetPoint);
+        const idx0 = Math.floor(targetPointA);
         const idx1 = Math.min(tiemposEscalados.length - 1, idx0 + 1);
-        const frac = targetPoint - idx0;
+        const frac = targetPointA - idx0;
         const t0 = tiemposEscalados[idx0] ?? 0;
         const t1 = tiemposEscalados[idx1] ?? t0;
         const ms = t0 + (t1 - t0) * frac;
         timestampRef.current.textContent = formatearTimestamp(ms);
       }
     }
-  }, [distanciaSeleccionada, circuitoActual, tiemposEscalados]);
+  }, [distanciaSeleccionada, trackRealA, trackRealB, circuitoActual, tiemposEscalados]);
 
   // 1. Manejo nativo de rueda de ratón con { passive: false } para EVITAR scroll de página
   useEffect(() => {
@@ -268,10 +342,11 @@ export function MapaCircuitoCanvas({
     let lastTime = performance.now();
 
     const render = (now: number) => {
-      const dt = Math.min(0.1, (now - lastTime) / 1000);
+      const dt = Math.min(0.1, (now - lastTime) / 1000) * velocidadMultRef.current;
       lastTime = now;
 
-      const track = circuitoActual?.track ?? [];
+      const track = trackRealA;
+      const trackB = trackRealB;
       const bounds = circuitoActual.bounds;
       const center = circuitoActual.center;
       const mapConfig = circuitoActual.mapConfig;
@@ -288,20 +363,22 @@ export function MapaCircuitoCanvas({
       let safeProgressA = Number.isFinite(cam.carProgressA)
         ? ((cam.carProgressA % totalPoints) + totalPoints) % totalPoints
         : 0;
+
+      const totalPointsB = trackB && trackB.length > 1 ? trackB.length : totalPoints;
       let safeProgressB = Number.isFinite(cam.carProgressB)
-        ? ((cam.carProgressB % totalPoints) + totalPoints) % totalPoints
+        ? ((cam.carProgressB % totalPointsB) + totalPointsB) % totalPointsB
         : 0;
 
       // Avance simultáneo de ambos monoplazas en carrera virtual
       if (cam.reproduciendo && totalPoints > 1) {
-        const metersPerPoint = Math.max(0.1, bounds.totalDistance / totalPoints);
+        const metersPerPointA = Math.max(0.1, bounds.totalDistance / totalPoints);
 
-        // Auto A: Ritmo base (Vuelta Rápida)
+        // Auto A: Ritmo base (Vuelta Rápida / Tanda Real)
         const idxA = Math.floor(safeProgressA);
         const pActualA = track[idxA] ?? track[0];
         if (pActualA) {
-          const speedKmhA = Math.max(80, pActualA.speed);
-          const puntosAvanzadosA = ((speedKmhA / 3.6) * dt) / metersPerPoint;
+          const speedKmhA = Math.max(60, pActualA.speed);
+          const puntosAvanzadosA = ((speedKmhA / 3.6) * dt) / metersPerPointA;
           safeProgressA = ((safeProgressA + puntosAvanzadosA) % totalPoints + totalPoints) % totalPoints;
           cam.carProgressA = safeProgressA;
 
@@ -312,14 +389,26 @@ export function MapaCircuitoCanvas({
           }
         }
 
-        // Auto B: Ritmo comparativo (~93% de velocidad media o según Vuelta B)
-        const idxB = Math.floor(safeProgressB);
-        const pActualB = track[idxB] ?? track[0];
-        if (pActualB) {
-          const speedKmhB = Math.max(75, pActualB.speed * 0.935);
-          const puntosAvanzadosB = ((speedKmhB / 3.6) * dt) / metersPerPoint;
-          safeProgressB = ((safeProgressB + puntosAvanzadosB) % totalPoints + totalPoints) % totalPoints;
-          cam.carProgressB = safeProgressB;
+        // Auto B: Ritmo comparativo (según Vuelta B real o Ghost ~93%)
+        if (trackB && trackB.length > 1) {
+          const metersPerPointB = Math.max(0.1, bounds.totalDistance / totalPointsB);
+          const idxB = Math.floor(safeProgressB);
+          const pActualB = trackB[idxB] ?? trackB[0];
+          if (pActualB) {
+            const speedKmhB = Math.max(60, pActualB.speed);
+            const puntosAvanzadosB = ((speedKmhB / 3.6) * dt) / metersPerPointB;
+            safeProgressB = ((safeProgressB + puntosAvanzadosB) % totalPointsB + totalPointsB) % totalPointsB;
+            cam.carProgressB = safeProgressB;
+          }
+        } else {
+          const idxB = Math.floor(safeProgressB);
+          const pActualB = track[idxB] ?? track[0];
+          if (pActualB) {
+            const speedKmhB = Math.max(60, pActualB.speed * 0.935);
+            const puntosAvanzadosB = ((speedKmhB / 3.6) * dt) / metersPerPointA;
+            safeProgressB = ((safeProgressB + puntosAvanzadosB) % totalPoints + totalPoints) % totalPoints;
+            cam.carProgressB = safeProgressB;
+          }
         }
       }
 
@@ -347,17 +436,17 @@ export function MapaCircuitoCanvas({
       const carADrs = pA0.drs;
       const carADist = Math.round(pA0.dist + (pA1.dist - pA0.dist) * fracA);
 
-      // Interpolación continua ultra segura para Monoplaza B (Ghost Car)
+      // Interpolación continua ultra segura para Monoplaza B (Ghost Car o Vuelta B Real)
       const idxB0 = Math.floor(safeProgressB);
-      const idxB1 = (idxB0 + 1) % totalPoints;
+      const idxB1 = (idxB0 + 1) % totalPointsB;
       const fracB = safeProgressB - idxB0;
-      const pB0 = track[idxB0] ?? track[0] ?? pA0;
-      const pB1 = track[idxB1] ?? pB0;
+      const pB0 = (trackB ? trackB[idxB0] : track[idxB0]) ?? track[0] ?? pA0;
+      const pB1 = (trackB ? trackB[idxB1] : track[idxB1]) ?? pB0;
 
       const carBX = pB0.x + (pB1.x - pB0.x) * fracB;
       const carBY = pB0.y + (pB1.y - pB0.y) * fracB;
       const carBZ = pB0.z + (pB1.z - pB0.z) * fracB;
-      const carBSpeed = Math.round((pB0.speed + (pB1.speed - pB0.speed) * fracB) * 0.935);
+      const carBSpeed = Math.round(trackB ? pB0.speed + (pB1.speed - pB0.speed) * fracB : (pB0.speed + (pB1.speed - pB0.speed) * fracB) * 0.935);
       const carBDist = Math.round(pB0.dist + (pB1.dist - pB0.dist) * fracB);
 
       // Calcular delta métrico entre ambos monoplazas con protección contra velocidad cero
@@ -493,12 +582,32 @@ export function MapaCircuitoCanvas({
           ctx.restore();
         }
 
-        // 2. Trazada de Telemetría con Heatmap
+        // 2. Si hay comparativa (Vuelta B), dibujar su trazada en cian punteado
+        if (trackB && trackB.length > 1) {
+          ctx.save();
+          ctx.lineWidth = 2.5;
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+          ctx.strokeStyle = "rgba(147, 197, 253, 0.45)";
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          for (let i = 0; i < trackB.length; i++) {
+            const pt = trackB[i]!;
+            const pScreen = projectMap(pt.x, pt.z);
+            if (i === 0) ctx.moveTo(pScreen.x, pScreen.y);
+            else ctx.lineTo(pScreen.x, pScreen.y);
+          }
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // 3. Trazada de Telemetría Real de Vuelta A con Heatmap
         ctx.lineWidth = 3.5;
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
 
-        for (let i = 0; i < totalPoints; i++) {
+        const cotaPuntosA = muestras && muestras.length > 5 ? totalPoints - 1 : totalPoints;
+        for (let i = 0; i < cotaPuntosA; i++) {
           const ptA = track[i];
           const ptB = track[(i + 1) % totalPoints] ?? ptA;
           if (!ptA || !ptB) continue;
@@ -684,7 +793,7 @@ export function MapaCircuitoCanvas({
 
     animId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animId);
-  }, [circuitoActual, modoRender, modoHeatmap, tieneComparativa, ranuraActiva, onSeleccionarDistancia, tiemposEscalados]);
+  }, [circuitoActual, trackRealA, trackRealB, muestras, modoRender, modoHeatmap, tieneComparativa, ranuraActiva, onSeleccionarDistancia, tiemposEscalados]);
 
   // Función auxiliar de pintado de Laser Puck
   function dibujarPuck(
@@ -1021,22 +1130,97 @@ export function MapaCircuitoCanvas({
         </div>
       </div>
 
-      {/* 5. Barra Inferior: Solo Botón Play y Timestamp */}
-      <div className="p-3 border-t border-[#262626] bg-[#0d0d0d] flex items-center gap-3">
-        <button
-          onClick={() => setEstaReproduciendo(!estaReproduciendo)}
-          title={estaReproduciendo ? "Pausar" : "Reproducir Demostración Simultánea"}
-          className="p-2 rounded bg-[#0066b1] hover:bg-[#1c69d4] text-white transition-colors cursor-pointer"
-        >
-          {estaReproduciendo ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-white" />}
-        </button>
+      {/* 5. Dock Flotante de Controles y Barra de Progreso */}
+      <div className="border-t border-[#262626] bg-[#0c0c0e] px-4 py-3 select-none space-y-2.5">
+        {/* Fila Superior: Scrubber / Barra de Progreso Interactiva */}
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 flex items-center group">
+            <input
+              type="range"
+              min={0}
+              max={longitudMetros ?? circuitoActual.lengthMeters ?? 5793}
+              step={1}
+              value={Math.max(0, Math.min(longitudMetros ?? circuitoActual.lengthMeters ?? 5793, distanciaSeleccionada ?? 0))}
+              onChange={(e) => {
+                const nuevaDist = Number(e.target.value);
+                onSeleccionarDistancia?.(nuevaDist);
+              }}
+              className="w-full h-2 bg-[#222225] rounded-lg appearance-none cursor-pointer accent-[#0066b1] hover:accent-[#1c69d4] focus:outline-none transition-all"
+            />
+          </div>
 
-        <span
-          ref={timestampRef}
-          className="text-sm font-mono font-bold text-white tracking-wider tabular-nums select-none"
-        >
-          00:00:000
-        </span>
+          <span className="text-[11px] font-mono text-[#bbbbbb] tabular-nums shrink-0">
+            {Math.round(distanciaSeleccionada ?? 0)} / {Math.round(longitudMetros ?? circuitoActual.lengthMeters ?? 5793)} m
+          </span>
+        </div>
+
+        {/* Fila Inferior: Botonera de Control, Velocidades y Métricas */}
+        <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+          <div className="flex items-center gap-2">
+            {/* Botón Play / Pause */}
+            <button
+              type="button"
+              onClick={() => setEstaReproduciendo(!estaReproduciendo)}
+              title={estaReproduciendo ? "Pausar reproducción" : "Reproducir trazada"}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0066b1] hover:bg-[#1c69d4] text-white font-bold transition-all cursor-pointer shadow-md shadow-[#0066b1]/20"
+            >
+              {estaReproduciendo ? (
+                <>
+                  <Pause className="w-3.5 h-3.5" />
+                  <span>Pausar</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-3.5 h-3.5 fill-white" />
+                  <span>Reproducir</span>
+                </>
+              )}
+            </button>
+
+            {/* Botón Reiniciar a Meta */}
+            <button
+              type="button"
+              onClick={() => {
+                onSeleccionarDistancia?.(0);
+              }}
+              title="Volver a la línea de meta (0 m)"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#18181b] border border-[#27272a] hover:border-white/20 text-[#bbbbbb] hover:text-white transition-colors cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span className="text-[11px]">Reiniciar</span>
+            </button>
+
+            {/* Selector de Velocidad Multiplicadora */}
+            <div className="flex items-center rounded-lg border border-[#27272a] bg-[#141416] p-0.5 ml-1">
+              {([0.5, 1, 2] as const).map((factor) => (
+                <button
+                  key={factor}
+                  type="button"
+                  onClick={() => setVelocidadMultiplicador(factor)}
+                  className={cn(
+                    "px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer",
+                    velocidadMultiplicador === factor
+                      ? "bg-[#0066b1] text-white"
+                      : "text-[#7e7e7e] hover:text-white"
+                  )}
+                >
+                  {factor}x
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Timestamp Sincronizado */}
+          <div className="flex items-center gap-2">
+            <span className="text-[#7e7e7e] text-[10px] uppercase">Tiempo:</span>
+            <span
+              ref={timestampRef}
+              className="text-sm font-mono font-bold text-white tracking-wider tabular-nums select-none"
+            >
+              00:00:000
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
