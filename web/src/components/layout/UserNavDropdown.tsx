@@ -12,6 +12,7 @@ import {
   FolderClock,
   ShieldCheck,
   Cpu,
+  UserPlus,
 } from "lucide-react";
 import type { PerfilUsuario } from "@/types/usuario";
 import { Badge } from "@/components/ui/Badge";
@@ -198,6 +199,21 @@ export function UserNavDropdown({
                 <span className="font-bold">Cambiar Simulador</span>
                 <span className="text-[10px] text-[#7e7e7e]">
                   Enlace Assetto Corsa & telemetría Win32
+                </span>
+              </div>
+            </Link>
+
+            <Link
+              href="/login?modo=registro"
+              role="menuitem"
+              onClick={() => setAbierto(false)}
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-[#cccccc] hover:text-white hover:bg-[#1a1a1a] transition-colors"
+            >
+              <UserPlus className="w-4 h-4 text-[#f4b400]" />
+              <div className="flex flex-col">
+                <span className="font-bold">Registrar Nuevo Piloto</span>
+                <span className="text-[10px] text-[#7e7e7e]">
+                  Alta rápida y cambio de piloto en cabina
                 </span>
               </div>
             </Link>

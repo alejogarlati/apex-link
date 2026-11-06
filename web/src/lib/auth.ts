@@ -1,6 +1,6 @@
 import type { PerfilUsuario, SesionAuth } from "@/types/usuario";
-import type { PerfilPilotoDetalleApiDto } from "@/types/api";
-import { autenticarUsuario } from "@/lib/apiClient";
+import type { PerfilPilotoDetalleApiDto, RegistroApiRequest } from "@/types/api";
+import { autenticarUsuario, registrarUsuario, declararPilotoActivo } from "@/lib/apiClient";
 
 const CLAVE_ALMACENAMIENTO_AUTH = "apexlink_auth_sesion";
 
@@ -181,6 +181,11 @@ export async function iniciarSesionConServidor(
       };
 
       guardarSesionLocal(sesion);
+      declararPilotoActivo(
+        usuarioConsolidado.id,
+        usuarioConsolidado.nombre,
+        usuarioConsolidado.alias
+      ).catch(() => {});
       return { exitoso: true, sesion };
     }
 
@@ -206,6 +211,108 @@ export async function iniciarSesionConServidor(
       exitoso: false,
       error:
         "Servidor central de boxes desconectado. Levantá la API de telemetría Kestrel (.NET 10 / PostgreSQL) para iniciar sesión.",
+    };
+  }
+}
+
+/**
+ * Registra un nuevo piloto en el servidor central (.NET 10 / PostgreSQL 16 con BCrypt),
+ * inicia su sesión automáticamente y lo declara como piloto activo en cabina.
+ */
+export async function registrarPilotoConServidor(
+  datos: RegistroApiRequest
+): Promise<{ exitoso: boolean; sesion?: SesionAuth; error?: string }> {
+  const nombre = datos.nombre.trim();
+  const alias = datos.alias.trim().toUpperCase();
+  const email = datos.email.trim().toLowerCase();
+  const password = datos.password;
+
+  if (nombre.length < 2) {
+    return {
+      exitoso: false,
+      error: "El nombre completo debe tener al menos 2 caracteres.",
+    };
+  }
+
+  if (alias.length < 2 || alias.length > 20) {
+    return {
+      exitoso: false,
+      error: "El alias de piloto debe tener entre 2 y 20 caracteres.",
+    };
+  }
+
+  if (!email.includes("@") || !email.includes(".")) {
+    return {
+      exitoso: false,
+      error: "Debés ingresar una dirección de correo electrónico válida.",
+    };
+  }
+
+  if (!password || password.length < 6) {
+    return {
+      exitoso: false,
+      error: "La contraseña debe tener al menos 6 caracteres.",
+    };
+  }
+
+  try {
+    const res = await registrarUsuario({
+      nombre,
+      alias,
+      email,
+      password,
+      nacionalidad: datos.nacionalidad || "Argentina",
+      codigoPais: datos.codigoPais || "ARG",
+    });
+
+    if (res.exitoso && res.datos) {
+      const usuarioConsolidado = mapearDtoAPerfilUsuario(res.datos.usuario);
+
+      const sesion: SesionAuth = {
+        token: res.datos.token,
+        usuario: usuarioConsolidado,
+        expiraEn: res.datos.expiraEn,
+      };
+
+      guardarSesionLocal(sesion);
+      declararPilotoActivo(
+        usuarioConsolidado.id,
+        usuarioConsolidado.nombre,
+        usuarioConsolidado.alias
+      ).catch(() => {});
+
+      return { exitoso: true, sesion };
+    }
+
+    return {
+      exitoso: false,
+      error: res.mensaje || "No se pudo completar el registro del piloto.",
+    };
+  } catch (err: unknown) {
+    const mensajeError = err instanceof Error ? err.message : "";
+    if (
+      mensajeError.includes("409") ||
+      mensajeError.toLowerCase().includes("existe") ||
+      mensajeError.toLowerCase().includes("en uso") ||
+      mensajeError.toLowerCase().includes("registrado")
+    ) {
+      return {
+        exitoso: false,
+        error: mensajeError || "El correo electrónico o el alias ya se encuentran registrados en boxes.",
+      };
+    }
+
+    if (mensajeError.includes("400")) {
+      return {
+        exitoso: false,
+        error: mensajeError || "Verificá los datos del formulario de registro.",
+      };
+    }
+
+    return {
+      exitoso: false,
+      error:
+        "Servidor central de boxes desconectado. Levantá la API de telemetría Kestrel (.NET 10 / PostgreSQL) para registrar pilotos.",
     };
   }
 }

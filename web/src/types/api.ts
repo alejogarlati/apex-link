@@ -224,6 +224,15 @@ export interface LoginApiRequest {
   password: string;
 }
 
+export interface RegistroApiRequest {
+  nombre: string;
+  alias: string;
+  email: string;
+  password: string;
+  nacionalidad?: string;
+  codigoPais?: string;
+}
+
 export interface LoginRespuestaApiDto {
   token: string;
   expiraEn: string;

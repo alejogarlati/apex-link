@@ -14,6 +14,7 @@ import type {
   GenerarEvaluacionApiRequest,
   ActualizarRatingApiRequest,
   LoginApiRequest,
+  RegistroApiRequest,
   LoginRespuestaApiDto,
 } from "@/types/api";
 import type { MuestraTelemetriaDto, ComparativaVueltasDto } from "@/types/telemetria";
@@ -233,5 +234,15 @@ export async function autenticarUsuario(
   return solicitarPost<LoginRespuestaApiDto, LoginApiRequest>(
     "/api/auth/login",
     credenciales
+  );
+}
+
+/** Registra un nuevo piloto en el servidor central Kestrel / PostgreSQL con hash BCrypt */
+export async function registrarUsuario(
+  datos: RegistroApiRequest
+): Promise<RespuestaApi<LoginRespuestaApiDto>> {
+  return solicitarPost<LoginRespuestaApiDto, RegistroApiRequest>(
+    "/api/auth/registro",
+    datos
   );
 }
