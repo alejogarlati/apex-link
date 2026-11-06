@@ -15,6 +15,7 @@ import type {
   RecordCircuitoPiloto,
   LogroGamificado,
 } from "@/types/usuario";
+import { Skeleton } from "@/components/ui/Skeleton";
 import {
   ArrowRight,
   Award,
@@ -202,7 +203,7 @@ function TarjetaPiloto({
 }: {
   usuario: PerfilUsuario;
 }) {
-  const iniciales = usuario.nombre.substring(0, 2).toUpperCase();
+  const iniciales = usuario.nombre.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
   return (
     <div className="flex flex-col gap-4">
       <section
@@ -644,9 +645,11 @@ function SeccionInsignias({ logros }: { logros: LogroGamificado[] }) {
 
 export default function PaginaPerfil() {
   const router = useRouter();
+  const [montado, setMontado] = useState(false);
   const [usuario, setUsuario] = useState<PerfilUsuario>(USUARIO_ALEJO_GARLATI);
 
   useEffect(() => {
+    setMontado(true);
     const sincronizarUsuario = () => {
       const sesion = obtenerSesionLocal();
       if (sesion?.usuario) {
@@ -863,6 +866,22 @@ export default function PaginaPerfil() {
       acento: COLORES.rojoM,
     },
   ];
+
+  if (!montado) {
+    return (
+      <div className="min-h-screen bg-black text-white antialiased selection:bg-[#0066b1]">
+        <FranjaM className="h-1.5 w-full" />
+        <main className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-10 sm:px-6 sm:py-14">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-64 w-full rounded-2xl" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Skeleton className="h-72 w-full rounded-xl" />
+            <Skeleton className="h-72 w-full rounded-xl" />
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white antialiased selection:bg-[#0066b1] selection:text-white">
