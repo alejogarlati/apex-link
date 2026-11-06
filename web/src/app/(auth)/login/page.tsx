@@ -143,13 +143,13 @@ export default function PaginaLogin() {
         <div className="flex items-center gap-3">
           {estadoBackend.verificado && (
             <Badge
-              variant={estadoBackend.conectado ? "success" : "info"}
+              variant={estadoBackend.conectado ? "success" : "danger"}
               dot
               pulse={estadoBackend.conectado}
             >
               {estadoBackend.conectado
                 ? `Core Relay Online (${estadoBackend.circuito || "Monza"})`
-                : "PostgreSQL Auth Ready"}
+                : "Servidor Desconectado (Offline)"}
             </Badge>
           )}
           <div className="hidden sm:flex items-center px-2.5 py-1 bg-[#141414] border border-[#3c3c3c] rounded">

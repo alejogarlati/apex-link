@@ -416,19 +416,9 @@ export async function iniciarSesionConServidor(
     };
   }
 
-  // Acceso directo e instantáneo para el Administrador Maestro (admin / admin)
-  if ((emailNorm === "admin" || emailNorm === "admin@apexlink.io") && passNorm === "admin") {
-    const sesion: SesionAuth = {
-      token: `apex_admin_${Date.now()}`,
-      usuario: USUARIO_ADMIN,
-      expiraEn: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    };
-    guardarSesionLocal(sesion);
-    return { exitoso: true, sesion };
-  }
-
   try {
-    const res = await autenticarUsuario({ email: emailNorm, password: passNorm });
+    const emailAEnviar = emailNorm === "admin" ? "admin@apexlink.io" : emailNorm;
+    const res = await autenticarUsuario({ email: emailAEnviar, password: passNorm });
     if (res.exitoso && res.datos) {
       const dto = res.datos.usuario;
       const baseUsuario =
@@ -499,52 +489,32 @@ export async function iniciarSesionConServidor(
       guardarSesionLocal(sesion);
       return { exitoso: true, sesion };
     }
+
+    return {
+      exitoso: false,
+      error: res.mensaje || "Credenciales inválidas. Verificá tu correo y contraseña de boxes.",
+    };
   } catch (err: unknown) {
     const mensajeError = err instanceof Error ? err.message : "";
     // Si el servidor respondió explícitamente 401 (Credenciales inválidas)
-    if (mensajeError.includes("401")) {
+    if (
+      mensajeError.includes("401") ||
+      mensajeError.toLowerCase().includes("invalida") ||
+      mensajeError.toLowerCase().includes("credenciales") ||
+      mensajeError.toLowerCase().includes("no corresponde")
+    ) {
       return {
         exitoso: false,
-        error: "Credenciales inválidas. Verificá tu correo y contraseña de acceso.",
+        error: "Credenciales inválidas. Verificá tu correo y contraseña de boxes.",
       };
     }
-  }
 
-  // Verificación estricta cuando la API Kestrel no está encendida en segundo plano
-  const passwordValida =
-    passNorm === "Password123!" ||
-    passNorm === "ApexLink2026!" ||
-    passNorm === "admin123";
-
-  if (!passwordValida) {
+    // Servidor central no alcanzable: rechazo estricto sin inicio de sesión offline
     return {
       exitoso: false,
-      error: "Contraseña incorrecta. Revisá tus credenciales de boxes.",
+      error: "Servidor central de boxes desconectado. Levantá la API de telemetría Kestrel (.NET 10 / PostgreSQL) para iniciar sesión.",
     };
   }
-
-  let usuarioAutenticado: PerfilUsuario | null = null;
-  if (emailNorm === "agarlati@apexlink.io") {
-    usuarioAutenticado = USUARIO_ALEJO_GARLATI;
-  } else if (emailNorm === "asalas@apexlink.io") {
-    usuarioAutenticado = USUARIO_ALEJO_SALAS;
-  }
-
-  if (!usuarioAutenticado) {
-    return {
-      exitoso: false,
-      error: "No existe ningún piloto activo registrado con ese correo electrónico.",
-    };
-  }
-
-  const sesion: SesionAuth = {
-    token: `apex_edge_${usuarioAutenticado.id}_${Date.now()}`,
-    usuario: usuarioAutenticado,
-    expiraEn: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-  };
-
-  guardarSesionLocal(sesion);
-  return { exitoso: true, sesion };
 }
 
 /**
