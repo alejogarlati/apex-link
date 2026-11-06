@@ -84,24 +84,45 @@ export default function PaginaLivePitwall() {
   const [conmutandoMock, setConmutandoMock] = useState(false);
   const [vueltasSesion, setVueltasSesion] = useState<VueltaRegistrada[]>([]);
 
-  // Precargar vueltas ya registradas en la sesión activa al abrir o recargar (F5) Pitwall
+  // Determinar si hay una sesión real (o Mock para Admin) corriendo en este instante en el simulador
+  const simulacionMockActiva = Boolean(estadoServicio?.isMockMode ?? estadoServicio?.modoMock);
+  const simuladorConectado = Boolean(estadoServicio?.isConnected ?? estadoServicio?.estaConectado);
+  const telemetriaValidaParaUsuario = esAdmin
+    ? Boolean(simuladorConectado || simulacionMockActiva)
+    : Boolean(simuladorConectado && !simulacionMockActiva);
+  const frameEfectivo = telemetriaValidaParaUsuario ? frame : null;
+
+  // Si no hay sesión activa en el simulador (juego cerrado / standby), limpiar la tabla en vivo
+  // ya que las tandas finalizadas pertenecen al Historial de Sesiones (/app/sessions)
   useEffect(() => {
     let cancelado = false;
 
+    if (!telemetriaValidaParaUsuario) {
+      setVueltasSesion([]);
+      return;
+    }
+
     async function precargarVueltasSesionActiva() {
       try {
-        const resSesiones = await obtenerSesionesPaginadas(1, 5);
+        const usuarioFiltro = esAdmin ? undefined : usuario.id;
+        const resSesiones = await obtenerSesionesPaginadas(1, 5, usuarioFiltro);
         if (cancelado || !resSesiones.exitoso || !resSesiones.datos?.elementos?.length) return;
 
-        const primeraSesion = resSesiones.datos.elementos[0];
-        if (!primeraSesion) return;
+        // Solo hidratar si existe una tanda actualmente ABIERTA (sin fecha de cierre)
+        const sesionAbierta = resSesiones.datos.elementos.find(
+          (s) => !(s.endTime ?? s.fechaFin) && (esAdmin || !(s.isMockSimulation ?? s.esSimulacionMock))
+        );
+        if (!sesionAbierta) {
+          setVueltasSesion([]);
+          return;
+        }
 
-        const resVueltas = await obtenerVueltasSesion(primeraSesion.id);
+        const resVueltas = await obtenerVueltasSesion(sesionAbierta.id);
         if (cancelado || !resVueltas.exitoso || !Array.isArray(resVueltas.datos)) return;
 
         const vueltasMapeadas: VueltaRegistrada[] = resVueltas.datos.map((v) => ({
           id: v.id,
-          sesionId: primeraSesion.id,
+          sesionId: sesionAbierta.id,
           lapNumber: v.lapNumber ?? v.numeroVuelta ?? 1,
           lapTimeMs: v.lapTimeMs ?? v.tiempoVueltaMs ?? 0,
           lapTimeStr: v.lapTimeStr ?? v.tiempoVueltaTexto ?? "--:--.---",
@@ -134,12 +155,7 @@ export default function PaginaLivePitwall() {
     return () => {
       cancelado = true;
     };
-  }, []);
-
-  // Aislar datos del modo mock: los pilotos regulares no ingieren vueltas sintéticas
-  const simulacionMockActiva = Boolean(estadoServicio?.isMockMode);
-  const telemetriaValidaParaUsuario = esAdmin || (!simulacionMockActiva && conectado);
-  const frameEfectivo = telemetriaValidaParaUsuario ? frame : null;
+  }, [telemetriaValidaParaUsuario, esAdmin, usuario.id]);
 
   // Mantener la velocidad actual en ref para evitar re-ejecuciones de effect en cada frame
   const velocidadAutoRef = useRef(frameEfectivo?.car.speedKmh ?? 0);
