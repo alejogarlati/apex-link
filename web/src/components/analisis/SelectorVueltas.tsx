@@ -142,8 +142,13 @@ export function SelectorVueltas({
       </div>
 
       {/* Grid Horizontal de Tarjetas de Vuelta */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-        {vueltasOrdenadas.map((vuelta) => {
+      {vueltasOrdenadas.length === 0 ? (
+        <div className="py-8 text-center text-xs font-mono text-[#7e7e7e]">
+          No hay vueltas registradas en esta tanda para analizar.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          {vueltasOrdenadas.map((vuelta) => {
           const esA = vuelta.id === vueltaAId;
           const esB = vuelta.id === vueltaBId;
           const esReferencia = vueltaReferencia?.id === vuelta.id;
@@ -275,7 +280,8 @@ export function SelectorVueltas({
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

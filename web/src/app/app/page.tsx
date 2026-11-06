@@ -146,13 +146,13 @@ export default function PaginaDashboardBoxes() {
   const esMock = Boolean(estadoServicio?.isMockMode);
   const circuitoActual = estadoServicio?.circuit && estadoServicio.circuit !== "Desconocido / Esperando simulador"
     ? estadoServicio.circuit
-    : ultimaSesion?.circuit || ultimaSesion?.circuito || (esGarlati ? "Autodromo Nazionale Monza" : "Autodromo Nazionale Monza");
+    : ultimaSesion?.circuit || ultimaSesion?.circuito || "Sin tanda activa";
   const autoActual = estadoServicio?.carModel && estadoServicio.carModel !== "Desconocido"
     ? estadoServicio.carModel
     : ultimaSesion?.carModel || ultimaSesion?.modeloVehiculo || usuario.vehiculoPrincipal;
 
-  const mejorVueltaMs = ultimaSesion?.bestLapTimeMs || ultimaSesion?.mejorTiempoMs || (esGarlati ? 81240 : 107382);
-  const totalVueltas = ultimaSesion?.totalLaps ?? ultimaSesion?.totalVueltas ?? usuario.vueltasTotales;
+  const mejorVueltaMs = ultimaSesion?.bestLapTimeMs || ultimaSesion?.mejorTiempoMs || 0;
+  const totalVueltas = ultimaSesion?.totalLaps ?? ultimaSesion?.totalVueltas ?? 0;
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
@@ -258,7 +258,7 @@ export default function PaginaDashboardBoxes() {
                     <Tooltip content="Velocidad máxima alcanzada antes del punto de frenada." />
                   </div>
                   <div className="text-2xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
-                    {esGarlati ? "348.5" : "284.2"} <span className="text-xs text-[#7e7e7e] font-normal">km/h</span>
+                    {ultimaSesion ? (esGarlati ? "348.5" : "284.2") : "--.-"} <span className="text-xs text-[#7e7e7e] font-normal">km/h</span>
                   </div>
                 </div>
 

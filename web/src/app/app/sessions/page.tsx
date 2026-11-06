@@ -17,68 +17,12 @@ import {
   Layers,
 } from "lucide-react";
 import { obtenerSesionesPaginadas, alternarModoMock } from "@/lib/apiClient";
-import { obtenerSesionLocal, esUsuarioAdmin, USUARIO_ALEJO_GARLATI, USUARIO_ALEJO_SALAS } from "@/lib/auth";
+import { obtenerSesionLocal, esUsuarioAdmin, USUARIO_ALEJO_GARLATI } from "@/lib/auth";
 import type { PerfilUsuario } from "@/types/usuario";
 import type { SesionResumenDto } from "@/types/api";
 import { TablaVueltasSesionModal } from "@/components/sessions/TablaVueltasSesionModal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
-
-// Tandas registradas oficiales de Alejo Garlati (Alien F1)
-const SESIONES_GARLATI: SesionResumenDto[] = [
-  {
-    id: "33333333-3333-3333-3333-333333333331",
-    circuit: "Autodromo Nazionale Monza",
-    trackConfig: "Grand Prix (5.793 m)",
-    carModel: "Ferrari SF70H (F1)",
-    sessionType: 0,
-    isMockSimulation: false,
-    startTime: "2026-10-31T19:15:00Z",
-    endTime: "2026-10-31T20:00:00Z",
-    totalLaps: 18,
-    bestLapTimeMs: 81240,
-  },
-  {
-    id: "33333333-3333-3333-3333-333333333332",
-    circuit: "Red Bull Ring (Spielberg)",
-    trackConfig: "Grand Prix (4.318 m)",
-    carModel: "Ferrari SF70H (F1)",
-    sessionType: 0,
-    isMockSimulation: false,
-    startTime: "2026-10-30T15:20:00Z",
-    endTime: "2026-10-30T16:00:00Z",
-    totalLaps: 16,
-    bestLapTimeMs: 65410,
-  },
-];
-
-// Tandas registradas oficiales de Alejo Salas (Pro-Am GT3)
-const SESIONES_SALAS: SesionResumenDto[] = [
-  {
-    id: "44444444-4444-4444-4444-444444444441",
-    circuit: "Autodromo Nazionale Monza",
-    trackConfig: "Grand Prix (5.793 m)",
-    carModel: "Ferrari 488 GT3",
-    sessionType: 0,
-    isMockSimulation: false,
-    startTime: "2026-10-29T16:40:00Z",
-    endTime: "2026-10-29T17:10:00Z",
-    totalLaps: 12,
-    bestLapTimeMs: 107382,
-  },
-  {
-    id: "44444444-4444-4444-4444-444444444442",
-    circuit: "Circuit de Spa-Francorchamps",
-    trackConfig: "Grand Prix (7.004 m)",
-    carModel: "Ferrari 488 GT3",
-    sessionType: 0,
-    isMockSimulation: false,
-    startTime: "2026-10-28T14:10:00Z",
-    endTime: "2026-10-28T14:50:00Z",
-    totalLaps: 8,
-    bestLapTimeMs: 138420,
-  },
-];
 
 export default function PaginaSesiones() {
   const [usuario, setUsuario] = useState<PerfilUsuario>(() => {
@@ -95,9 +39,7 @@ export default function PaginaSesiones() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [conmutandoMock, setConmutandoMock] = useState(false);
 
-  const esGarlati = usuario.id === USUARIO_ALEJO_GARLATI.id || usuario.email.includes("garlati");
   const esAdmin = esUsuarioAdmin(usuario);
-  const sesionesPiloto = esGarlati ? SESIONES_GARLATI : SESIONES_SALAS;
 
   useEffect(() => {
     const sincronizarUsuario = () => {
@@ -129,30 +71,23 @@ export default function PaginaSesiones() {
           ? res.datos.elementos
           : res.datos.elementos.filter((s) => !s.isMockSimulation);
 
-        if (elementosFiltrados.length > 0) {
-          setSesiones(elementosFiltrados);
-          setTotalPaginas(res.datos.totalPaginas || 1);
-          setTotalRegistros(elementosFiltrados.length);
-        } else {
-          setSesiones(sesionesPiloto);
-          setTotalPaginas(1);
-          setTotalRegistros(sesionesPiloto.length);
-        }
+        setSesiones(elementosFiltrados);
+        setTotalPaginas(res.datos.totalPaginas || 1);
+        setTotalRegistros(res.datos.totalRegistros || elementosFiltrados.length);
       } else {
-        // Fallback a las tandas oficiales del piloto activo
-        setSesiones(sesionesPiloto);
+        setSesiones([]);
         setTotalPaginas(1);
-        setTotalRegistros(sesionesPiloto.length);
+        setTotalRegistros(0);
       }
     } catch {
-      setErrorApi("Relay Kestrel desconectado. Mostrando tandas oficiales del piloto activo.");
-      setSesiones(sesionesPiloto);
+      setErrorApi("Relay Kestrel desconectado. No se pudieron obtener las tandas del servidor.");
+      setSesiones([]);
       setTotalPaginas(1);
-      setTotalRegistros(sesionesPiloto.length);
+      setTotalRegistros(0);
     } finally {
       setCargando(false);
     }
-  }, [sesionesPiloto, esAdmin]);
+  }, [esAdmin]);
 
   useEffect(() => {
     cargarSesiones(pagina);

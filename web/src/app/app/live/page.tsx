@@ -21,50 +21,10 @@ import { KammFrictionCircle } from "@/components/live/KammFrictionCircle";
 import { TyreThermalsMatrix } from "@/components/live/TyreThermalsMatrix";
 import { LiveMapaCircuitoCanvas } from "@/components/live/LiveMapaCircuitoCanvas";
 import { LiveLapTimesList, type VueltaRegistrada } from "@/components/live/LiveLapTimesList";
-import { generarTelemetriaMonza } from "@/lib/mockTelemetria";
 import { solicitarPost, obtenerEstadoServicio } from "@/lib/apiClient";
 import { obtenerSesionLocal, esUsuarioAdmin, USUARIO_ALEJO_GARLATI } from "@/lib/auth";
 import type { PerfilUsuario } from "@/types/usuario";
 import type { EstadoMockDto, EstadoServicioDto } from "@/types/api";
-
-const VUELTAS_INICIALES_MONZA: VueltaRegistrada[] = [
-  {
-    lapNumber: 4,
-    lapTimeMs: 80912,
-    lapTimeStr: "1:20.912",
-    isPersonalBest: true,
-    isValidLap: true,
-    sectors: [27.712, 27.420, 25.780],
-    topSpeedKmh: 348,
-  },
-  {
-    lapNumber: 3,
-    lapTimeMs: 81345,
-    lapTimeStr: "1:21.345",
-    isPersonalBest: false,
-    isValidLap: true,
-    sectors: [27.910, 27.530, 25.905],
-    topSpeedKmh: 345,
-  },
-  {
-    lapNumber: 2,
-    lapTimeMs: 81890,
-    lapTimeStr: "1:21.890",
-    isPersonalBest: false,
-    isValidLap: true,
-    sectors: [28.120, 27.680, 26.090],
-    topSpeedKmh: 342,
-  },
-  {
-    lapNumber: 1,
-    lapTimeMs: 83204,
-    lapTimeStr: "1:23.204",
-    isPersonalBest: false,
-    isValidLap: true,
-    sectors: [28.650, 28.104, 26.450],
-    topSpeedKmh: 338,
-  },
-];
 
 export default function PaginaLivePitwall() {
   const [usuario, setUsuario] = useState<PerfilUsuario>(() => {
@@ -117,9 +77,7 @@ export default function PaginaLivePitwall() {
   }, []);
 
   const [conmutandoMock, setConmutandoMock] = useState(false);
-  const [vueltasSesion, setVueltasSesion] = useState<VueltaRegistrada[]>(() =>
-    esAdmin ? VUELTAS_INICIALES_MONZA : []
-  );
+  const [vueltasSesion, setVueltasSesion] = useState<VueltaRegistrada[]>([]);
 
   // Aislar datos del modo mock: los pilotos regulares no ingieren vueltas sintéticas
   const simulacionMockActiva = Boolean(estadoServicio?.isMockMode);
@@ -127,10 +85,10 @@ export default function PaginaLivePitwall() {
   const frameEfectivo = telemetriaValidaParaUsuario ? frame : null;
 
   // Mantener la velocidad actual en ref para evitar re-ejecuciones de effect en cada frame
-  const velocidadAutoRef = useRef(frameEfectivo?.car.speedKmh ?? (esAdmin ? 340 : 0));
+  const velocidadAutoRef = useRef(frameEfectivo?.car.speedKmh ?? 0);
   useEffect(() => {
-    velocidadAutoRef.current = frameEfectivo?.car.speedKmh ?? (esAdmin ? 340 : 0);
-  }, [frameEfectivo?.car.speedKmh, esAdmin]);
+    velocidadAutoRef.current = frameEfectivo?.car.speedKmh ?? 0;
+  }, [frameEfectivo?.car.speedKmh]);
 
   // Sincronizar automáticamente nuevas vueltas cruzadas por meta vía WebSocket
   useEffect(() => {
@@ -227,7 +185,6 @@ export default function PaginaLivePitwall() {
   const deltaFondo = deltaNegativo ? "bg-[#0fa336]/10" : "bg-[#e22718]/10";
   const deltaBorde = deltaNegativo ? "border-[#0fa336]/30" : "border-[#e22718]/30";
 
-  const muestrasMonza = useMemo(() => generarTelemetriaMonza(1.0), []);
   const longitudCircuito = 5793;
   const distanciaEstimada = (timing.lapProgress || 0) * longitudCircuito;
 
@@ -401,7 +358,6 @@ export default function PaginaLivePitwall() {
           {/* Canvas 2D en Vivo como Sección Principal */}
           <div className="border border-[#222225] rounded-xl overflow-hidden bg-[#09090b]">
             <LiveMapaCircuitoCanvas
-              muestras={muestrasMonza}
               distanciaSeleccionada={distanciaEstimada}
               nombreCircuito={sesion.track.toUpperCase().includes("IMOLA") ? "Autodromo Enzo e Dino Ferrari" : sesion.track.toUpperCase().includes("RBR") ? "Red Bull Ring GP" : "Autodromo Nazionale Monza"}
               longitudMetros={longitudCircuito}
