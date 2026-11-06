@@ -30,6 +30,7 @@ import {
   cerrarSesion,
   USUARIO_ALEJO_GARLATI,
 } from "@/lib/auth";
+import { declararPilotoActivo } from "@/lib/apiClient";
 import type { PerfilUsuario } from "@/types/usuario";
 import { UserNavDropdown } from "@/components/layout/UserNavDropdown";
 import { useToast } from "@/context/ToastContext";
@@ -158,7 +159,32 @@ export default function LayoutAppBoxes({
     const sesion = obtenerSesionLocal();
     if (sesion?.usuario) {
       setUsuario(sesion.usuario);
+      declararPilotoActivo(
+        sesion.usuario.id,
+        sesion.usuario.nombre,
+        sesion.usuario.alias
+      ).catch(() => {});
     }
+  }, []);
+
+  useEffect(() => {
+    const alCambiarUsuario = () => {
+      const sesion = obtenerSesionLocal();
+      if (sesion?.usuario) {
+        setUsuario(sesion.usuario);
+        declararPilotoActivo(
+          sesion.usuario.id,
+          sesion.usuario.nombre,
+          sesion.usuario.alias
+        ).catch(() => {});
+      }
+    };
+    window.addEventListener("apexlink_usuario_cambiado", alCambiarUsuario);
+    window.addEventListener("storage", alCambiarUsuario);
+    return () => {
+      window.removeEventListener("apexlink_usuario_cambiado", alCambiarUsuario);
+      window.removeEventListener("storage", alCambiarUsuario);
+    };
   }, []);
 
   useEffect(() => {

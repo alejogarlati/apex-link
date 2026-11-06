@@ -89,6 +89,14 @@ export async function solicitarPut<T, B = unknown>(
   return respuesta.data;
 }
 
+/**
+ * Envoltorio tipado seguro para peticiones DELETE
+ */
+export async function solicitarDelete<T>(ruta: string): Promise<RespuestaApi<T>> {
+  const respuesta = await clienteHttp.delete<RespuestaApi<T>>(ruta);
+  return respuesta.data;
+}
+
 // ---------------------------------------------------------------------------
 // Endpoints de Dominio de Telemetría (Capa 1 Kestrel <-> Capa 3 WebApp)
 // ---------------------------------------------------------------------------
@@ -116,10 +124,38 @@ export async function obtenerCircuitoPorId(id: string): Promise<RespuestaApi<Cir
 /** Obtiene las sesiones registradas en SQLite/PostgreSQL con paginación */
 export async function obtenerSesionesPaginadas(
   numeroPagina = 1,
-  tamanioPagina = 10
+  tamanioPagina = 10,
+  usuarioId?: string
 ): Promise<RespuestaApi<PaginacionRespuesta<SesionResumenDto>>> {
-  return solicitarGet<PaginacionRespuesta<SesionResumenDto>>(
-    `/api/sesiones?numeroPagina=${numeroPagina}&tamanioPagina=${tamanioPagina}`
+  const url = usuarioId
+    ? `/api/sesiones?numeroPagina=${numeroPagina}&tamanioPagina=${tamanioPagina}&usuarioId=${encodeURIComponent(usuarioId)}`
+    : `/api/sesiones?numeroPagina=${numeroPagina}&tamanioPagina=${tamanioPagina}`;
+  return solicitarGet<PaginacionRespuesta<SesionResumenDto>>(url);
+}
+
+/** Elimina una sesión y todas sus vueltas y telemetría asociadas en cascada */
+export async function eliminarSesion(sesionId: string): Promise<RespuestaApi<boolean>> {
+  return solicitarDelete<boolean>(`/api/sesiones/${sesionId}`);
+}
+
+/** Declara el piloto activo sentado en la cabina del simulador (FAPPE) */
+export async function declararPilotoActivo(
+  usuarioId: string,
+  nombre: string,
+  alias: string
+): Promise<RespuestaApi<boolean>> {
+  return solicitarPost<boolean, { usuarioId: string; nombre: string; alias: string }>(
+    "/api/telemetria/piloto-activo",
+    { usuarioId, nombre, alias }
+  );
+}
+
+/** Consulta el piloto actualmente activo en cabina */
+export async function obtenerPilotoActivo(): Promise<
+  RespuestaApi<{ usuarioId: string | null; nombre: string; alias: string }>
+> {
+  return solicitarGet<{ usuarioId: string | null; nombre: string; alias: string }>(
+    "/api/telemetria/piloto-activo"
   );
 }
 

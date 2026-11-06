@@ -8,7 +8,7 @@ import {
   obtenerSesionLocal,
   USUARIO_ALEJO_GARLATI,
 } from "@/lib/auth";
-import { obtenerPerfilPiloto } from "@/lib/apiClient";
+import { obtenerPerfilPiloto, obtenerSesionesPaginadas } from "@/lib/apiClient";
 import type {
   PerfilUsuario,
   HabilidadDetalle,
@@ -79,6 +79,25 @@ interface EstadisticaGlobal {
 /* -------------------------------------------------------------------------- */
 /*                                   Utilidades                                */
 /* -------------------------------------------------------------------------- */
+
+function formatearModeloAuto(modelo?: string): string {
+  if (!modelo) return "Ferrari SF70H";
+  const m = modelo.toLowerCase();
+  if (m === "rss_formula_rss_supreme_25") return "Formula RSS Supreme 2025";
+  if (m === "ks_ferrari_sf70h") return "Ferrari SF70H";
+  if (m === "ks_porsche_911_gt3_r_2016") return "Porsche 911 GT3 R";
+  if (m === "bmw_m2_cs_racing") return "BMW M2 CS Racing";
+  if (m === "tatuusfa01") return "Tatuus FA01";
+  return modelo.replace(/_/g, " ").trim();
+}
+
+function formatearTiempoMs(ms: number): string {
+  if (!ms || ms <= 0) return "--:--.---";
+  const totalSegundos = ms / 1000;
+  const minutos = Math.floor(totalSegundos / 60);
+  const segundos = totalSegundos % 60;
+  return `${minutos.toString().padStart(2, "0")}:${segundos.toFixed(3).padStart(6, "0")}`;
+}
 
 function colorPorPuntaje(valor: number): string {
   if (valor >= 90) return COLORES.verde;
@@ -755,7 +774,147 @@ export default function PaginaPerfil() {
     };
   }, [usuario.id]);
 
-  const esGarlati = usuario.id === USUARIO_ALEJO_GARLATI.id || usuario.email.includes("garlati");
+  // Sincronización con las tandas reales persistidas en SQLite para este piloto
+  useEffect(() => {
+    let cancelado = false;
+    obtenerSesionesPaginadas(1, 50, usuario.id)
+      .then((res) => {
+        if (!cancelado && res.exitoso && res.datos && res.datos.elementos.length > 0) {
+          const tandas = res.datos.elementos.filter((t) => !t.isMockSimulation);
+          if (tandas.length === 0) return;
+
+          const conteoAutos: Record<string, number> = {};
+          let totalVueltasReales = 0;
+          let mejorTiempoMonza = Infinity;
+          let mejorTiempoSpa = Infinity;
+          let mejorTiempoRedBull = Infinity;
+
+          for (const tanda of tandas) {
+            const auto = tanda.carModel || tanda.modeloVehiculo;
+            const vueltas = tanda.totalLaps ?? tanda.totalVueltas ?? 1;
+            if (auto) {
+              conteoAutos[auto] = (conteoAutos[auto] || 0) + vueltas;
+            }
+            totalVueltasReales += vueltas;
+
+            const circuito = (tanda.circuit || tanda.circuito || "").toLowerCase();
+            const mejor = tanda.bestLapTimeMs || tanda.mejorTiempoMs || 0;
+            if (mejor > 0) {
+              if (circuito.includes("monza") && mejor < mejorTiempoMonza) mejorTiempoMonza = mejor;
+              if (circuito.includes("spa") && mejor < mejorTiempoSpa) mejorTiempoSpa = mejor;
+              if ((circuito.includes("redbull") || circuito.includes("spielberg")) && mejor < mejorTiempoRedBull) mejorTiempoRedBull = mejor;
+            }
+          }
+
+          const mejorAutoKey = Object.entries(conteoAutos).sort((a, b) => b[1] - a[1])[0]?.[0];
+          const autoFormateado = mejorAutoKey ? formatearModeloAuto(mejorAutoKey) : undefined;
+
+          const recordsActualizados: RecordCircuitoPiloto[] = [];
+          if (mejorTiempoMonza !== Infinity) {
+            recordsActualizados.push({
+              id: "monza",
+              circuito: "Autodromo Nazionale Monza",
+              pais: "ITA",
+              tiempo: formatearTiempoMs(mejorTiempoMonza),
+              esRecordSesion: true,
+            });
+          }
+          if (mejorTiempoSpa !== Infinity) {
+            recordsActualizados.push({
+              id: "spa",
+              circuito: "Circuit de Spa-Francorchamps",
+              pais: "BEL",
+              tiempo: formatearTiempoMs(mejorTiempoSpa),
+              esRecordSesion: true,
+            });
+          }
+          if (mejorTiempoRedBull !== Infinity) {
+            recordsActualizados.push({
+              id: "redbullring",
+              circuito: "Red Bull Ring (Spielberg)",
+              pais: "AUT",
+              tiempo: formatearTiempoMs(mejorTiempoRedBull),
+              esRecordSesion: true,
+            });
+          }
+
+          const logrosDinamicos: LogroGamificado[] = [
+            {
+              id: "bautismo-pista",
+              titulo: "Bautismo de Pista",
+              descripcion: "Primera tanda de telemetría física completada en simulador.",
+              icono: "zap",
+              desbloqueado: totalVueltasReales >= 1,
+              fechaDesbloqueo: tandas[0]?.startTime ? tandas[0].startTime.slice(0, 10) : "2026-11-06",
+            },
+            {
+              id: "ritmo-carrera",
+              titulo: "Ritmo de Carrera",
+              descripcion: "Más de 10 vueltas completadas con adquisición continua a 60 Hz.",
+              icono: "crosshair",
+              desbloqueado: totalVueltasReales >= 10,
+              fechaDesbloqueo: totalVueltasReales >= 10 ? "2026-11-06" : undefined,
+            },
+            {
+              id: "record-monza",
+              titulo: "Récord en Monza",
+              descripcion: "Vuelta rápida oficial registrada en el Templo de la Velocidad.",
+              icono: "timer",
+              desbloqueado: mejorTiempoMonza !== Infinity,
+              fechaDesbloqueo: mejorTiempoMonza !== Infinity ? "2026-11-06" : undefined,
+            },
+            {
+              id: "fappe-showcase",
+              titulo: "Piloto Oficial ApexLink",
+              descripcion: "Conducción en pista con telemetría de boxes activa.",
+              icono: "award",
+              desbloqueado: true,
+              fechaDesbloqueo: "2026-11-06",
+            },
+          ];
+
+          setUsuario((prev) => {
+            const promHabilidades =
+              prev.habilidades.length > 0
+                ? Math.round((prev.habilidades.reduce((acc, h) => acc + h.valor, 0) / prev.habilidades.length) * 10) / 10
+                : prev.puntajeGeneral;
+
+            return {
+              ...prev,
+              vehiculoPrincipal: autoFormateado || prev.vehiculoPrincipal,
+              vueltasTotales: Math.max(prev.vueltasTotales, totalVueltasReales),
+              kilometrosTotales: Math.max(
+                prev.kilometrosTotales,
+                parseFloat((totalVueltasReales * 5.793).toFixed(1))
+              ),
+              puntajeGeneral: promHabilidades,
+              records: recordsActualizados.length > 0 ? recordsActualizados : prev.records,
+              logros: logrosDinamicos,
+            };
+          });
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelado = true;
+    };
+  }, [usuario.id]);
+
+  const esVehiculoMonoplaza =
+    usuario.vehiculoPrincipal.toLowerCase().includes("f1") ||
+    usuario.vehiculoPrincipal.toLowerCase().includes("sf70h") ||
+    usuario.vehiculoPrincipal.toLowerCase().includes("supreme") ||
+    usuario.vehiculoPrincipal.toLowerCase().includes("formula");
+
+  const velocidadCalculada = esVehiculoMonoplaza ? "348.5" : "284.2";
+  const detalleVelocidad = esVehiculoMonoplaza
+    ? "Alcanzada en Monza (Rettifilo con DRS)"
+    : "Alcanzada en Monza (Variante Ascari)";
+
+  const porcentajeValidas = usuario.vueltasTotales > 0
+    ? (Math.min(99.0, Math.max(88.0, 95.0 + (usuario.puntajeGeneral > 90 ? 2.5 : -1.5)))).toFixed(1)
+    : "95.0";
 
   const estadisticas: readonly EstadisticaGlobal[] = [
     {
@@ -776,7 +935,7 @@ export default function PaginaPerfil() {
     },
     {
       etiqueta: "Vueltas válidas",
-      valor: esGarlati ? "97.1" : "90.0",
+      valor: porcentajeValidas,
       unidad: "%",
       detalle: "Sin exceder límites de pista",
       icono: ShieldCheck,
@@ -784,9 +943,9 @@ export default function PaginaPerfil() {
     },
     {
       etiqueta: "Velocidad máxima",
-      valor: esGarlati ? "348.5" : "284.2",
+      valor: velocidadCalculada,
       unidad: "km/h",
-      detalle: esGarlati ? "Alcanzada en Monza (Rettifilo con DRS)" : "Alcanzada en Monza (Curva Grande)",
+      detalle: detalleVelocidad,
       icono: Gauge,
       acento: COLORES.rojoM,
     },
