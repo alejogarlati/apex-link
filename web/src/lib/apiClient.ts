@@ -246,3 +246,25 @@ export async function registrarUsuario(
     datos
   );
 }
+
+/** Solicita el envío de un código de 6 dígitos por SMTP de Gmail para restablecer la clave */
+export async function solicitarRecuperacionPassword(
+  email: string
+): Promise<RespuestaApi<boolean>> {
+  return solicitarPost<boolean, { email: string }>(
+    "/api/auth/recuperar-solicitud",
+    { email }
+  );
+}
+
+/** Confirma el código de 6 dígitos recibido por correo y actualiza la contraseña con BCrypt */
+export async function confirmarRecuperacionPassword(datos: {
+  email: string;
+  codigo: string;
+  nuevaPassword: string;
+}): Promise<RespuestaApi<boolean>> {
+  return solicitarPost<
+    boolean,
+    { email: string; codigo: string; nuevaPassword: string }
+  >("/api/auth/recuperar-confirmar", datos);
+}

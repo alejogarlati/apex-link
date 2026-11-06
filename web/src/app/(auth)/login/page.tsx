@@ -21,6 +21,8 @@ import {
 import {
   iniciarSesionConServidor,
   registrarPilotoConServidor,
+  enviarCodigoRecuperacion,
+  restablecerPasswordConCodigo,
   estaAutenticado,
 } from "@/lib/auth";
 import { solicitarGet } from "@/lib/apiClient";
@@ -50,12 +52,15 @@ export default function PaginaLogin() {
   const [passwordRegistro, setPasswordRegistro] = useState("");
   const [confirmarPasswordRegistro, setConfirmarPasswordRegistro] = useState("");
 
-  // Estado común
+  // Estado común y Recuperación de Contraseña (SMTP 2 pasos)
   const [estaCargando, setEstaCargando] = useState(false);
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
   const [mostrarRecupero, setMostrarRecupero] = useState(false);
   const [emailRecupero, setEmailRecupero] = useState("");
   const [recuperoEnviado, setRecuperoEnviado] = useState(false);
+  const [codigoRecupero, setCodigoRecupero] = useState("");
+  const [nuevaPasswordRecupero, setNuevaPasswordRecupero] = useState("");
+  const [confirmarNuevaPasswordRecupero, setConfirmarNuevaPasswordRecupero] = useState("");
 
   const [estadoBackend, setEstadoBackend] = useState<{
     verificado: boolean;
@@ -204,14 +209,77 @@ export default function PaginaLogin() {
     }
   };
 
-  const manejarSolicitudRecupero = (e: React.FormEvent) => {
+  const manejarSolicitudRecupero = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!emailRecupero.trim()) return;
-    setRecuperoEnviado(true);
-    toast.info(
-      "Solicitud de recuperación procesada",
-      "Si el correo está registrado, recibirás un enlace válido por 15 minutos."
-    );
+    setErrorGeneral(null);
+
+    const emailLimpio = emailRecupero.trim().toLowerCase();
+    if (!emailLimpio || !emailLimpio.includes("@")) {
+      setErrorGeneral("Ingresá el correo electrónico válido de tu cuenta.");
+      return;
+    }
+
+    setEstaCargando(true);
+    try {
+      const resultado = await enviarCodigoRecuperacion(emailLimpio);
+      if (!resultado.exitoso) {
+        setErrorGeneral(resultado.mensaje);
+        toast.error("No se pudo enviar el código", resultado.mensaje);
+        return;
+      }
+
+      setRecuperoEnviado(true);
+      toast.success("Código enviado por Gmail SMTP", resultado.mensaje);
+    } finally {
+      setEstaCargando(false);
+    }
+  };
+
+  const manejarConfirmarRecupero = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorGeneral(null);
+
+    if (codigoRecupero.trim().length !== 6) {
+      setErrorGeneral("El código recibido por correo debe tener 6 dígitos.");
+      return;
+    }
+
+    if (nuevaPasswordRecupero.length < 6) {
+      setErrorGeneral("La nueva contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
+
+    if (nuevaPasswordRecupero !== confirmarNuevaPasswordRecupero) {
+      setErrorGeneral("Las contraseñas ingresadas no coinciden.");
+      return;
+    }
+
+    setEstaCargando(true);
+    try {
+      const resultado = await restablecerPasswordConCodigo({
+        email: emailRecupero,
+        codigo: codigoRecupero,
+        nuevaPassword: nuevaPasswordRecupero,
+      });
+
+      if (!resultado.exitoso) {
+        setErrorGeneral(resultado.mensaje);
+        toast.error("Error de verificación", resultado.mensaje);
+        return;
+      }
+
+      toast.success("Contraseña actualizada", resultado.mensaje);
+      setEmail(emailRecupero.trim());
+      setPassword("");
+      setMostrarRecupero(false);
+      setRecuperoEnviado(false);
+      setCodigoRecupero("");
+      setNuevaPasswordRecupero("");
+      setConfirmarNuevaPasswordRecupero("");
+      setModo("login");
+    } finally {
+      setEstaCargando(false);
+    }
   };
 
   return (
@@ -544,49 +612,124 @@ export default function PaginaLogin() {
               </div>
             </div>
           ) : (
-            /* Vista de Recuperación de Contraseña por Correo */
+            /* Vista de Recuperación de Contraseña por Correo (Gmail SMTP + Código 6 Dígitos + BCrypt) */
             <div className="p-6 space-y-5">
               <div className="space-y-1">
                 <h2 className="text-sm font-bold uppercase tracking-wider text-white">
                   Recuperación de Contraseña
                 </h2>
                 <p className="text-xs text-[#bbbbbb] leading-relaxed">
-                  Ingresá el correo electrónico asociado a tu licencia de piloto. Te enviaremos un enlace temporal válido por 15 minutos para restablecer tu clave.
+                  {!recuperoEnviado
+                    ? "Ingresá el correo electrónico asociado a tu licencia de piloto. Te enviaremos un código de 6 dígitos válido por 15 minutos."
+                    : `Ingresá el código de 6 dígitos enviado a ${emailRecupero} y definí tu nueva clave de boxes.`}
                 </p>
               </div>
 
-              {recuperoEnviado ? (
-                <div className="p-4 rounded-lg bg-[#0fa336]/10 border border-[#0fa336]/40 space-y-2 text-xs">
-                  <div className="flex items-center gap-2 font-bold text-[#00E676] uppercase font-mono">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Enlace de Recuperación Despachado</span>
-                  </div>
-                  <p className="text-[#cccccc] leading-relaxed">
-                    Si la dirección <strong className="text-white">{emailRecupero}</strong> se encuentra registrada en el servidor central, recibirás las instrucciones en tu bandeja de entrada en los próximos instantes.
-                  </p>
+              {errorGeneral && (
+                <div
+                  role="alert"
+                  className="p-3.5 rounded-lg bg-[#e22718]/10 border border-[#e22718]/40 flex items-start gap-3 text-xs text-[#ff8080]"
+                >
+                  <AlertCircle className="w-4 h-4 text-[#e22718] shrink-0 mt-0.5" />
+                  <p className="leading-relaxed">{errorGeneral}</p>
                 </div>
+              )}
+
+              {recuperoEnviado ? (
+                <form onSubmit={manejarConfirmarRecupero} className="space-y-4">
+                  <div className="p-3 rounded-lg bg-[#0fa336]/10 border border-[#0fa336]/40 flex items-center gap-2 text-xs text-[#00E676] font-mono">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <span>Código enviado a {emailRecupero}</span>
+                  </div>
+
+                  <Input
+                    label="Código de 6 Dígitos (Recibido por Email)"
+                    type="text"
+                    value={codigoRecupero}
+                    onChange={(e) => {
+                      setCodigoRecupero(e.target.value.replace(/\D/g, "").slice(0, 6));
+                      if (errorGeneral) setErrorGeneral(null);
+                    }}
+                    placeholder="123456"
+                    leftIcon={<Tag className="w-4 h-4" />}
+                    maxLength={6}
+                    required
+                    mono
+                  />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Input
+                      label="Nueva Contraseña"
+                      type="password"
+                      value={nuevaPasswordRecupero}
+                      onChange={(e) => {
+                        setNuevaPasswordRecupero(e.target.value);
+                        if (errorGeneral) setErrorGeneral(null);
+                      }}
+                      placeholder="Mín. 6 caracteres"
+                      leftIcon={<KeyRound className="w-4 h-4" />}
+                      required
+                    />
+
+                    <Input
+                      label="Confirmar Clave"
+                      type="password"
+                      value={confirmarNuevaPasswordRecupero}
+                      onChange={(e) => {
+                        setConfirmarNuevaPasswordRecupero(e.target.value);
+                        if (errorGeneral) setErrorGeneral(null);
+                      }}
+                      placeholder="Repetir contraseña"
+                      leftIcon={<Lock className="w-4 h-4" />}
+                      required
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    fullWidth
+                    isLoading={estaCargando}
+                    loadingText="Verificando código y actualizando..."
+                  >
+                    Restablecer Contraseña con BCrypt
+                  </Button>
+                </form>
               ) : (
                 <form onSubmit={manejarSolicitudRecupero} className="space-y-4">
                   <Input
                     label="Correo Electrónico Registrado"
                     type="email"
                     value={emailRecupero}
-                    onChange={(e) => setEmailRecupero(e.target.value)}
-                    placeholder="piloto@apexlink.io"
+                    onChange={(e) => {
+                      setEmailRecupero(e.target.value);
+                      if (errorGeneral) setErrorGeneral(null);
+                    }}
+                    placeholder="piloto@gmail.com"
                     leftIcon={<Mail className="w-4 h-4" />}
                     required
                     mono
                   />
 
-                  <Button type="submit" variant="primary" fullWidth>
-                    Enviar Enlace de Recuperación
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    fullWidth
+                    isLoading={estaCargando}
+                    loadingText="Despachando correo por Gmail SMTP..."
+                  >
+                    Enviar Código de 6 Dígitos
                   </Button>
                 </form>
               )}
 
               <button
                 type="button"
-                onClick={() => setMostrarRecupero(false)}
+                onClick={() => {
+                  setMostrarRecupero(false);
+                  setRecuperoEnviado(false);
+                  setErrorGeneral(null);
+                }}
                 className="w-full py-2 text-xs font-mono font-bold uppercase text-[#bbbbbb] hover:text-white transition-colors cursor-pointer"
               >
                 ← Volver al Inicio de Sesión

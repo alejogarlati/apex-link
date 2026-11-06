@@ -1,6 +1,12 @@
 import type { PerfilUsuario, SesionAuth } from "@/types/usuario";
 import type { PerfilPilotoDetalleApiDto, RegistroApiRequest } from "@/types/api";
-import { autenticarUsuario, registrarUsuario, declararPilotoActivo } from "@/lib/apiClient";
+import {
+  autenticarUsuario,
+  registrarUsuario,
+  declararPilotoActivo,
+  solicitarRecuperacionPassword,
+  confirmarRecuperacionPassword,
+} from "@/lib/apiClient";
 
 const CLAVE_ALMACENAMIENTO_AUTH = "apexlink_auth_sesion";
 
@@ -331,4 +337,87 @@ export function cerrarSesion(): void {
  */
 export function estaAutenticado(): boolean {
   return obtenerSesionLocal() !== null;
+}
+
+/**
+ * Solicita al backend el envío del código de 6 dígitos vía Gmail SMTP
+ */
+export async function enviarCodigoRecuperacion(
+  email: string
+): Promise<{ exitoso: boolean; mensaje: string }> {
+  const emailLimpio = email.trim().toLowerCase();
+  if (!emailLimpio || !emailLimpio.includes("@")) {
+    return {
+      exitoso: false,
+      mensaje: "Ingresá una dirección de correo electrónico válida.",
+    };
+  }
+
+  try {
+    const res = await solicitarRecuperacionPassword(emailLimpio);
+    return {
+      exitoso: Boolean(res.exitoso),
+      mensaje:
+        res.mensaje ||
+        (res.exitoso
+          ? "Código de 6 dígitos enviado por correo electrónico."
+          : "No se pudo procesar la solicitud."),
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "";
+    return {
+      exitoso: false,
+      mensaje:
+        msg ||
+        "No se pudo conectar con el servidor para enviar el correo de recuperación.",
+    };
+  }
+}
+
+/**
+ * Confirma el código de 6 dígitos recibido por correo y establece la nueva clave con BCrypt
+ */
+export async function restablecerPasswordConCodigo(datos: {
+  email: string;
+  codigo: string;
+  nuevaPassword: string;
+}): Promise<{ exitoso: boolean; mensaje: string }> {
+  const emailLimpio = datos.email.trim().toLowerCase();
+  const codigoLimpio = datos.codigo.trim();
+
+  if (codigoLimpio.length !== 6) {
+    return {
+      exitoso: false,
+      mensaje: "El código de verificación debe tener 6 dígitos.",
+    };
+  }
+
+  if (!datos.nuevaPassword || datos.nuevaPassword.length < 6) {
+    return {
+      exitoso: false,
+      mensaje: "La nueva contraseña debe tener al menos 6 caracteres.",
+    };
+  }
+
+  try {
+    const res = await confirmarRecuperacionPassword({
+      email: emailLimpio,
+      codigo: codigoLimpio,
+      nuevaPassword: datos.nuevaPassword,
+    });
+    return {
+      exitoso: Boolean(res.exitoso),
+      mensaje:
+        res.mensaje ||
+        (res.exitoso
+          ? "Contraseña actualizada exitosamente."
+          : "Código inválido o expirado."),
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "";
+    return {
+      exitoso: false,
+      mensaje: msg || "El código ingresado es incorrecto o ha expirado.",
+    };
+  }
 }
