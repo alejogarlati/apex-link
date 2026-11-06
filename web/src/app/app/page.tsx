@@ -27,6 +27,7 @@ import {
   obtenerSesionesPaginadas,
   obtenerVueltasSesion,
   obtenerLeaderboard,
+  obtenerPerfilPiloto,
 } from "@/lib/apiClient";
 import type { EstadoServicioDto, SesionResumenDto, LeaderboardItemDto } from "@/types/api";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -41,10 +42,11 @@ export default function PaginaDashboardBoxes() {
   const [estadoServicio, setEstadoServicio] = useState<EstadoServicioDto | null>(null);
   const [ultimaSesion, setUltimaSesion] = useState<SesionResumenDto | null>(null);
   const [rankingTop, setRankingTop] = useState<LeaderboardItemDto[]>([]);
-  const [tiempoIdealStr, setTiempoIdealStr] = useState("01:20.810");
-  const [deltaIdealStr, setDeltaIdealStr] = useState("-0.430s");
-  const [consistenciaStr, setConsistenciaStr] = useState("94.4%");
-  const [vueltasValidasStr, setVueltasValidasStr] = useState("17 vueltas válidas");
+  const [tiempoIdealStr, setTiempoIdealStr] = useState("--:--.---");
+  const [deltaIdealStr, setDeltaIdealStr] = useState("0.000s");
+  const [consistenciaStr, setConsistenciaStr] = useState("--%");
+  const [vueltasValidasStr, setVueltasValidasStr] = useState("Sin vueltas registradas");
+  const [topSpeedStr, setTopSpeedStr] = useState("--.-");
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
@@ -66,7 +68,6 @@ export default function PaginaDashboardBoxes() {
   }, []);
 
   const metricas = usuario.rating.metricas;
-  const esGarlati = usuario.id === USUARIO_ALEJO_GARLATI.id || usuario.email.includes("garlati");
   const esAdmin = esUsuarioAdmin(usuario);
 
   const formatearTiempoMs = (ms: number) => {
@@ -89,14 +90,52 @@ export default function PaginaDashboardBoxes() {
           setEstadoServicio(resEstado.datos);
         }
 
-        // 2. Consultar la última tanda registrada (para pilotos regulares, excluir simulaciones mock)
-        const resSesiones = await obtenerSesionesPaginadas(1, 10).catch(() => null);
+        // 2. Sincronizar perfil y métricas reales desde el backend
+        const resPerfil = await obtenerPerfilPiloto(usuario.id).catch(() => null);
+        if (!cancelado && resPerfil?.exitoso && resPerfil.datos) {
+          const d = resPerfil.datos;
+          const evalActual = d.ultimaEvaluacion;
+          if (d.velocidadMaximaKmh && d.velocidadMaximaKmh > 0) {
+            setTopSpeedStr(d.velocidadMaximaKmh.toFixed(1));
+          }
+          setUsuario((prev) => ({
+            ...prev,
+            vehiculoPrincipal: d.vehiculoPrincipal || prev.vehiculoPrincipal,
+            puntajeGeneral: d.puntajeGeneral ?? prev.puntajeGeneral,
+            rating: {
+              paceRating: d.paceRating ?? prev.rating.paceRating,
+              safetyRating: d.safetyRating ?? prev.rating.safetyRating,
+              nivel: d.nivel ?? prev.rating.nivel,
+              metricas: evalActual
+                ? {
+                    velocidad: evalActual.velocidad,
+                    consistencia: evalActual.consistencia,
+                    frenada: evalActual.frenada,
+                    control: evalActual.control,
+                    agresividad: evalActual.agresividad,
+                  }
+                : prev.rating.metricas,
+            },
+            diagnosticoAi: evalActual
+              ? {
+                  puntoFuerteTitulo: evalActual.puntoFuerteTitulo,
+                  puntoFuerteDesc: evalActual.puntoFuerteDesc,
+                  oportunidadMejoraTitulo: evalActual.oportunidadMejoraTitulo,
+                  oportunidadMejoraDesc: evalActual.oportunidadMejoraDesc,
+                }
+              : prev.diagnosticoAi,
+          }));
+        }
+
+        // 3. Consultar la última tanda registrada del piloto
+        const usuarioFiltro = esAdmin ? undefined : usuario.id;
+        const resSesiones = await obtenerSesionesPaginadas(1, 10, usuarioFiltro).catch(() => null);
         if (!cancelado && resSesiones?.exitoso && resSesiones.datos?.elementos?.length) {
           const sesion = resSesiones.datos.elementos.find((s) => esAdmin || !s.isMockSimulation);
           if (sesion) {
             setUltimaSesion(sesion);
 
-            // 3. Consultar las vueltas de la sesión para calcular vuelta ideal y consistencia
+            // 4. Consultar las vueltas de la sesión para calcular vuelta ideal y consistencia
             const resVueltas = await obtenerVueltasSesion(sesion.id).catch(() => null);
             if (!cancelado && resVueltas?.exitoso && resVueltas.datos?.length) {
               const vueltas = resVueltas.datos;
@@ -107,7 +146,7 @@ export default function PaginaDashboardBoxes() {
                 const s2Min = Math.min(...validas.map((v) => v.sector2Ms).filter((s) => s > 0));
                 const s3Min = Math.min(...validas.map((v) => v.sector3Ms).filter((s) => s > 0));
 
-                if (s1Min > 0 && s2Min > 0 && s3Min > 0) {
+                if (Number.isFinite(s1Min) && Number.isFinite(s2Min) && Number.isFinite(s3Min) && s1Min > 0 && s2Min > 0 && s3Min > 0) {
                   const idealMs = s1Min + s2Min + s3Min;
                   setTiempoIdealStr(formatearTiempoMs(idealMs));
                   const pb = sesion.bestLapTimeMs || sesion.mejorTiempoMs || idealMs;
@@ -120,10 +159,18 @@ export default function PaginaDashboardBoxes() {
                 setVueltasValidasStr(`${validas.length} vueltas válidas`);
               }
             }
+          } else {
+            setUltimaSesion(null);
+            setTiempoIdealStr("--:--.---");
+            setDeltaIdealStr("0.000s");
+            setConsistenciaStr("--%");
+            setVueltasValidasStr("Sin vueltas registradas");
           }
+        } else if (!cancelado) {
+          setUltimaSesion(null);
         }
 
-        // 4. Consultar el top de clasificación de Monza
+        // 5. Consultar el top de clasificación de Monza
         const resLeaderboard = await obtenerLeaderboard("monza", 3).catch(() => null);
         if (!cancelado && resLeaderboard?.exitoso && resLeaderboard.datos?.length) {
           setRankingTop(resLeaderboard.datos);
@@ -138,7 +185,7 @@ export default function PaginaDashboardBoxes() {
     return () => {
       cancelado = true;
     };
-  }, [esAdmin]);
+  }, [esAdmin, usuario.id]);
 
   const enlaceActivo = esAdmin
     ? Boolean(estadoServicio?.isConnected || estadoServicio?.isMockMode)
@@ -215,7 +262,7 @@ export default function PaginaDashboardBoxes() {
           <div>
             <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
               <h2 className="text-base sm:text-lg font-bold uppercase text-white tracking-tight group-hover:text-[#81c4ff] transition-colors">
-                {ultimaSesion?.circuit || ultimaSesion?.circuito || "Autodromo Nazionale Monza"}
+                {ultimaSesion?.circuit || ultimaSesion?.circuito || "Sin tanda registrada"}
               </h2>
               <span className="text-xs font-mono text-[#bbbbbb]">
                 {totalVueltas} Vueltas Registradas
@@ -255,10 +302,10 @@ export default function PaginaDashboardBoxes() {
                 <div>
                   <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#7e7e7e]">
                     <span>Top Speed</span>
-                    <Tooltip content="Velocidad máxima alcanzada antes del punto de frenada." />
+                    <Tooltip content="Velocidad máxima alcanzada registrada en telemetría." />
                   </div>
                   <div className="text-2xl font-bold font-mono text-white mt-1 tabular-nums tracking-tight">
-                    {ultimaSesion ? (esGarlati ? "348.5" : "284.2") : "--.-"} <span className="text-xs text-[#7e7e7e] font-normal">km/h</span>
+                    {topSpeedStr} <span className="text-xs text-[#7e7e7e] font-normal">km/h</span>
                   </div>
                 </div>
 
@@ -279,7 +326,7 @@ export default function PaginaDashboardBoxes() {
           <div className="pt-4 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono">
             <span className="text-[#bbbbbb] flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-[#7e7e7e]" />
-              {ultimaSesion?.carModel || "Ferrari SF70H (F1 2017)"}
+              {ultimaSesion?.carModel || ultimaSesion?.modeloVehiculo || usuario.vehiculoPrincipal}
             </span>
             <span className="text-[#0066b1] group-hover:text-white font-bold uppercase text-[11px] flex items-center gap-1 transition-colors">
               Abrir análisis completo de telemetría
