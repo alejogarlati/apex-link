@@ -212,6 +212,35 @@ BEGIN
     END IF;
 END $$;
 
+-- ============================================================================
+-- USUARIO MAESTRO: ADMINISTRADOR (Exclusivo para Control y Modo Mock)
+-- ============================================================================
+
+DO $$
+DECLARE
+    v_admin_id UUID := '00000000-0000-0000-0000-000000000001';
+    v_rol_admin_id UUID;
+BEGIN
+    INSERT INTO usuarios (id, nombre_completo, alias_piloto, email, password_hash, activo)
+    VALUES (
+        v_admin_id,
+        'ApexLink Administrador Maestro',
+        'ADMIN',
+        'admin@apexlink.io',
+        '$2a$11$eAKo2.g5Yk5Qk8QeW7Xz6.V.mG5r6tY8u9i0o1p2q3r4s5t6u7v8w',
+        TRUE
+    )
+    ON CONFLICT (email) DO NOTHING;
+
+    SELECT id INTO v_rol_admin_id FROM roles WHERE nombre = 'Administrador';
+
+    IF v_rol_admin_id IS NOT NULL THEN
+        INSERT INTO usuarios_roles (usuario_id, rol_id)
+        VALUES (v_admin_id, v_rol_admin_id)
+        ON CONFLICT DO NOTHING;
+    END IF;
+END $$;
+
 
 -- ============================================================================
 -- Migración: Registro Completo de Rendimiento del Piloto y 2 Usuarios de Prueba

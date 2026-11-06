@@ -20,6 +20,7 @@ import {
   obtenerVueltasSesion,
   obtenerTelemetriaVuelta,
 } from "@/lib/apiClient";
+import { obtenerSesionLocal, esUsuarioAdmin } from "@/lib/auth";
 import type { ResumenVuelta, MuestraTelemetria } from "@/types/telemetria";
 import { mapearMuestraDtoAMuestra } from "@/types/telemetria";
 import type { VueltaDto } from "@/types/api";
@@ -68,15 +69,19 @@ function ContenidoAnalisis() {
 
         // Si no vino parámetro de sesión, consultar la sesión más reciente
         if (!idSesion) {
-          const resSesiones = await obtenerSesionesPaginadas(1, 1);
+          const resSesiones = await obtenerSesionesPaginadas(1, 10);
           if (
             resSesiones.exitoso &&
             resSesiones.datos &&
             resSesiones.datos.elementos.length > 0
           ) {
-            const primerElemento = resSesiones.datos.elementos[0];
-            if (primerElemento) {
-              idSesion = primerElemento.id;
+            const perfil = obtenerSesionLocal();
+            const esAdmin = esUsuarioAdmin(perfil?.usuario);
+            const sesionElegida = resSesiones.datos.elementos.find(
+              (s) => esAdmin || !s.isMockSimulation
+            );
+            if (sesionElegida) {
+              idSesion = sesionElegida.id;
             }
           }
         }

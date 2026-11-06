@@ -257,7 +257,118 @@ export const USUARIO_ALEJO_SALAS: PerfilUsuario = {
   ],
 };
 
-export const USUARIOS_PRUEBA = [USUARIO_ALEJO_GARLATI, USUARIO_ALEJO_SALAS];
+// ---------------------------------------------------------------------------
+// USUARIO MAESTRO: ADMIN (Control de Boxes & Exclusivo Modo Mock)
+// ---------------------------------------------------------------------------
+export const USUARIO_ADMIN: PerfilUsuario = {
+  id: "00000000-0000-0000-0000-000000000001",
+  nombre: "Administrador Maestro",
+  alias: "ADMIN",
+  email: "admin@apexlink.io",
+  esInvitadoFappe: false,
+  licencia: "Licencia de Control Maestro Apex",
+  nacionalidad: "Argentina",
+  codigoPais: "ARG",
+  vehiculoPrincipal: "Control Central / Generador Mock",
+  simulador: "Simulador de Boxes / Modo Mock & Control",
+  puntajeGeneral: 99.9,
+  rating: {
+    paceRating: 3000,
+    safetyRating: "S",
+    nivel: "Director de Carrera",
+    metricas: {
+      velocidad: 99,
+      consistencia: 99,
+      frenada: 99,
+      control: 99,
+      agresividad: 50,
+    },
+  },
+  vueltasTotales: 999,
+  kilometrosTotales: 5000.0,
+  habilidades: [
+    {
+      id: "frenada",
+      nombre: "Frenada / Trail Braking",
+      etiquetaCorta: "FRENADA",
+      valor: 99,
+      descripcion: "Supervisión de sensores de desaceleración y telemetría de frenada.",
+      consejo: "Acceso total a curvas de deceleración.",
+    },
+    {
+      id: "traccion",
+      nombre: "Tracción / Salida",
+      etiquetaCorta: "TRACCIÓN",
+      valor: 99,
+      descripcion: "Supervisión de trenes de potencia y telemetría de tracción.",
+      consejo: "Control de telemetría de motores y ERS.",
+    },
+    {
+      id: "apice",
+      nombre: "Velocidad en Ápice",
+      etiquetaCorta: "ÁPICE",
+      valor: 99,
+      descripcion: "Supervisión de velocidades de vértice en todos los circuitos.",
+      consejo: "Monitoreo de trazadas.",
+    },
+    {
+      id: "consistencia",
+      nombre: "Consistencia",
+      etiquetaCorta: "CONSISTENCIA",
+      valor: 99,
+      descripcion: "Análisis y dispersión de tiempos en todas las categorías.",
+      consejo: "Modo de control maestro activado.",
+    },
+    {
+      id: "limites",
+      nombre: "Respeto de Límites",
+      etiquetaCorta: "LÍMITES",
+      valor: 99,
+      descripcion: "Control de límites de pista y penalizaciones de carrera.",
+      consejo: "Control reglamentario FIA / FAPPE.",
+    },
+  ],
+  records: [
+    {
+      id: "monza",
+      circuito: "Autodromo Nazionale Monza",
+      pais: "ITA",
+      tiempo: "01:20.912",
+      esRecordSesion: true,
+    },
+  ],
+  diagnosticoAi: {
+    puntoFuerteTitulo: "Control Maestro de Pista",
+    puntoFuerteDesc: "Privilegios exclusivos de conmutación de simulador sintético Mock y auditoría de telemetría.",
+    oportunidadMejoraTitulo: "Gestión de Flota",
+    oportunidadMejoraDesc: "Asegurar que los pilotos compitan exclusivamente con telemetría física real.",
+  },
+  logros: [
+    {
+      id: "admin-master",
+      titulo: "Director de Carrera",
+      descripcion: "Acceso concedido al panel maestro de telemetría y generador sintético.",
+      icono: "shield-check",
+      desbloqueado: true,
+      fechaDesbloqueo: "2026-11-05",
+    },
+  ],
+};
+
+export const USUARIOS_PRUEBA = [USUARIO_ALEJO_GARLATI, USUARIO_ALEJO_SALAS, USUARIO_ADMIN];
+
+/**
+ * Comprueba si el usuario tiene privilegios de Administrador Maestro
+ */
+export function esUsuarioAdmin(usuario?: PerfilUsuario | null): boolean {
+  if (!usuario) return false;
+  return (
+    usuario.alias === "ADMIN" ||
+    usuario.email.toLowerCase() === "admin" ||
+    usuario.email.toLowerCase() === "admin@apexlink.io" ||
+    usuario.id === USUARIO_ADMIN.id
+  );
+}
 
 // Compatibilidad hacia atrás: el piloto predeterminado es Alejo Garlati
 export const PILOTO_INVITADO_FAPPE: PerfilUsuario = USUARIO_ALEJO_GARLATI;
@@ -305,13 +416,27 @@ export async function iniciarSesionConServidor(
     };
   }
 
+  // Acceso directo e instantáneo para el Administrador Maestro (admin / admin)
+  if ((emailNorm === "admin" || emailNorm === "admin@apexlink.io") && passNorm === "admin") {
+    const sesion: SesionAuth = {
+      token: `apex_admin_${Date.now()}`,
+      usuario: USUARIO_ADMIN,
+      expiraEn: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    };
+    guardarSesionLocal(sesion);
+    return { exitoso: true, sesion };
+  }
+
   try {
     const res = await autenticarUsuario({ email: emailNorm, password: passNorm });
     if (res.exitoso && res.datos) {
       const dto = res.datos.usuario;
-      const baseUsuario = emailNorm.includes("salas")
-        ? USUARIO_ALEJO_SALAS
-        : USUARIO_ALEJO_GARLATI;
+      const baseUsuario =
+        emailNorm === "admin" || emailNorm.includes("admin")
+          ? USUARIO_ADMIN
+          : emailNorm.includes("salas")
+          ? USUARIO_ALEJO_SALAS
+          : USUARIO_ALEJO_GARLATI;
 
       const evalDto = dto.ultimaEvaluacion;
       const usuarioConsolidado: PerfilUsuario = {

@@ -255,21 +255,6 @@ export default function LayoutAppBoxes({
               {sidebarAbierto ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
 
-            {/* Toggle Permanente para Colapsar/Expandir en Desktop */}
-            <button
-              type="button"
-              onClick={alternarColapsoSidebar}
-              title={sidebarColapsado ? "Expandir barra lateral" : "Colapsar barra lateral"}
-              aria-label={sidebarColapsado ? "Expandir barra lateral" : "Colapsar barra lateral"}
-              className="hidden md:inline-flex items-center justify-center p-2 rounded-lg text-[#8e8e93] hover:text-white hover:bg-white/[0.04] border border-[#262626] hover:border-[#3c3c3c] transition-colors cursor-pointer shrink-0"
-            >
-              {sidebarColapsado ? (
-                <PanelLeft className="w-4 h-4 text-[#0066b1]" />
-              ) : (
-                <PanelLeftClose className="w-4 h-4" />
-              )}
-            </button>
-
             <Link href="/app" className="flex items-center gap-3 sm:gap-4 group">
             <Image
               src="/logos/logo.webp"

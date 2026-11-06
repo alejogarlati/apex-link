@@ -22,8 +22,10 @@ import { TyreThermalsMatrix } from "@/components/live/TyreThermalsMatrix";
 import { LiveMapaCircuitoCanvas } from "@/components/live/LiveMapaCircuitoCanvas";
 import { LiveLapTimesList, type VueltaRegistrada } from "@/components/live/LiveLapTimesList";
 import { generarTelemetriaMonza } from "@/lib/mockTelemetria";
-import { solicitarPost } from "@/lib/apiClient";
-import type { EstadoMockDto } from "@/types/api";
+import { solicitarPost, obtenerEstadoServicio } from "@/lib/apiClient";
+import { obtenerSesionLocal, esUsuarioAdmin, USUARIO_ALEJO_GARLATI } from "@/lib/auth";
+import type { PerfilUsuario } from "@/types/usuario";
+import type { EstadoMockDto, EstadoServicioDto } from "@/types/api";
 
 const VUELTAS_INICIALES_MONZA: VueltaRegistrada[] = [
   {
@@ -65,6 +67,27 @@ const VUELTAS_INICIALES_MONZA: VueltaRegistrada[] = [
 ];
 
 export default function PaginaLivePitwall() {
+  const [usuario, setUsuario] = useState<PerfilUsuario>(() => {
+    const sesion = obtenerSesionLocal();
+    return sesion ? sesion.usuario : USUARIO_ALEJO_GARLATI;
+  });
+
+  useEffect(() => {
+    const sincronizar = () => {
+      const sesion = obtenerSesionLocal();
+      if (sesion?.usuario) setUsuario(sesion.usuario);
+    };
+    sincronizar();
+    window.addEventListener("storage", sincronizar);
+    window.addEventListener("apexlink_usuario_cambiado", sincronizar);
+    return () => {
+      window.removeEventListener("storage", sincronizar);
+      window.removeEventListener("apexlink_usuario_cambiado", sincronizar);
+    };
+  }, []);
+
+  const esAdmin = esUsuarioAdmin(usuario);
+
   const {
     conectado,
     frame,
@@ -75,18 +98,44 @@ export default function PaginaLivePitwall() {
     reconectar,
   } = useLiveTelemetryWebSocket();
 
+  const [estadoServicio, setEstadoServicio] = useState<EstadoServicioDto | null>(null);
+
+  useEffect(() => {
+    let cancelado = false;
+    const consultar = async () => {
+      const res = await obtenerEstadoServicio().catch(() => null);
+      if (!cancelado && res?.exitoso && res.datos) {
+        setEstadoServicio(res.datos);
+      }
+    };
+    consultar();
+    const interval = setInterval(consultar, 3000);
+    return () => {
+      cancelado = true;
+      clearInterval(interval);
+    };
+  }, []);
+
   const [conmutandoMock, setConmutandoMock] = useState(false);
-  const [vueltasSesion, setVueltasSesion] = useState<VueltaRegistrada[]>(VUELTAS_INICIALES_MONZA);
+  const [vueltasSesion, setVueltasSesion] = useState<VueltaRegistrada[]>(() =>
+    esAdmin ? VUELTAS_INICIALES_MONZA : []
+  );
+
+  // Aislar datos del modo mock: los pilotos regulares no ingieren vueltas sintéticas
+  const simulacionMockActiva = Boolean(estadoServicio?.isMockMode);
+  const telemetriaValidaParaUsuario = esAdmin || (!simulacionMockActiva && conectado);
+  const frameEfectivo = telemetriaValidaParaUsuario ? frame : null;
 
   // Mantener la velocidad actual en ref para evitar re-ejecuciones de effect en cada frame
-  const velocidadAutoRef = useRef(frame?.car.speedKmh ?? 340);
+  const velocidadAutoRef = useRef(frameEfectivo?.car.speedKmh ?? (esAdmin ? 340 : 0));
   useEffect(() => {
-    velocidadAutoRef.current = frame?.car.speedKmh ?? 340;
-  }, [frame?.car.speedKmh]);
+    velocidadAutoRef.current = frameEfectivo?.car.speedKmh ?? (esAdmin ? 340 : 0);
+  }, [frameEfectivo?.car.speedKmh, esAdmin]);
 
   // Sincronizar automáticamente nuevas vueltas cruzadas por meta vía WebSocket
   useEffect(() => {
     if (!ultimoEventoVuelta) return;
+    if (!esAdmin && simulacionMockActiva) return;
 
     setVueltasSesion((prev) => {
       if (prev.some((v) => v.lapNumber === ultimoEventoVuelta.lapNumber)) {
@@ -109,12 +158,20 @@ export default function PaginaLivePitwall() {
 
       return [nuevaVuelta, ...listaBase];
     });
-  }, [ultimoEventoVuelta]);
+  }, [ultimoEventoVuelta, esAdmin, simulacionMockActiva]);
 
   const manejarAlternarMock = async () => {
     try {
       setConmutandoMock(true);
-      await solicitarPost<EstadoMockDto>("/api/mock/alternar", {});
+      const res = await solicitarPost<EstadoMockDto>("/api/mock/alternar", {});
+      if (res.exitoso && res.datos) {
+        const activo = res.datos.modoMockActivo ?? res.datos.isMockActive ?? false;
+        setEstadoServicio((prev) =>
+          prev
+            ? { ...prev, isMockMode: activo, isConnected: activo || prev.isConnected }
+            : null
+        );
+      }
     } catch {
       // Manejado defensivamente
     } finally {
@@ -123,7 +180,7 @@ export default function PaginaLivePitwall() {
   };
 
   // Valores de fallback cuando no hay frame activo
-  const auto = frame?.car ?? {
+  const auto = frameEfectivo?.car ?? {
     speedKmh: 0,
     rpms: 0,
     maxRpm: 13000,
@@ -135,7 +192,7 @@ export default function PaginaLivePitwall() {
     drsEnabled: false,
   };
 
-  const timing = frame?.timing ?? {
+  const timing = frameEfectivo?.timing ?? {
     lapTimeMs: 0,
     lapTimeStr: "--:--.---",
     bestTimeMs: 0,
@@ -146,22 +203,22 @@ export default function PaginaLivePitwall() {
     lapProgress: 0,
   };
 
-  const neumaticos = frame?.tyres ?? {
+  const neumaticos = frameEfectivo?.tyres ?? {
     pressurePsi: [27.5, 27.8, 27.6, 27.9],
     tempCoreC: [85.0, 92.0, 86.0, 93.0],
     wear: [98, 97, 98, 97],
   };
 
-  const dinamicas = frame?.dynamics ?? {
+  const dinamicas = frameEfectivo?.dynamics ?? {
     gForce: { lat: 0, lon: 0, vert: 1 },
     worldPos: { x: 0, y: 12, z: 0 },
   };
 
-  const sesion = frame?.session ?? {
+  const sesion = frameEfectivo?.session ?? {
     flag: "GREEN",
     position: 1,
     track: "monza",
-    carModel: "ks_ferrari_sf70h",
+    carModel: usuario.vehiculoPrincipal || "Ferrari SF70H",
   };
 
   const deltaNegativo = timing.deltaMs < 0;
@@ -189,29 +246,37 @@ export default function PaginaLivePitwall() {
           {/* 1. Header con Telemetría en Vivo e Indicador de Estado */}
           <div className="pb-5 border-b border-[#222225] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
-              <div className={conectado ? "text-[#0fa336]" : "text-[#e22718]"}>
-                <Radio className={`w-5 h-5 ${conectado ? "animate-pulse" : ""}`} />
+              <div className={telemetriaValidaParaUsuario ? "text-[#0fa336]" : "text-[#f4b400]"}>
+                <Radio className={`w-5 h-5 ${telemetriaValidaParaUsuario ? "animate-pulse" : ""}`} />
               </div>
 
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-lg sm:text-xl font-bold uppercase tracking-tight text-white">
-                    Autodromo Nazionale Monza • {sesion.carModel}
+                    {telemetriaValidaParaUsuario
+                      ? `Autodromo Nazionale Monza • ${sesion.carModel}`
+                      : "Muro de Boxes • Esperando Assetto Corsa (ACS.exe)"}
                   </h1>
-                  {conectado ? (
+                  {telemetriaValidaParaUsuario ? (
                     <span className="flex items-center gap-1.5 text-xs font-mono text-[#0fa336] font-bold">
                       <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
-                      Live {fpsEstimado} FPS
+                      {simulacionMockActiva && esAdmin
+                        ? `Mock (Admin) ${fpsEstimado} FPS`
+                        : `Live ACS.exe ${fpsEstimado} FPS`}
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1.5 text-xs font-mono text-[#e22718] font-bold">
-                      <span className="w-2 h-2 rounded-full bg-[#e22718]" />
-                      Desconectado
+                    <span className="flex items-center gap-1.5 text-xs font-mono text-[#f4b400] font-bold">
+                      <span className="w-2 h-2 rounded-full bg-[#f4b400]" />
+                      Standby
                     </span>
                   )}
                 </div>
                 <p className="text-[11px] text-[#bbbbbb] font-mono mt-0.5">
-                  Canal compartido Win32 MMF @ 60 Hz
+                  {telemetriaValidaParaUsuario
+                    ? simulacionMockActiva && esAdmin
+                      ? "Generador Mock Sintético @ 60 Hz (Exclusivo Administrador)"
+                      : "Canal compartido Win32 MMF @ 60 Hz"
+                    : "Esperando inicio de tanda en Assetto Corsa (Win32 MMF Standby)"}
                 </p>
               </div>
             </div>
@@ -219,19 +284,22 @@ export default function PaginaLivePitwall() {
             {/* Controles de Conexión y Ping */}
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
               <div className="flex items-center gap-2.5 text-xs font-mono text-[#7e7e7e]">
-                <span>Ping: <strong className="text-white">{latenciaMs} ms</strong></span>
+                <span>Ping: <strong className="text-white">{telemetriaValidaParaUsuario ? latenciaMs : 0} ms</strong></span>
                 <span className="text-[#3c3c3c]">|</span>
-                <span>Cuadros: <strong className="text-[#0066b1]">{totalCuadrosRecibidos}</strong></span>
+                <span>Cuadros: <strong className="text-[#0066b1]">{telemetriaValidaParaUsuario ? totalCuadrosRecibidos : 0}</strong></span>
               </div>
 
-              <button
-                onClick={manejarAlternarMock}
-                disabled={conmutandoMock}
-                className="px-3 py-1.5 rounded-lg text-xs font-bold font-mono uppercase border border-white/15 hover:border-white/30 hover:bg-white/[0.04] text-white transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-              >
-                <Zap className="w-3.5 h-3.5 text-[#f4b400]" />
-                {conmutandoMock ? "..." : "Mock"}
-              </button>
+              {esAdmin && (
+                <button
+                  onClick={manejarAlternarMock}
+                  disabled={conmutandoMock}
+                  title="Conmutar generador sintético Mock (Exclusivo Administrador)"
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold font-mono uppercase border border-amber-500/30 hover:border-amber-500/60 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <Zap className="w-3.5 h-3.5 text-[#f4b400]" />
+                  {conmutandoMock ? "..." : "Mock (Admin)"}
+                </button>
+              )}
 
               {!conectado && (
                 <button
@@ -246,7 +314,7 @@ export default function PaginaLivePitwall() {
           </div>
 
           {/* 2. Banner de Notificación de Vuelta Récord (si ocurrió evento) */}
-          {ultimoEventoVuelta && (
+          {ultimoEventoVuelta && telemetriaValidaParaUsuario && (
             <div className="py-3 px-4 border border-[#0066b1]/30 rounded-lg flex items-center justify-between bg-[#0066b1]/5">
               <div className="flex items-center gap-3">
                 <Trophy className="w-5 h-5 text-[#f4b400] shrink-0" />

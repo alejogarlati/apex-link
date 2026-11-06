@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import {
   obtenerSesionLocal,
+  esUsuarioAdmin,
   USUARIO_ALEJO_GARLATI,
   USUARIO_ALEJO_SALAS,
 } from "@/lib/auth";
@@ -66,6 +67,7 @@ export default function PaginaDashboardBoxes() {
 
   const metricas = usuario.rating.metricas;
   const esGarlati = usuario.id === USUARIO_ALEJO_GARLATI.id || usuario.email.includes("garlati");
+  const esAdmin = esUsuarioAdmin(usuario);
 
   const formatearTiempoMs = (ms: number) => {
     if (!ms || ms <= 0) return "--:--.---";
@@ -87,10 +89,10 @@ export default function PaginaDashboardBoxes() {
           setEstadoServicio(resEstado.datos);
         }
 
-        // 2. Consultar la última tanda registrada
-        const resSesiones = await obtenerSesionesPaginadas(1, 1).catch(() => null);
+        // 2. Consultar la última tanda registrada (para pilotos regulares, excluir simulaciones mock)
+        const resSesiones = await obtenerSesionesPaginadas(1, 10).catch(() => null);
         if (!cancelado && resSesiones?.exitoso && resSesiones.datos?.elementos?.length) {
-          const sesion = resSesiones.datos.elementos[0];
+          const sesion = resSesiones.datos.elementos.find((s) => esAdmin || !s.isMockSimulation);
           if (sesion) {
             setUltimaSesion(sesion);
 
@@ -136,10 +138,12 @@ export default function PaginaDashboardBoxes() {
     return () => {
       cancelado = true;
     };
-  }, []);
+  }, [esAdmin]);
 
-  const enlaceActivo = estadoServicio?.isConnected || estadoServicio?.isMockMode || false;
-  const esMock = estadoServicio?.isMockMode || false;
+  const enlaceActivo = esAdmin
+    ? Boolean(estadoServicio?.isConnected || estadoServicio?.isMockMode)
+    : Boolean(estadoServicio?.isConnected && !estadoServicio?.isMockMode);
+  const esMock = Boolean(estadoServicio?.isMockMode);
   const circuitoActual = estadoServicio?.circuit && estadoServicio.circuit !== "Desconocido / Esperando simulador"
     ? estadoServicio.circuit
     : ultimaSesion?.circuit || ultimaSesion?.circuito || (esGarlati ? "Autodromo Nazionale Monza" : "Autodromo Nazionale Monza");
@@ -166,7 +170,7 @@ export default function PaginaDashboardBoxes() {
               {enlaceActivo ? (
                 <span className="inline-flex items-center gap-1.5 text-xs font-mono text-[#0fa336] font-bold">
                   <span className="w-2 h-2 rounded-full bg-[#0fa336] animate-pulse" />
-                  {esMock ? "Generador Mock @ 60 Hz" : "Enlace Activo"}
+                  {esMock && esAdmin ? "Generador Mock @ 60 Hz (Admin)" : "Enlace Activo (ACS.exe)"}
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 text-xs font-mono text-[#f4b400] font-bold">

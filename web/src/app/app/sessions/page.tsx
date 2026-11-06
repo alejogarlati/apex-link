@@ -17,7 +17,7 @@ import {
   Layers,
 } from "lucide-react";
 import { obtenerSesionesPaginadas, alternarModoMock } from "@/lib/apiClient";
-import { obtenerSesionLocal, USUARIO_ALEJO_GARLATI, USUARIO_ALEJO_SALAS } from "@/lib/auth";
+import { obtenerSesionLocal, esUsuarioAdmin, USUARIO_ALEJO_GARLATI, USUARIO_ALEJO_SALAS } from "@/lib/auth";
 import type { PerfilUsuario } from "@/types/usuario";
 import type { SesionResumenDto } from "@/types/api";
 import { TablaVueltasSesionModal } from "@/components/sessions/TablaVueltasSesionModal";
@@ -96,6 +96,7 @@ export default function PaginaSesiones() {
   const [conmutandoMock, setConmutandoMock] = useState(false);
 
   const esGarlati = usuario.id === USUARIO_ALEJO_GARLATI.id || usuario.email.includes("garlati");
+  const esAdmin = esUsuarioAdmin(usuario);
   const sesionesPiloto = esGarlati ? SESIONES_GARLATI : SESIONES_SALAS;
 
   useEffect(() => {
@@ -123,9 +124,20 @@ export default function PaginaSesiones() {
     try {
       const res = await obtenerSesionesPaginadas(pag, 9);
       if (res.exitoso && res.datos && res.datos.elementos.length > 0) {
-        setSesiones(res.datos.elementos);
-        setTotalPaginas(res.datos.totalPaginas || 1);
-        setTotalRegistros(res.datos.totalRegistros || res.datos.elementos.length);
+        // Los pilotos regulares solo ven tandas reales de pista (sin datos sintéticos de mock)
+        const elementosFiltrados = esAdmin
+          ? res.datos.elementos
+          : res.datos.elementos.filter((s) => !s.isMockSimulation);
+
+        if (elementosFiltrados.length > 0) {
+          setSesiones(elementosFiltrados);
+          setTotalPaginas(res.datos.totalPaginas || 1);
+          setTotalRegistros(elementosFiltrados.length);
+        } else {
+          setSesiones(sesionesPiloto);
+          setTotalPaginas(1);
+          setTotalRegistros(sesionesPiloto.length);
+        }
       } else {
         // Fallback a las tandas oficiales del piloto activo
         setSesiones(sesionesPiloto);
@@ -140,7 +152,7 @@ export default function PaginaSesiones() {
     } finally {
       setCargando(false);
     }
-  }, [sesionesPiloto]);
+  }, [sesionesPiloto, esAdmin]);
 
   useEffect(() => {
     cargarSesiones(pagina);
@@ -220,13 +232,16 @@ export default function PaginaSesiones() {
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorApi}</span>
           </div>
-          <button
-            onClick={handleAlternarMock}
-            disabled={conmutandoMock}
-            className="px-2.5 py-1 rounded bg-[#f4b400]/20 hover:bg-[#f4b400]/30 text-white font-bold transition-colors cursor-pointer border border-[#f4b400]/40"
-          >
-            {conmutandoMock ? "Conmutando..." : "Activar Mock"}
-          </button>
+          {esAdmin && (
+            <button
+              onClick={handleAlternarMock}
+              disabled={conmutandoMock}
+              title="Conmutar modo mock (Solo Administrador)"
+              className="px-2.5 py-1 rounded bg-[#f4b400]/20 hover:bg-[#f4b400]/30 text-white font-bold transition-colors cursor-pointer border border-[#f4b400]/40"
+            >
+              {conmutandoMock ? "Conmutando..." : "Activar Mock (Admin)"}
+            </button>
+          )}
         </div>
       )}
 
