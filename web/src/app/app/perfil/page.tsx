@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
   obtenerSesionLocal,
-  USUARIO_ALEJO_GARLATI,
 } from "@/lib/auth";
 import { obtenerPerfilPiloto, obtenerSesionesPaginadas } from "@/lib/apiClient";
 import type {
@@ -645,15 +644,15 @@ function SeccionInsignias({ logros }: { logros: LogroGamificado[] }) {
 
 export default function PaginaPerfil() {
   const router = useRouter();
-  const [montado, setMontado] = useState(false);
-  const [usuario, setUsuario] = useState<PerfilUsuario>(USUARIO_ALEJO_GARLATI);
+  const [usuario, setUsuario] = useState<PerfilUsuario | null>(null);
 
   useEffect(() => {
-    setMontado(true);
     const sincronizarUsuario = () => {
       const sesion = obtenerSesionLocal();
       if (sesion?.usuario) {
         setUsuario(sesion.usuario);
+      } else {
+        router.replace("/login");
       }
     };
 
@@ -665,20 +664,22 @@ export default function PaginaPerfil() {
       window.removeEventListener("storage", sincronizarUsuario);
       window.removeEventListener("apexlink_usuario_cambiado", sincronizarUsuario);
     };
-  }, []);
+  }, [router]);
 
   // Sincronización unificada en vivo con backend Kestrel (PostgreSQL + Telemetría SQLite)
   useEffect(() => {
+    if (!usuario?.id) return;
     let cancelado = false;
 
     async function sincronizarPerfilYTelemetria() {
       try {
-        const res = await obtenerPerfilPiloto(usuario.id);
+        const res = await obtenerPerfilPiloto(usuario!.id);
         if (!cancelado && res.exitoso && res.datos) {
           const d = res.datos;
           const evalActual = d.ultimaEvaluacion;
 
           setUsuario((prev) => {
+            if (!prev) return prev;
             const habilidadesNuevas: HabilidadDetalle[] = evalActual
               ? [
                   {
@@ -803,7 +804,23 @@ export default function PaginaPerfil() {
     return () => {
       cancelado = true;
     };
-  }, [usuario.id]);
+  }, [usuario?.id]);
+
+  if (!usuario) {
+    return (
+      <div className="min-h-screen bg-black text-white antialiased selection:bg-[#0066b1]">
+        <FranjaM className="h-1.5 w-full" />
+        <main className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-10 sm:px-6 sm:py-14">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-64 w-full rounded-2xl" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Skeleton className="h-72 w-full rounded-xl" />
+            <Skeleton className="h-72 w-full rounded-xl" />
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   const esVehiculoMonoplaza =
     usuario.vehiculoPrincipal.toLowerCase().includes("f1") ||
@@ -866,22 +883,6 @@ export default function PaginaPerfil() {
       acento: COLORES.rojoM,
     },
   ];
-
-  if (!montado) {
-    return (
-      <div className="min-h-screen bg-black text-white antialiased selection:bg-[#0066b1]">
-        <FranjaM className="h-1.5 w-full" />
-        <main className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-10 sm:px-6 sm:py-14">
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-64 w-full rounded-2xl" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Skeleton className="h-72 w-full rounded-xl" />
-            <Skeleton className="h-72 w-full rounded-xl" />
-          </div>
-        </main>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-black text-white antialiased selection:bg-[#0066b1] selection:text-white">
