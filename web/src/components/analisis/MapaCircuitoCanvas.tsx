@@ -119,6 +119,8 @@ export function MapaCircuitoCanvas({
       const totalDistCircuito = circuitoActual.lengthMeters || 5793;
       let minX = Infinity;
       let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
       let minZ = Infinity;
       let maxZ = -Infinity;
       let maxDistMuestra = 1;
@@ -127,16 +129,19 @@ export function MapaCircuitoCanvas({
         const m = serieMuestras[i]!;
         if (m.posicionMundo.x < minX) minX = m.posicionMundo.x;
         if (m.posicionMundo.x > maxX) maxX = m.posicionMundo.x;
+        if (m.posicionMundo.y < minY) minY = m.posicionMundo.y;
+        if (m.posicionMundo.y > maxY) maxY = m.posicionMundo.y;
         if (m.posicionMundo.z < minZ) minZ = m.posicionMundo.z;
         if (m.posicionMundo.z > maxZ) maxZ = m.posicionMundo.z;
         if (m.distanciaMetros > maxDistMuestra) maxDistMuestra = m.distanciaMetros;
       }
 
       const spanX = maxX - minX;
+      const spanY = maxY - minY;
       const spanZ = maxZ - minZ;
       const bounds = circuitoActual.bounds;
 
-      // Verificar si las coordenadas (X, Z) provienen del mundo 3D real de Kunos para este circuito
+      // 1. Coordenadas 3D (X, Y, Z) completas nativas de Kunos para este circuito
       const tieneCoordenadasKunosReales =
         spanX >= bounds.width * 0.65 &&
         spanZ >= bounds.depth * 0.65 &&
@@ -168,41 +173,86 @@ export function MapaCircuitoCanvas({
         });
       }
 
-      // Si las coordenadas provienen de una sesión cuyas posiciones (x,z) no están calibradas con map.ini,
-      // interpolamos la telemetría real (velocidad, freno, acelerador, marcha, RPM) por distancia sobre la geometría oficial
+      // 2. Vueltas previas en SQLite donde el eje Z real de Kunos quedó almacenado en posicionMundo.y
+      // y la elevación Y en posicionMundo.x: preservamos cada muestra real a 60 Hz y su coordenada Z real
+      const tieneZRealEnY =
+        spanZ < 1 &&
+        spanY >= bounds.depth * 0.65 &&
+        minY <= bounds.minZ * 0.5 &&
+        maxY >= bounds.maxZ * 0.5 &&
+        baseTrack.length > 1;
+
+      if (tieneZRealEnY) {
+        const escalaDist = maxDistMuestra > totalDistCircuito * 0.5 ? maxDistMuestra : totalDistCircuito;
+        let cursorBase = 0;
+
+        return serieMuestras.map((m, idx) => {
+          const distNorm = (m.distanciaMetros / escalaDist) * totalDistCircuito;
+          while (
+            cursorBase + 1 < baseTrack.length &&
+            baseTrack[cursorBase + 1]!.dist <= distNorm
+          ) {
+            cursorBase++;
+          }
+          const p0 = baseTrack[cursorBase]!;
+          const p1 = baseTrack[Math.min(baseTrack.length - 1, cursorBase + 1)] ?? p0;
+          const dTramo = p1.dist - p0.dist;
+          const frac = dTramo > 0.05 ? Math.max(0, Math.min(1, (distNorm - p0.dist) / dTramo)) : 0;
+          const xInterp = p0.x + (p1.x - p0.x) * frac;
+
+          return {
+            index: idx,
+            t: Math.max(0, Math.min(1, m.distanciaMetros / escalaDist)),
+            x: xInterp,
+            y: m.posicionMundo.x,
+            z: m.posicionMundo.y,
+            dist: m.distanciaMetros,
+            yaw: p0.yaw,
+            speed: m.velocidadKmh,
+            gear: m.marcha,
+            rpm: m.rpms,
+            throttle: m.acelerador,
+            brake: m.freno,
+            slope: p0.slope,
+            section: p0.section,
+            drs: p0.drs,
+          };
+        });
+      }
+
+      // 3. Fallback para sesiones sintéticas o sin coordenadas de Kunos: proyectar cada muestra por distancia sobre la geometría oficial
       const escalaDist = maxDistMuestra > totalDistCircuito * 0.5 ? maxDistMuestra : totalDistCircuito;
-      let cursorMuestra = 0;
+      let cursorBase = 0;
 
-      return baseTrack.map((pt, idx) => {
-        const distObjetivo = (pt.dist / totalDistCircuito) * escalaDist;
+      return serieMuestras.map((m, idx) => {
+        const distNorm = (m.distanciaMetros / escalaDist) * totalDistCircuito;
         while (
-          cursorMuestra + 1 < serieMuestras.length &&
-          serieMuestras[cursorMuestra + 1]!.distanciaMetros <= distObjetivo
+          cursorBase + 1 < baseTrack.length &&
+          baseTrack[cursorBase + 1]!.dist <= distNorm
         ) {
-          cursorMuestra++;
+          cursorBase++;
         }
-
-        const m0 = serieMuestras[cursorMuestra]!;
-        const m1 = serieMuestras[Math.min(serieMuestras.length - 1, cursorMuestra + 1)] ?? m0;
-        const tramo = m1.distanciaMetros - m0.distanciaMetros;
-        const factor = tramo > 0.05 ? Math.max(0, Math.min(1, (distObjetivo - m0.distanciaMetros) / tramo)) : 0;
+        const p0 = baseTrack[cursorBase] ?? baseTrack[0]!;
+        const p1 = baseTrack[Math.min(baseTrack.length - 1, cursorBase + 1)] ?? p0;
+        const dTramo = p1.dist - p0.dist;
+        const frac = dTramo > 0.05 ? Math.max(0, Math.min(1, (distNorm - p0.dist) / dTramo)) : 0;
 
         return {
           index: idx,
-          t: pt.t,
-          x: pt.x,
-          y: pt.y,
-          z: pt.z,
-          dist: pt.dist,
-          yaw: pt.yaw,
-          speed: m0.velocidadKmh + (m1.velocidadKmh - m0.velocidadKmh) * factor,
-          gear: factor < 0.5 ? m0.marcha : m1.marcha,
-          rpm: Math.round(m0.rpms + (m1.rpms - m0.rpms) * factor),
-          throttle: m0.acelerador + (m1.acelerador - m0.acelerador) * factor,
-          brake: m0.freno + (m1.freno - m0.freno) * factor,
-          slope: pt.slope,
-          section: pt.section,
-          drs: pt.drs,
+          t: Math.max(0, Math.min(1, m.distanciaMetros / escalaDist)),
+          x: p0.x + (p1.x - p0.x) * frac,
+          y: p0.y + (p1.y - p0.y) * frac,
+          z: p0.z + (p1.z - p0.z) * frac,
+          dist: m.distanciaMetros,
+          yaw: p0.yaw,
+          speed: m.velocidadKmh,
+          gear: m.marcha,
+          rpm: m.rpms,
+          throttle: m.acelerador,
+          brake: m.freno,
+          slope: p0.slope,
+          section: p0.section,
+          drs: p0.drs,
         };
       });
     },
@@ -229,9 +279,9 @@ export function MapaCircuitoCanvas({
       const prev = track[i - 1];
       const curr = track[i];
       if (!prev || !curr) continue;
-      const dDist = Math.max(0.1, curr.dist - prev.dist);
+      const dDist = Math.max(0, curr.dist - prev.dist);
       const avgSpeedMs = Math.max(10, ((prev.speed + curr.speed) / 2) / 3.6);
-      acumSec += dDist / avgSpeedMs;
+      acumSec += dDist > 0.005 ? dDist / avgSpeedMs : 1 / 60;
       times.push(acumSec * 1000);
     }
     return times;
@@ -271,9 +321,9 @@ export function MapaCircuitoCanvas({
       const prev = track[i - 1];
       const curr = track[i];
       if (!prev || !curr) continue;
-      const dDist = Math.max(0.1, curr.dist - prev.dist);
+      const dDist = Math.max(0, curr.dist - prev.dist);
       const avgSpeedMs = Math.max(10, ((prev.speed + curr.speed) / 2) / 3.6);
-      acumSec += dDist / avgSpeedMs;
+      acumSec += dDist > 0.005 ? dDist / avgSpeedMs : 1 / 60;
       times.push(acumSec * 1000);
     }
     return times;
@@ -302,6 +352,31 @@ export function MapaCircuitoCanvas({
     return tiemposAcumuladosPistaB;
   }, [tiemposAcumuladosPistaB, duracionObjetivoMsB]);
 
+  // Busca por bisección el índice fraccionario de una serie temporal en el instante exacto tMs
+  const obtenerProgresoEnTiempo = useCallback((serieTiempos: number[], tMs: number): number => {
+    const n = serieTiempos.length;
+    if (n <= 1 || tMs <= 0) return 0;
+    const tMax = serieTiempos[n - 1] ?? 0;
+    if (tMs >= tMax) return n - 1;
+
+    let low = 0;
+    let high = n - 1;
+    while (low < high) {
+      const mid = (low + high) >>> 1;
+      if ((serieTiempos[mid] ?? 0) < tMs) {
+        low = mid + 1;
+      } else {
+        high = mid;
+      }
+    }
+
+    if (low <= 0) return 0;
+    const tPrev = serieTiempos[low - 1] ?? 0;
+    const tCurr = serieTiempos[low] ?? tPrev;
+    const frac = tCurr > tPrev ? (tMs - tPrev) / (tCurr - tPrev) : 0;
+    return low - 1 + Math.max(0, Math.min(1, frac));
+  }, []);
+
   // Variables de cámara y animación (persisten sin re-renderizar)
   const estadoCamara = useRef({
     azimuth: Math.PI / 4,
@@ -315,7 +390,7 @@ export function MapaCircuitoCanvas({
     mapImage: null as HTMLImageElement | null,
     mapLoaded: false,
     carProgressA: 0, // Avance en coma flotante del Monoplaza A
-    carProgressB: 0, // Avance en coma flotante del Monoplaza B (Ghost / Comparativo)
+    carProgressB: 0, // Avance en coma flotante del Monoplaza B (en el mismo instante temporal tA)
     reproduciendo: false,
     ultimoTiempoSync: 0,
   });
@@ -380,7 +455,7 @@ export function MapaCircuitoCanvas({
       const totalMetros = circuitoActual.lengthMeters || (trackRealA[trackRealA.length - 1]?.dist ?? 1);
       const distClamped = Math.max(0, Math.min(totalMetros, distanciaSeleccionada));
 
-      // Búsqueda binaria o indexada del punto más cercano sobre la trazada real
+      // Búsqueda del punto correspondiente sobre la trazada real A
       let targetPointA = 0;
       for (let i = 0; i < trackRealA.length; i++) {
         if (trackRealA[i]!.dist >= distClamped) {
@@ -390,68 +465,16 @@ export function MapaCircuitoCanvas({
       }
       estadoCamara.current.carProgressA = targetPointA;
 
+      const tA = tiemposEscalados[targetPointA] ?? 0;
       if (trackRealB && trackRealB.length > 0 && tiemposEscaladosB.length > 0) {
-        const totalPtsB = trackRealB.length;
-        const tA = tiemposEscalados[targetPointA] ?? 0;
-
-        // Punto de igual distancia en B para conocer quién viene adelante temporalmente
-        let idxMismaDistB = 0;
-        for (let i = 0; i < totalPtsB; i++) {
-          if (trackRealB[i]!.dist >= distClamped) {
-            idxMismaDistB = i;
-            break;
-          }
-        }
-        const tBMismaDist = tiemposEscaladosB[idxMismaDistB] ?? tA;
-
-        // Ubicar el Ghost B en la posición espacial que tenía exactamente en el instante tA
-        let targetPointB = 0;
-        if (tA <= 0) {
-          const bMasLentoGlobal = (duracionObjetivoMsB ?? 1) >= (duracionObjetivoMs ?? 0);
-          const offsetInicial = bMasLentoGlobal ? -12 : 12;
-          targetPointB = ((targetPointA + offsetInicial) % totalPtsB + totalPtsB) % totalPtsB;
-        } else {
-          let idxTiempoB = tiemposEscaladosB.length - 1;
-          for (let i = 0; i < tiemposEscaladosB.length; i++) {
-            if (tiemposEscaladosB[i]! >= tA) {
-              idxTiempoB = i;
-              break;
-            }
-          }
-          if (idxTiempoB > 0) {
-            const tPrev = tiemposEscaladosB[idxTiempoB - 1] ?? 0;
-            const tCurr = tiemposEscaladosB[idxTiempoB] ?? tPrev;
-            const frac = tCurr > tPrev ? (tA - tPrev) / (tCurr - tPrev) : 0;
-            targetPointB = idxTiempoB - 1 + Math.max(0, Math.min(1, frac));
-          } else {
-            targetPointB = 0;
-          }
-
-          // Garantizar separación mínima visual (12 puntos) para que el Puck A jamás tape al Puck B
-          const ratioIndexA = (targetPointA / Math.max(1, trackRealA.length)) * totalPtsB;
-          const diffPts = targetPointB - ratioIndexA;
-          if (Math.abs(diffPts) < 12) {
-            const bEsMasLento =
-              tBMismaDist - tA >= -5 && (duracionObjetivoMsB ?? 1) >= (duracionObjetivoMs ?? 0);
-            const dir = diffPts < -0.05 ? -1 : diffPts > 0.05 ? 1 : bEsMasLento ? -1 : 1;
-            targetPointB = ((ratioIndexA + dir * 12) % totalPtsB + totalPtsB) % totalPtsB;
-          }
-        }
-
-        estadoCamara.current.carProgressB = targetPointB;
+        // Ubicar el Monoplaza B en las coordenadas reales que tenía exactamente en el mismo instante tA
+        estadoCamara.current.carProgressB = obtenerProgresoEnTiempo(tiemposEscaladosB, tA);
       } else {
-        const totalPtsA = Math.max(1, trackRealA.length);
-        estadoCamara.current.carProgressB = ((targetPointA - 12) % totalPtsA + totalPtsA) % totalPtsA;
+        estadoCamara.current.carProgressB = targetPointA;
       }
 
       if (timestampRef.current && tiemposEscalados.length > 0) {
-        const idx0 = Math.floor(targetPointA);
-        const idx1 = Math.min(tiemposEscalados.length - 1, idx0 + 1);
-        const frac = targetPointA - idx0;
-        const t0 = tiemposEscalados[idx0] ?? 0;
-        const t1 = tiemposEscalados[idx1] ?? t0;
-        const ms = t0 + (t1 - t0) * frac;
-        timestampRef.current.textContent = formatearTimestamp(ms);
+        timestampRef.current.textContent = formatearTimestamp(tA);
       }
     }
   }, [
@@ -461,8 +484,7 @@ export function MapaCircuitoCanvas({
     circuitoActual,
     tiemposEscalados,
     tiemposEscaladosB,
-    duracionObjetivoMs,
-    duracionObjetivoMsB,
+    obtenerProgresoEnTiempo,
   ]);
 
   // 1. Manejo nativo de rueda de ratón con { passive: false } para EVITAR scroll de página
@@ -522,7 +544,7 @@ export function MapaCircuitoCanvas({
         ? ((cam.carProgressB % totalPointsB) + totalPointsB) % totalPointsB
         : 0;
 
-      // Avance simultáneo de ambos monoplazas en carrera virtual
+      // Avance del Monoplaza A en tiempo real durante la reproducción
       if (cam.reproduciendo && totalPoints > 1) {
         const metersPerPointA = Math.max(0.1, bounds.totalDistance / totalPoints);
 
@@ -539,28 +561,6 @@ export function MapaCircuitoCanvas({
           if (onSeleccionarDistancia && now - cam.ultimoTiempoSync > 100) {
             onSeleccionarDistancia(Math.round(pActualA.dist));
             cam.ultimoTiempoSync = now;
-          }
-        }
-
-        // Auto B: Ritmo comparativo (según Vuelta B real o Ghost ~93%)
-        if (trackB && trackB.length > 1) {
-          const metersPerPointB = Math.max(0.1, bounds.totalDistance / totalPointsB);
-          const idxB = Math.floor(safeProgressB);
-          const pActualB = trackB[idxB] ?? trackB[0];
-          if (pActualB) {
-            const speedKmhB = Math.max(60, pActualB.speed);
-            const puntosAvanzadosB = ((speedKmhB / 3.6) * dt) / metersPerPointB;
-            safeProgressB = ((safeProgressB + puntosAvanzadosB) % totalPointsB + totalPointsB) % totalPointsB;
-            cam.carProgressB = safeProgressB;
-          }
-        } else {
-          const idxB = Math.floor(safeProgressB);
-          const pActualB = track[idxB] ?? track[0];
-          if (pActualB) {
-            const speedKmhB = Math.max(60, pActualB.speed * 0.935);
-            const puntosAvanzadosB = ((speedKmhB / 3.6) * dt) / metersPerPointA;
-            safeProgressB = ((safeProgressB + puntosAvanzadosB) % totalPoints + totalPoints) % totalPoints;
-            cam.carProgressB = safeProgressB;
           }
         }
       }
@@ -587,50 +587,65 @@ export function MapaCircuitoCanvas({
       const carABrake = pA0.brake + (pA1.brake - pA0.brake) * fracA;
       const carASection = pA0.section;
       const carADrs = pA0.drs;
-      const carADist = Math.round(pA0.dist + (pA1.dist - pA0.dist) * fracA);
+      const carADist = pA0.dist + (pA1.dist - pA0.dist) * fracA;
 
-      // Interpolación continua ultra segura para Monoplaza B (Ghost Car o Vuelta B Real)
-      const idxB0 = Math.floor(safeProgressB);
-      const idxB1 = (idxB0 + 1) % totalPointsB;
-      const fracB = safeProgressB - idxB0;
+      // Instante temporal exacto tActualA (ms) en el que el Monoplaza A se encuentra en este punto
+      const tA0 = tiemposEscalados[idxA0] ?? 0;
+      const tA1 = tiemposEscalados[idxA1] ?? tA0;
+      const tActualA = tA0 + (tA1 - tA0) * fracA;
+
+      // Sincronizar el Monoplaza B en el MISMO instante temporal tActualA usando sus coordenadas reales
+      if (trackB && trackB.length > 1 && tiemposEscaladosB.length > 1) {
+        safeProgressB = obtenerProgresoEnTiempo(tiemposEscaladosB, tActualA);
+        cam.carProgressB = safeProgressB;
+      } else {
+        safeProgressB = safeProgressA;
+        cam.carProgressB = safeProgressB;
+      }
+
+      // Interpolación continua de las coordenadas reales (X, Y, Z) del Monoplaza B en el instante tActualA
+      const idxB0 = Math.min(totalPointsB - 1, Math.max(0, Math.floor(safeProgressB)));
+      const idxB1 = Math.min(totalPointsB - 1, idxB0 + 1);
+      const fracB = Math.max(0, Math.min(1, safeProgressB - idxB0));
       const pB0 = (trackB ? trackB[idxB0] : track[idxB0]) ?? track[0] ?? pA0;
       const pB1 = (trackB ? trackB[idxB1] : track[idxB1]) ?? pB0;
 
       const carBX = pB0.x + (pB1.x - pB0.x) * fracB;
       const carBY = pB0.y + (pB1.y - pB0.y) * fracB;
       const carBZ = pB0.z + (pB1.z - pB0.z) * fracB;
-      const carBSpeed = Math.round(trackB ? pB0.speed + (pB1.speed - pB0.speed) * fracB : (pB0.speed + (pB1.speed - pB0.speed) * fracB) * 0.935);
-      const carBDist = Math.round(pB0.dist + (pB1.dist - pB0.dist) * fracB);
+      const carBSpeed = Math.round(pB0.speed + (pB1.speed - pB0.speed) * fracB);
+      const carBDist = pB0.dist + (pB1.dist - pB0.dist) * fracB;
 
-      // Calcular delta métrico y temporal real entre ambos monoplazas
+      // Calcular delta métrico y temporal real entre ambos monoplazas en el instante tActualA
       const longitudCircuito = circuitoActual.lengthMeters || 5793;
       const velocidadMs = Math.max(1, carASpeed / 3.6);
-      let deltaMetros = carADist - carBDist;
+      let deltaMetros = Math.round(carADist - carBDist);
       if (deltaMetros < -longitudCircuito / 2) deltaMetros += longitudCircuito;
       if (deltaMetros > longitudCircuito / 2) deltaMetros -= longitudCircuito;
 
-      let deltaSegundosNum = deltaMetros / velocidadMs;
-      if (tiemposEscalados.length > 0 && tiemposEscaladosB.length > 0) {
-        const tA0 = tiemposEscalados[idxA0] ?? 0;
-        const tA1 = tiemposEscalados[idxA1] ?? tA0;
-        const tActualA = tA0 + (tA1 - tA0) * fracA;
-
-        const ratioA = safeProgressA / Math.max(1, totalPoints);
-        const posEquivB = ratioA * Math.max(1, tiemposEscaladosB.length - 1);
-        const idxEqB0 = Math.min(tiemposEscaladosB.length - 1, Math.floor(posEquivB));
-        const idxEqB1 = Math.min(tiemposEscaladosB.length - 1, idxEqB0 + 1);
-        const fracEqB = posEquivB - idxEqB0;
-        const tB0 = tiemposEscaladosB[idxEqB0] ?? 0;
-        const tB1 = tiemposEscaladosB[idxEqB1] ?? tB0;
-        const tActualBMismaDist = tB0 + (tB1 - tB0) * fracEqB;
-
-        if (tActualA > 50) {
-          deltaSegundosNum = (tActualBMismaDist - tActualA) / 1000;
-          deltaMetros = Math.round(deltaSegundosNum * velocidadMs);
-        } else if (duracionObjetivoMs && duracionObjetivoMsB) {
-          deltaSegundosNum = (duracionObjetivoMsB - duracionObjetivoMs) / 1000;
-          deltaMetros = Math.round(deltaSegundosNum * velocidadMs);
+      let deltaSegundosNum = (carADist - carBDist) / velocidadMs;
+      if (trackB && trackB.length > 1 && tiemposEscaladosB.length > 1) {
+        // Búsqueda del tiempo que tardó B en alcanzar la misma distancia carADist
+        let lowD = 0;
+        let highD = trackB.length - 1;
+        while (lowD < highD) {
+          const midD = (lowD + highD) >>> 1;
+          if ((trackB[midD]?.dist ?? 0) < carADist) {
+            lowD = midD + 1;
+          } else {
+            highD = midD;
+          }
         }
+        const idxD0 = Math.max(0, lowD - 1);
+        const idxD1 = lowD;
+        const d0 = trackB[idxD0]?.dist ?? 0;
+        const d1 = trackB[idxD1]?.dist ?? d0;
+        const fracD = d1 > d0 ? Math.max(0, Math.min(1, (carADist - d0) / (d1 - d0))) : 0;
+        const tB0 = tiemposEscaladosB[idxD0] ?? 0;
+        const tB1 = tiemposEscaladosB[idxD1] ?? tB0;
+        const tActualBMismaDist = tB0 + (tB1 - tB0) * fracD;
+
+        deltaSegundosNum = (tActualBMismaDist - tActualA) / 1000;
       }
       const deltaSegundos = deltaSegundosNum.toFixed(3);
 
@@ -801,7 +816,7 @@ export function MapaCircuitoCanvas({
         }
 
         const posA = projectMap(carAX, carAZ);
-        const posBRaw = projectMap(carBX, carBZ);
+        const posB = projectMap(carBX, carBZ);
 
         // Vector tangente de avance del circuito en la posición de A
         const nextLookIdx = (idxA0 + 8) % totalPoints;
@@ -809,20 +824,9 @@ export function MapaCircuitoCanvas({
         const nextLookPos = projectMap(nextLookP.x, nextLookP.z);
         const angulo = Math.atan2(nextLookPos.y - posA.y, nextLookPos.x - posA.x);
 
-        // Garantizar separación mínima en píxeles en pantalla (22 px) para que el Puck B jamás quede oculto bajo A
-        let posB = posBRaw;
         if (tieneComparativa) {
-          const distPxRaw = Math.hypot(posBRaw.x - posA.x, posBRaw.y - posA.y);
-          if (distPxRaw < 22) {
-            const signoSeparacion = deltaSegundosNum >= 0 ? -1 : 1;
-            posB = {
-              x: posA.x + Math.cos(angulo) * 22 * signoSeparacion,
-              y: posA.y + Math.sin(angulo) * 22 * signoSeparacion,
-            };
-          }
-
           const distPx = Math.hypot(posB.x - posA.x, posB.y - posA.y);
-          if (distPx > 12) {
+          if (distPx > 6) {
             ctx.save();
             ctx.beginPath();
             ctx.moveTo(posA.x, posA.y);
@@ -835,7 +839,7 @@ export function MapaCircuitoCanvas({
           }
 
           if (ranuraActiva !== "B") {
-            // Si el foco es A, dibujar B debajo y A encima
+            // Si el foco es A, dibujar B debajo y A encima en sus coordenadas exactas de map.png
             dibujarPuck(ctx, posB, "B", true);
           }
         }
@@ -964,22 +968,9 @@ export function MapaCircuitoCanvas({
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // Coche B en 3D
+        // Coche B en 3D (en sus coordenadas espaciales reales (X, Y, Z))
         if (tieneComparativa) {
-          const posBRaw = projectIso(carBX, carBY, carBZ);
-          const nextLookIdx3D = (idxA0 + 8) % totalPoints;
-          const nextLookP3D = track[nextLookIdx3D] ?? pA0;
-          const nextLookPos3D = projectIso(nextLookP3D.x, nextLookP3D.y, nextLookP3D.z);
-          const angulo3D = Math.atan2(nextLookPos3D.y - posA.y, nextLookPos3D.x - posA.x);
-          const distPx3D = Math.hypot(posBRaw.x - posA.x, posBRaw.y - posA.y);
-          const signoSep3D = deltaSegundosNum >= 0 ? -1 : 1;
-          const posB =
-            distPx3D < 22
-              ? {
-                  x: posA.x + Math.cos(angulo3D) * 22 * signoSep3D,
-                  y: posA.y + Math.sin(angulo3D) * 22 * signoSep3D,
-                }
-              : posBRaw;
+          const posB = projectIso(carBX, carBY, carBZ);
           const floorB = projectIso(carBX, floorY, carBZ);
 
           ctx.beginPath();
@@ -1017,6 +1008,7 @@ export function MapaCircuitoCanvas({
     tiemposEscaladosB,
     duracionObjetivoMs,
     duracionObjetivoMsB,
+    obtenerProgresoEnTiempo,
   ]);
 
   // Función auxiliar de pintado de Laser Puck
@@ -1043,7 +1035,7 @@ export function MapaCircuitoCanvas({
     ctx.fillStyle = halo;
     ctx.fill();
 
-    // Punto central
+    // Punto central en la coordenada exacta del circuito
     ctx.beginPath();
     ctx.arc(pos.x, pos.y, radio, 0, Math.PI * 2);
     ctx.fillStyle = colorCore;
@@ -1052,9 +1044,10 @@ export function MapaCircuitoCanvas({
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Insignia con Letra A / B
+    // Insignia con Letra A (arriba: -13px) o B (abajo: +13px) para evitar que se tapen cuando coinciden en un punto
+    const badgeOffsetY = letra === "B" ? 13 : -13;
     ctx.beginPath();
-    ctx.arc(pos.x, pos.y - 12, 7, 0, Math.PI * 2);
+    ctx.arc(pos.x, pos.y + badgeOffsetY, 7, 0, Math.PI * 2);
     ctx.fillStyle = esSecundario ? "#1c69d4" : "#0066b1";
     ctx.fill();
     ctx.strokeStyle = "#ffffff";
@@ -1065,7 +1058,7 @@ export function MapaCircuitoCanvas({
     ctx.font = "bold 8px monospace";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(letra, pos.x, pos.y - 11.5);
+    ctx.fillText(letra, pos.x, pos.y + badgeOffsetY + 0.5);
 
     ctx.restore();
   }
