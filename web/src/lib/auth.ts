@@ -16,10 +16,11 @@ const CLAVE_ALMACENAMIENTO_AUTH = "apexlink_auth_sesion";
 export function esUsuarioAdmin(usuario?: PerfilUsuario | null): boolean {
   if (!usuario) return false;
   return (
-    usuario.alias === "ADMIN" ||
-    usuario.email.toLowerCase() === "admin" ||
-    usuario.email.toLowerCase() === "admin@apexlink.io" ||
-    usuario.id.startsWith("00000000")
+    usuario.rol?.toLowerCase() === "admin" ||
+    usuario.alias?.toUpperCase() === "ADMIN" ||
+    usuario.email?.toLowerCase() === "admin" ||
+    usuario.email?.toLowerCase() === "admin@apexlink.io" ||
+    usuario.id?.startsWith("00000000")
   );
 }
 
@@ -59,6 +60,7 @@ export function mapearDtoAPerfilUsuario(dto: PerfilPilotoDetalleApiDto): PerfilU
     nombre: dto.nombre,
     alias: dto.alias,
     email: dto.email,
+    rol: dto.rol || (dto.alias?.toUpperCase() === "ADMIN" ? "admin" : "piloto"),
     esInvitadoFappe: false,
     licencia: dto.licencia || "Licencia Apex SimRacing",
     nacionalidad: dto.nacionalidad || "Argentina",

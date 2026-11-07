@@ -1,11 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Wifi, Monitor, Check, Save } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Wifi, Monitor, Check, Save, Loader2, ShieldAlert } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
+import { obtenerSesionLocal, esUsuarioAdmin } from "@/lib/auth";
 
 export default function PaginaAjustes() {
+  const router = useRouter();
   const toast = useToast();
+  const [esAdmin, setEsAdmin] = useState<boolean | null>(null);
   const [servidorUrl, setServidorUrl] = useState("http://localhost:8080");
   const [wsUrl, setWsUrl] = useState("ws://localhost:8080/ws/telemetry");
   const [aceleracionGpu, setAceleracionGpu] = useState(true);
@@ -14,6 +18,19 @@ export default function PaginaAjustes() {
   const [guardado, setGuardado] = useState(false);
 
   useEffect(() => {
+    const sesion = obtenerSesionLocal();
+    const admin = esUsuarioAdmin(sesion?.usuario);
+    setEsAdmin(admin);
+
+    if (!admin) {
+      toast.warning(
+        "Acceso Restringido",
+        "La sección de Ajustes de Boxes solo está disponible para usuarios con rol de administrador."
+      );
+      router.replace("/app");
+      return;
+    }
+
     try {
       const config = localStorage.getItem("apexlink_ajustes_boxes");
       if (config) {
@@ -27,7 +44,20 @@ export default function PaginaAjustes() {
     } catch {
       // Ignorar fallback
     }
-  }, []);
+  }, [router, toast]);
+
+  if (esAdmin === null) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] text-[#7e7e7e]">
+        <Loader2 className="w-8 h-8 animate-spin text-[#0066b1] mb-2" />
+        <span className="text-xs font-mono">Verificando credenciales de administración...</span>
+      </div>
+    );
+  }
+
+  if (!esAdmin) {
+    return null;
+  }
 
   const manejarGuardar = (e: React.FormEvent) => {
     e.preventDefault();

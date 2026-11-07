@@ -1,80 +1,81 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { MapPin, Trophy, ArrowRight, Loader2, Flag } from "lucide-react";
-import { obtenerCircuitos, obtenerSesionesPaginadas } from "@/lib/apiClient";
-import type { CircuitoDto, SesionResumenDto } from "@/types/api";
+import { MapPin } from "lucide-react";
+import { obtenerCircuitos } from "@/lib/apiClient";
+import type { CircuitoDto } from "@/types/api";
 
-function formatearTiempoMs(ms: number): string {
-  if (!ms || ms <= 0) return "--:--.---";
-  const totalSegundos = ms / 1000;
-  const minutos = Math.floor(totalSegundos / 60);
-  const segundos = totalSegundos % 60;
-  return `${minutos.toString().padStart(2, "0")}:${segundos.toFixed(3).padStart(6, "0")}`;
-}
+const CIRCUITOS_CATALOGO: CircuitoDto[] = [
+  {
+    id: "monza_f1_2025",
+    nombre: "Autodromo Nazionale Monza",
+    pais: "Italia",
+    codigoPais: "IT",
+    longitudMetros: 5793,
+    cantidadCurvas: 11,
+    recordVuelta: "01:21.046",
+    pilotoRecord: "Rubens Barrichello (Ferrari F2004)",
+    zonasDrsCount: 2,
+    esOficialFappe: true,
+  },
+  {
+    id: "fn_imola",
+    nombre: "Autodromo Internazionale Enzo e Dino Ferrari",
+    pais: "Italia",
+    codigoPais: "IT",
+    longitudMetros: 4909,
+    cantidadCurvas: 19,
+    recordVuelta: "01:15.484",
+    pilotoRecord: "Lewis Hamilton (Mercedes W11)",
+    zonasDrsCount: 1,
+    esOficialFappe: false,
+  },
+  {
+    id: "ks_red_bull_ring",
+    nombre: "Red Bull Ring Spielberg",
+    pais: "Austria",
+    codigoPais: "AT",
+    longitudMetros: 4318,
+    cantidadCurvas: 10,
+    recordVuelta: "01:05.619",
+    pilotoRecord: "Carlos Sainz (McLaren MCL35)",
+    zonasDrsCount: 3,
+    esOficialFappe: false,
+  },
+  {
+    id: "spa_francorchamps",
+    nombre: "Circuit de Spa-Francorchamps",
+    pais: "Bélgica",
+    codigoPais: "BE",
+    longitudMetros: 7004,
+    cantidadCurvas: 19,
+    recordVuelta: "01:46.286",
+    pilotoRecord: "Valtteri Bottas (Mercedes W09)",
+    zonasDrsCount: 2,
+    esOficialFappe: false,
+  },
+];
 
 export default function PaginaCircuitos() {
-  const [circuitos, setCircuitos] = useState<CircuitoDto[]>([]);
-  const [cargando, setCargando] = useState(true);
+  const [circuitos, setCircuitos] = useState<CircuitoDto[]>(CIRCUITOS_CATALOGO);
 
   useEffect(() => {
     let cancelado = false;
-    setCargando(true);
-
-    Promise.all([
-      obtenerCircuitos().catch(() => null),
-      obtenerSesionesPaginadas(1, 100).catch(() => null),
-    ])
-      .then(([resCircuitos, resSesiones]) => {
-        if (cancelado) return;
-
-        const listaBase: CircuitoDto[] =
-          resCircuitos?.exitoso && Array.isArray(resCircuitos.datos)
-            ? resCircuitos.datos
-            : [];
-
-        const sesionesReales: SesionResumenDto[] =
-          resSesiones?.exitoso && resSesiones.datos?.elementos
-            ? resSesiones.datos.elementos.filter((s) => !(s.isMockSimulation ?? s.esSimulacionMock))
-            : [];
-
-        const enriquecidos = listaBase.map((pista) => {
-          const clave = pista.id.toLowerCase();
-          const sesionesPista = sesionesReales.filter((s) => {
-            const c = (s.circuit || s.circuito || "").toLowerCase();
-            if (clave.includes("monza")) return c.includes("monza");
-            if (clave.includes("imola")) return c.includes("imola");
-            if (clave.includes("red_bull") || clave.includes("redbull"))
-              return c.includes("redbull") || c.includes("spielberg") || c.includes("rbr");
-            return c.includes(clave);
-          });
-
-          let mejorMs = 0;
-          let mejorAuto = "";
-          for (const s of sesionesPista) {
-            const ms = s.bestLapTimeMs ?? s.mejorTiempoMs ?? 0;
-            if (ms > 0 && (mejorMs === 0 || ms < mejorMs)) {
-              mejorMs = ms;
-              mejorAuto = s.carModel || s.modeloVehiculo || "";
+    obtenerCircuitos()
+      .then((res) => {
+        if (!cancelado && res?.exitoso && Array.isArray(res.datos) && res.datos.length > 0) {
+          const ids = new Set(res.datos.map((d) => d.id.toLowerCase()));
+          const combinados = [...res.datos];
+          for (const c of CIRCUITOS_CATALOGO) {
+            if (!ids.has(c.id.toLowerCase())) {
+              combinados.push(c);
             }
           }
-
-          if (mejorMs > 0) {
-            return {
-              ...pista,
-              recordVuelta: formatearTiempoMs(mejorMs),
-              pilotoRecord: mejorAuto ? `Récord en Boxes (${mejorAuto})` : pista.pilotoRecord,
-            };
-          }
-
-          return pista;
-        });
-
-        setCircuitos(enriquecidos);
+          setCircuitos(combinados);
+        }
       })
-      .finally(() => {
-        if (!cancelado) setCargando(false);
+      .catch(() => {
+        // Fallback activo sin interrupción
       });
 
     return () => {
@@ -83,92 +84,114 @@ export default function PaginaCircuitos() {
   }, []);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto py-2">
+      {/* Header en Blanco y Negro */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#262626] pb-4">
-        <div className="flex items-start gap-3.5">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
-              Catálogo de Circuitos
-            </h1>
-            <p className="mt-1 text-xs text-[#bbbbbb]">
-              Pistas escaneadas por láser con calibración cartográfica en el Core Relay.
-            </p>
-          </div>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
+            Catálogo de Circuitos
+          </h1>
+          <p className="mt-1 text-xs text-[#bbbbbb]">
+            Mapeo cartográfico escaneado por láser y telemetría de sectores.
+          </p>
+        </div>
+
+        <div className="text-left sm:text-right font-mono text-xs text-[#0066b1]">
+          <span>Monza desbloqueado • Otros trazados en preparación</span>
         </div>
       </div>
 
-      {cargando ? (
-        <div className="flex flex-col items-center justify-center py-20 text-[#7e7e7e]">
-          <Loader2 className="w-8 h-8 animate-spin text-[#0066b1] mb-3" />
-          <p className="text-xs font-mono uppercase tracking-widest">
-            Cargando catálogo cartográfico desde el servidor...
-          </p>
-        </div>
-      ) : circuitos.length === 0 ? (
-        <div className="py-20 text-center space-y-3 border border-[#262626] rounded-xl bg-[#0d0d0d] p-8">
-          <Flag className="w-8 h-8 text-[#0066b1] mx-auto" />
-          <p className="text-xs font-mono uppercase text-[#bbbbbb]">
-            No se pudieron obtener los circuitos desde el servidor de telemetría
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {circuitos.map((pista) => (
-            <Link
+      {/* Tablas / Listas de Circuitos en Blanco y Negro, sin botones hacia ninguna sección */}
+      <div className="space-y-4">
+        {circuitos.map((pista) => {
+          const esMonza =
+            pista.id.toLowerCase().includes("monza") || Boolean(pista.esOficialFappe);
+
+          return (
+            <div
               key={pista.id}
-              href={`/app/analysis?circuito=${pista.id}`}
-              className="border-t border-[#222225] pt-6 pb-4 flex flex-col justify-between group cursor-pointer block hover:bg-white/[0.015] transition-colors"
+              className={`border p-6 sm:p-7 relative select-none transition-colors ${
+                esMonza
+                  ? "border-[#3c3c3c] bg-[#141414]"
+                  : "border-[#222225] bg-[#0d0d0d] opacity-60"
+              }`}
             >
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs text-[#bbbbbb] font-mono flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-[#0066b1]" />
-                    {pista.pais}
-                  </span>
-                  <span className="text-[11px] font-mono text-[#7e7e7e]">
-                    {pista.longitudMetros.toLocaleString("es-AR")} m
-                  </span>
+              {/* Cabecera del circuito */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#222225]">
+                <div className="flex items-center gap-3">
+                  <MapPin className="w-4 h-4 text-[#7e7e7e] shrink-0" />
+                  <div>
+                    <h2 className="text-lg sm:text-xl font-bold text-white uppercase tracking-tight">
+                      {pista.nombre}
+                    </h2>
+                    <div className="flex items-center gap-2 text-xs font-mono text-[#7e7e7e] mt-0.5">
+                      <span>{pista.pais}</span>
+                      <span>•</span>
+                      <span className="text-[#bbbbbb]">
+                        {pista.longitudMetros.toLocaleString("es-AR")} metros
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <h2 className="text-lg font-bold text-white uppercase leading-snug group-hover:text-[#81c4ff] transition-colors">
-                  {pista.nombre}
-                </h2>
-
-                <div className="mt-4 space-y-2.5 text-xs font-mono border-t border-white/[0.06] pt-4">
-                  <div className="flex justify-between">
-                    <span className="text-[#7e7e7e]">Curvas:</span>
-                    <span className="text-white">{pista.cantidadCurvas}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#7e7e7e]">Zonas DRS:</span>
-                    <span className="text-[#0066b1] font-bold">{pista.zonasDrsCount}</span>
-                  </div>
-                  <div className="flex justify-between items-center border-t border-white/[0.06] pt-2">
-                    <span className="text-[#7e7e7e] flex items-center gap-1">
-                      <Trophy className="w-3.5 h-3.5 text-[#f4b400]" />
-                      Referencia:
+                <div className="self-start sm:self-auto">
+                  {esMonza ? (
+                    <span className="inline-block text-[10px] font-mono font-bold uppercase tracking-[0.2em] px-2.5 py-1 border border-white bg-white text-[#0066b1]">
+                      Desbloqueado
                     </span>
-                    <span className="text-[#00E676] font-bold text-sm tabular-nums tracking-tight">
-                      {pista.recordVuelta}
+                  ) : (
+                    <span className="inline-block text-[10px] font-mono font-bold uppercase tracking-[0.2em] px-2.5 py-1 border border-white/20 bg-white/[0.04] text-[#bbbbbb]">
+                      Próximamente
                     </span>
-                  </div>
-                  <div className="text-[10px] text-right text-[#7e7e7e] truncate">
-                    {pista.pilotoRecord}
-                  </div>
+                  )}
                 </div>
               </div>
 
-              <div className="mt-6 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono">
-                <span className="text-[#7e7e7e]">Abrir trazada y telemetría</span>
-                <span className="text-[#0066b1] group-hover:text-white font-bold uppercase text-[11px] flex items-center gap-1 transition-colors">
-                  Laboratorio 2D
-                  <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
-                </span>
+              {/* Fila técnica (tabla de especificaciones en blanco y negro) */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 text-xs font-mono">
+                <div className="space-y-1">
+                  <span className="text-[10px] uppercase tracking-wider text-[#7e7e7e] block">
+                    Curvas Oficiales
+                  </span>
+                  <span className="text-sm font-bold text-white tabular-nums">
+                    {pista.cantidadCurvas} giros
+                  </span>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-[10px] uppercase tracking-wider text-[#7e7e7e] block">
+                    Zonas DRS
+                  </span>
+                  <span className="text-sm font-bold text-white tabular-nums">
+                    {pista.zonasDrsCount} {pista.zonasDrsCount === 1 ? "sector" : "sectores"}
+                  </span>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-[10px] uppercase tracking-wider text-[#7e7e7e] block">
+                    Récord de Referencia
+                  </span>
+                  <span className="text-sm font-bold text-white tabular-nums">
+                    {pista.recordVuelta || "--:--.---"}
+                  </span>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-[10px] uppercase tracking-wider text-[#7e7e7e] block">
+                    Piloto / Monoplaza
+                  </span>
+                  <span
+                    className="text-xs text-[#bbbbbb] truncate block"
+                    title={pista.pilotoRecord}
+                  >
+                    {pista.pilotoRecord || "En calibración"}
+                  </span>
+                </div>
               </div>
-            </Link>
-          ))}
-        </div>
-      )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -175,6 +175,7 @@ export interface PerfilPilotoDetalleApiDto {
   nombre: string;
   alias: string;
   email: string;
+  rol?: string;
   licencia: string;
   nacionalidad: string;
   codigoPais: string;

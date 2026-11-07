@@ -464,7 +464,7 @@ export default function PaginaDashboardBoxes() {
             <Trophy className="w-5 h-5 text-[#f4b400]" />
             <div>
               <h3 className="text-base font-bold uppercase tracking-tight text-white group-hover:text-[#81c4ff] transition-colors">
-                Tabla de Récords Oficiales • Monza GP
+                Torneo Fappe 2026 - Leaderboard • Monza GP
               </h3>
               <p className="text-xs text-[#7e7e7e] font-mono">
                 Registros en vivo marcados por pilotos en el simulador

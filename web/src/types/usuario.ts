@@ -55,6 +55,7 @@ export interface PerfilUsuario {
   nombre: string;
   alias: string;
   email: string;
+  rol?: string;
   avatarUrl?: string;
   esInvitadoFappe: boolean;
   licencia: string;

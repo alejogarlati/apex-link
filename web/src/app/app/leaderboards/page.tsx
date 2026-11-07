@@ -1,91 +1,142 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { Trophy, RefreshCw, Flag, Car, ShieldCheck, Loader2 } from "lucide-react";
+import { useEffect, useState, useCallback, Suspense } from "react";
+import { Trophy, RefreshCw, Car, Loader2, Gauge, Timer, Users } from "lucide-react";
 import { obtenerLeaderboard } from "@/lib/apiClient";
 import type { LeaderboardItemDto } from "@/types/api";
 
-const CIRCUITOS_TABS = [
-  { id: "monza", nombre: "Monza GP", sub: "5.793 m" },
-  { id: "spa", nombre: "Spa-Francorchamps", sub: "7.004 m" },
-  { id: "redbullring", nombre: "Red Bull Ring", sub: "4.318 m" },
-];
+const CIRCUITO_MONZA = {
+  id: "monza",
+  nombre: "Autodromo Nazionale Monza",
+  sub: "Grand Prix · 5.793 m",
+};
 
 function ContenidoLeaderboards() {
-  const searchParams = useSearchParams();
-  const circuitoInicial = searchParams.get("circuito") || "monza";
-
-  const [circuitoActivo, setCircuitoActivo] = useState(
-    circuitoInicial.toLowerCase().includes("spa")
-      ? "spa"
-      : circuitoInicial.toLowerCase().includes("redbull")
-      ? "redbullring"
-      : "monza"
-  );
   const [ranking, setRanking] = useState<LeaderboardItemDto[]>([]);
   const [cargando, setCargando] = useState(true);
 
-  useEffect(() => {
-    let cancelado = false;
+  const cargarLeaderboard = useCallback(() => {
     setCargando(true);
-
-    obtenerLeaderboard(circuitoActivo, 10)
+    obtenerLeaderboard(CIRCUITO_MONZA.id, 20)
       .then((res) => {
-        if (!cancelado && res.exitoso && Array.isArray(res.datos)) {
+        if (res.exitoso && Array.isArray(res.datos)) {
           setRanking(res.datos);
+        } else {
+          setRanking([]);
         }
       })
       .catch(() => {
-        // Fallback silencioso
+        setRanking([]);
       })
       .finally(() => {
-        if (!cancelado) setCargando(false);
+        setCargando(false);
       });
+  }, []);
 
-    return () => {
-      cancelado = true;
-    };
-  }, [circuitoActivo]);
+  useEffect(() => {
+    cargarLeaderboard();
+  }, [cargarLeaderboard]);
+
+  const mejorVueltaStand = ranking[0]?.tiempo || "--:--.---";
+  const totalVueltasStand = ranking.reduce((acc, curr) => acc + (curr.vueltas || 0), 0);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
+      {/* Header Oficial FAPPE 2026 */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#262626] pb-4">
-        <div className="flex items-start gap-3.5">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
-              Tabla de Récords
-            </h1>
-            <p className="mt-1 text-xs text-[#bbbbbb]">
-              Tiempos registrados en el simulador sincronizados con la base de datos central.
-            </p>
-          </div>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white uppercase">
+            Torneo Fappe 2026 - Leaderboard
+          </h1>
+          <p className="mt-1 text-xs text-[#bbbbbb]">
+            Clasificación oficial en vivo del simulador en {CIRCUITO_MONZA.nombre} ({CIRCUITO_MONZA.sub}) para la feria universitaria FAPPE 2026.
+          </p>
         </div>
+
+        <button
+          onClick={cargarLeaderboard}
+          disabled={cargando}
+          className="inline-flex items-center gap-2 px-3 py-1.5 border border-[#3c3c3c] text-xs font-mono font-bold uppercase text-[#bbbbbb] hover:text-white hover:border-[#0066b1] hover:bg-[#0066b1]/10 transition-colors cursor-pointer disabled:opacity-50 self-start sm:self-auto"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${cargando ? "animate-spin text-[#0066b1]" : ""}`} />
+          <span>Actualizar</span>
+        </button>
       </div>
 
-      {/* Selector de Circuito (Pestañas limpias sin cards de fondo) */}
-      <div className="flex flex-wrap items-center gap-2">
-        {CIRCUITOS_TABS.map((tab) => {
-          const activo = circuitoActivo === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setCircuitoActivo(tab.id)}
-              className={`px-4 py-2 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                activo
-                  ? "bg-[#0066b1] text-white shadow-md shadow-[#0066b1]/20"
-                  : "text-[#8e8e93] hover:text-white hover:bg-white/[0.04]"
-              }`}
-            >
-              <Flag className="w-3.5 h-3.5" />
-              <span>{tab.nombre}</span>
-              <span className={`text-[10px] ${activo ? "text-white/80" : "text-[#7e7e7e]"}`}>
-                ({tab.sub})
-              </span>
-            </button>
-          );
-        })}
+      {/* 3 Estadísticas Dinámicas del Torneo */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* 1. Mejor Tiempo (Récord de entre todas las sesiones de los pilotos) */}
+        <div className="border border-[#262626] bg-[#141414] p-5 flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-[#7e7e7e]">
+              Mejor Tiempo
+            </span>
+            <Timer className="w-4 h-4 text-[#0fa336]" />
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl sm:text-3xl font-mono font-bold text-[#0fa336] tabular-nums tracking-tight">
+              {cargando ? "--:--.---" : mejorVueltaStand}
+            </span>
+          </div>
+          <div className="mt-3 pt-2.5 border-t border-[#262626] flex flex-col gap-0.5">
+            <span className="text-[10px] text-[#7e7e7e] font-mono uppercase tracking-wider">
+              Récord de entre todas las sesiones de los pilotos
+            </span>
+            <span className="text-xs text-[#bbbbbb] font-mono truncate">
+              {ranking[0]?.piloto ? `${ranking[0].piloto} · ${ranking[0].auto}` : "Sin tiempo de referencia"}
+            </span>
+          </div>
+        </div>
+
+        {/* 2. Pilotos Clasificados (Total de competidores) */}
+        <div className="border border-[#262626] bg-[#141414] p-5 flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-[#7e7e7e]">
+              Pilotos Clasificados
+            </span>
+            <Users className="w-4 h-4 text-[#0066b1]" />
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl sm:text-3xl font-mono font-bold text-white tabular-nums">
+              {cargando ? "--" : ranking.length}
+            </span>
+            <span className="text-xs text-[#7e7e7e] font-mono">
+              {ranking.length === 1 ? "competidor" : "competidores"}
+            </span>
+          </div>
+          <div className="mt-3 pt-2.5 border-t border-[#262626] flex flex-col gap-0.5">
+            <span className="text-[10px] text-[#7e7e7e] font-mono uppercase tracking-wider">
+              Total de competidores
+            </span>
+            <span className="text-xs text-[#bbbbbb] font-mono">
+              {ranking.length > 0 ? "En Autodromo Nazionale Monza" : "Esperando clasificados"}
+            </span>
+          </div>
+        </div>
+
+        {/* 3. Cantidad de Vueltas Registradas */}
+        <div className="border border-[#262626] bg-[#141414] p-5 flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-[#7e7e7e]">
+              Vueltas Registradas
+            </span>
+            <Gauge className="w-4 h-4 text-[#1c69d4]" />
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl sm:text-3xl font-mono font-bold text-white tabular-nums">
+              {cargando ? "--" : totalVueltasStand}
+            </span>
+            <span className="text-xs text-[#7e7e7e] font-mono">vueltas</span>
+          </div>
+          <div className="mt-3 pt-2.5 border-t border-[#262626] flex flex-col gap-0.5">
+            <span className="text-[10px] text-[#7e7e7e] font-mono uppercase tracking-wider">
+              Cantidad de vueltas registradas
+            </span>
+            <span className="text-xs text-[#bbbbbb] font-mono">
+              {totalVueltasStand > 0 ? "Telemetría oficial en vivo" : "Sin vueltas registradas aún"}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Tabla de Clasificación con fondo invisible y separadores lineales */}
@@ -94,66 +145,83 @@ function ContenidoLeaderboards() {
           <div className="flex items-center gap-2">
             <Trophy className="w-4 h-4 text-[#f4b400]" />
             <span className="text-xs font-bold uppercase tracking-wider text-white">
-              {CIRCUITOS_TABS.find((t) => t.id === circuitoActivo)?.nombre}
+              Clasificación Oficial Monza GP
             </span>
           </div>
-          <div className="flex items-center gap-2 font-mono text-xs text-[#7e7e7e]">
+          <div className="flex items-center gap-2 font-mono text-xs text-[#bbbbbb] uppercase tracking-wider">
             {cargando && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0066b1]" />}
-            <span>{ranking.length} registros</span>
+            <span>{CIRCUITO_MONZA.nombre}</span>
           </div>
         </div>
 
-        <div className="divide-y divide-[#222225]">
-          {ranking.map((item) => (
-            <div
-              key={`${item.posicion}-${item.piloto}`}
-              className="py-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
-            >
-              <div className="flex items-center gap-4">
-                <span
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center font-mono font-bold text-xs shadow-sm ${
-                    item.posicion === 1
-                      ? "bg-[#f4b400] text-black font-black"
-                      : item.posicion === 2
-                      ? "bg-[#bbbbbb] text-black font-black"
-                      : item.posicion === 3
-                      ? "bg-[#e22718] text-white font-black"
-                      : "bg-[#262626] text-[#bbbbbb]"
-                  }`}
-                >
-                  {item.posicion}
-                </span>
+        {cargando ? (
+          <div className="py-12 flex flex-col items-center justify-center text-[#7e7e7e]">
+            <Loader2 className="w-6 h-6 animate-spin text-[#0066b1] mb-2" />
+            <span className="text-xs font-mono">Cargando clasificación oficial...</span>
+          </div>
+        ) : ranking.length === 0 ? (
+          <div className="py-12 text-center flex flex-col items-center justify-center">
+            <Trophy className="w-10 h-10 text-[#7e7e7e] mb-3 opacity-30" />
+            <h4 className="text-sm font-bold uppercase text-white tracking-wider">
+              Sin registros en Monza GP
+            </h4>
+            <p className="text-xs text-[#7e7e7e] mt-1 max-w-md font-mono">
+              Aún no se han registrado tiempos oficiales en este circuito para el Torneo Fappe 2026. Salí a pista en el simulador para inaugurar la tabla.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-[#222225]">
+            {ranking.map((item) => (
+              <div
+                key={`${item.posicion}-${item.piloto}`}
+                className="py-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+              >
+                <div className="flex items-center gap-4">
+                  <span
+                    className={`w-8 h-8 flex items-center justify-center font-mono font-bold text-xs shadow-sm ${
+                      item.posicion === 1
+                        ? "bg-[#f4b400] text-black font-black"
+                        : item.posicion === 2
+                        ? "bg-[#bbbbbb] text-black font-black"
+                        : item.posicion === 3
+                        ? "bg-[#e22718] text-white font-black"
+                        : "bg-[#262626] text-[#bbbbbb]"
+                    }`}
+                  >
+                    {item.posicion}
+                  </span>
 
-                <div>
-                  <div className="text-sm font-bold text-white flex items-center gap-2">
-                    <span>{item.piloto}</span>
+                  <div>
+                    <div className="text-sm font-bold text-white flex items-center gap-2">
+                      <span>{item.piloto}</span>
+                    </div>
+                    <div className="text-xs text-[#7e7e7e] font-mono flex items-center gap-2 mt-0.5">
+                      <span className="flex items-center gap-1 text-[#bbbbbb]">
+                        <Car className="w-3 h-3 text-[#0066b1]" />
+                        {item.auto}
+                      </span>
+                      <span>•</span>
+                      <span>{item.vueltas} vueltas rodadas</span>
+                    </div>
                   </div>
-                  <div className="text-xs text-[#7e7e7e] font-mono flex items-center gap-2 mt-0.5">
-                    <span className="flex items-center gap-1 text-[#bbbbbb]">
-                      <Car className="w-3 h-3 text-[#0066b1]" />
-                      {item.auto}
-                    </span>
-                    <span>•</span>
-                    <span>{item.vueltas} vueltas rodadas</span>
+                </div>
+
+                <div className="text-right font-mono">
+                  <div className="text-base font-bold text-[#0fa336] tabular-nums tracking-tight">
+                    {item.tiempo}
+                  </div>
+                  <div
+                    className={`text-[11px] font-bold tabular-nums ${
+                      item.delta === "Ref" ? "text-[#7e7e7e]" : "text-[#e22718]"
+                    }`}
+                  >
+                    {item.delta}
                   </div>
                 </div>
               </div>
-
-              <div className="text-right font-mono">
-                <div className="text-base font-bold text-[#00E676] tabular-nums tracking-tight">
-                  {item.tiempo}
-                </div>
-                <div
-                  className={`text-[11px] font-bold tabular-nums ${
-                    item.delta === "Ref" ? "text-[#7e7e7e]" : "text-[#e22718]"
-                  }`}
-                >
-                  {item.delta}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

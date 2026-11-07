@@ -7,7 +7,11 @@ import type { LucideIcon } from "lucide-react";
 import {
   obtenerSesionLocal,
 } from "@/lib/auth";
-import { obtenerPerfilPiloto, obtenerSesionesPaginadas } from "@/lib/apiClient";
+import {
+  obtenerPerfilPiloto,
+  obtenerSesionesPaginadas,
+  obtenerVueltasSesion,
+} from "@/lib/apiClient";
 import type {
   PerfilUsuario,
   HabilidadDetalle,
@@ -227,10 +231,6 @@ function TarjetaPiloto({
 
           <div className="flex min-w-0 flex-1 flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <span className="inline-flex w-fit items-center gap-2 border border-[#0fa336] bg-[#0fa336]/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#0fa336]">
-                <span aria-hidden className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#0fa336]" />
-                {usuario.simulador}
-              </span>
               <h1
                 id="titulo-piloto"
                 className="text-3xl font-bold uppercase tracking-wider text-white sm:text-4xl"
@@ -264,7 +264,7 @@ function TarjetaPiloto({
         </div>
 
         {/* Apex Rating */}
-        <div className="relative flex flex-col justify-between gap-6 bg-transparent lg:border-l lg:border-[#222225] lg:pl-8">
+        <div className="relative flex flex-col justify-between gap-6 bg-transparent pt-8 lg:border-l lg:border-[#222225] lg:pl-8">
           <FranjaM className="absolute inset-x-0 top-0 h-1.5" />
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-[0.3em] text-white">
@@ -353,7 +353,7 @@ function SeccionHabilidades({ habilidades }: { habilidades: HabilidadDetalle[] }
       <div className="grid gap-8 border-b border-[#222225] pb-8 lg:grid-cols-[1.1fr_1fr]">
         {/* Radar */}
         <div className="flex flex-col bg-transparent lg:border-r lg:border-[#222225] lg:pr-8">
-          <div className="flex items-center justify-between border-b border-[#222225] px-5 py-3">
+          <div className="flex items-center justify-between px-5 py-3 select-none">
             <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-white">
               Radar técnico
             </span>
@@ -362,10 +362,18 @@ function SeccionHabilidades({ habilidades }: { habilidades: HabilidadDetalle[] }
             </span>
           </div>
           <div
-            className="px-2 py-4"
-            role="img"
+            className="px-2 py-4 select-none outline-none focus:outline-none focus:ring-0 [&_*]:outline-none [&_*]:focus:outline-none [&_*]:focus-visible:outline-none [&_.recharts-wrapper]:outline-none [&_.recharts-surface]:outline-none [&_svg]:outline-none"
+            style={{ WebkitTapHighlightColor: "transparent", userSelect: "none" }}
             aria-label={`Radar de habilidades: ${habilidades.map((h) => `${h.nombre} ${h.valor}`).join(", ")}`}
           >
+            <style>{`
+              .recharts-wrapper, .recharts-surface, .recharts-wrapper *:focus, .recharts-surface:focus {
+                outline: none !important;
+                border: none !important;
+                box-shadow: none !important;
+                -webkit-tap-highlight-color: transparent !important;
+              }
+            `}</style>
             <ResponsiveContainer width="100%" height={360}>
               <RadarChart data={[...habilidades]} outerRadius="72%">
                 <PolarGrid stroke={COLORES.borde} />
@@ -678,6 +686,34 @@ export default function PaginaPerfil() {
           const d = res.datos;
           const evalActual = d.ultimaEvaluacion;
 
+          // Si el perfil no trae porcentajeVueltasValidas o velocidadMaximaKmh calculadas, las obtenemos dinámicamente de las tandas
+          let vueltasValidasCalculadas = d.porcentajeVueltasValidas;
+          let velMaxCalculada = d.velocidadMaximaKmh;
+
+          try {
+            const resSes = await obtenerSesionesPaginadas(1, 20, usuario!.id);
+            if (resSes?.exitoso && resSes.datos?.elementos?.length) {
+              const sesiones = resSes.datos.elementos;
+              let totalVueltas = 0;
+              let totalValidas = 0;
+
+              if (vueltasValidasCalculadas === undefined || vueltasValidasCalculadas === 0) {
+                for (const s of sesiones.slice(0, 5)) {
+                  const resV = await obtenerVueltasSesion(s.id).catch(() => null);
+                  if (resV?.exitoso && resV.datos?.length) {
+                    totalVueltas += resV.datos.length;
+                    totalValidas += resV.datos.filter((v) => v.isValidLap ?? v.esValida ?? true).length;
+                  }
+                }
+                if (totalVueltas > 0) {
+                  vueltasValidasCalculadas = Math.round((totalValidas / totalVueltas) * 1000) / 10;
+                }
+              }
+            }
+          } catch {
+            // Silencioso si no se pueden consultar las sesiones
+          }
+
           setUsuario((prev) => {
             if (!prev) return prev;
             const habilidadesNuevas: HabilidadDetalle[] = evalActual
@@ -745,8 +781,10 @@ export default function PaginaPerfil() {
               puntajeGeneral: puntajeConsolidado,
               vueltasTotales: d.vueltasTotales ?? prev.vueltasTotales,
               kilometrosTotales: d.kilometrosTotales ?? prev.kilometrosTotales,
-              porcentajeVueltasValidas: d.porcentajeVueltasValidas ?? prev.porcentajeVueltasValidas,
-              velocidadMaximaKmh: d.velocidadMaximaKmh ?? prev.velocidadMaximaKmh,
+              porcentajeVueltasValidas:
+                vueltasValidasCalculadas ?? d.porcentajeVueltasValidas ?? prev.porcentajeVueltasValidas,
+              velocidadMaximaKmh:
+                velMaxCalculada ?? d.velocidadMaximaKmh ?? prev.velocidadMaximaKmh,
               rating: {
                 paceRating: d.paceRating ?? prev.rating.paceRating,
                 safetyRating: d.safetyRating ?? prev.rating.safetyRating,
@@ -822,32 +860,31 @@ export default function PaginaPerfil() {
     );
   }
 
-  const esVehiculoMonoplaza =
-    usuario.vehiculoPrincipal.toLowerCase().includes("f1") ||
-    usuario.vehiculoPrincipal.toLowerCase().includes("sf70h") ||
-    usuario.vehiculoPrincipal.toLowerCase().includes("supreme") ||
-    usuario.vehiculoPrincipal.toLowerCase().includes("formula");
+  const tieneVelocidadReal =
+    typeof usuario.velocidadMaximaKmh === "number" && usuario.velocidadMaximaKmh > 0;
 
-  const velocidadCalculada =
-    usuario.velocidadMaximaKmh && usuario.velocidadMaximaKmh > 0
-      ? usuario.velocidadMaximaKmh.toFixed(1)
-      : esVehiculoMonoplaza
-      ? "342.8"
-      : "278.4";
+  const velocidadCalculada = tieneVelocidadReal
+    ? usuario.velocidadMaximaKmh!.toFixed(1)
+    : "--";
 
-  const detalleVelocidad =
-    usuario.velocidadMaximaKmh && usuario.velocidadMaximaKmh > 0
-      ? `Pico de telemetría real (${usuario.vehiculoPrincipal})`
-      : esVehiculoMonoplaza
-      ? "Alcanzada en Monza (Rettifilo con DRS)"
-      : "Alcanzada en Monza (Variante Ascari)";
+  const detalleVelocidad = tieneVelocidadReal
+    ? `Pico de telemetría real (${usuario.vehiculoPrincipal})`
+    : "Sin registros de velocidad punta en pista";
 
-  const porcentajeValidas =
-    usuario.porcentajeVueltasValidas !== undefined && usuario.porcentajeVueltasValidas > 0
-      ? usuario.porcentajeVueltasValidas.toFixed(1)
-      : usuario.vueltasTotales > 0
-      ? Math.min(99.0, Math.max(88.0, 95.0 + (usuario.puntajeGeneral > 90 ? 2.5 : -1.5))).toFixed(1)
-      : "95.0";
+  const tieneVueltasValidas =
+    typeof usuario.porcentajeVueltasValidas === "number" && usuario.porcentajeVueltasValidas > 0;
+
+  const porcentajeValidas = tieneVueltasValidas
+    ? usuario.porcentajeVueltasValidas!.toFixed(1)
+    : usuario.vueltasTotales > 0
+    ? "0.0"
+    : "--";
+
+  const detalleValidas = tieneVueltasValidas
+    ? "Sin exceder límites de pista"
+    : usuario.vueltasTotales > 0
+    ? "0% de vueltas reglamentarias registradas"
+    : "Sin tandas registradas en pista";
 
   const estadisticas: readonly EstadisticaGlobal[] = [
     {
@@ -869,15 +906,15 @@ export default function PaginaPerfil() {
     {
       etiqueta: "Vueltas válidas",
       valor: porcentajeValidas,
-      unidad: "%",
-      detalle: "Sin exceder límites de pista",
+      unidad: porcentajeValidas === "--" ? "" : "%",
+      detalle: detalleValidas,
       icono: ShieldCheck,
       acento: COLORES.verde,
     },
     {
       etiqueta: "Velocidad máxima",
       valor: velocidadCalculada,
-      unidad: "km/h",
+      unidad: velocidadCalculada === "--" ? "" : "km/h",
       detalle: detalleVelocidad,
       icono: Gauge,
       acento: COLORES.rojoM,

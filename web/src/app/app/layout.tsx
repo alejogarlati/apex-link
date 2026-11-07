@@ -28,6 +28,7 @@ import {
 import {
   obtenerSesionLocal,
   cerrarSesion,
+  esUsuarioAdmin,
 } from "@/lib/auth";
 import { declararPilotoActivo } from "@/lib/apiClient";
 import type { PerfilUsuario } from "@/types/usuario";
@@ -42,6 +43,7 @@ interface EnlaceNav {
   icono: React.ComponentType<{ className?: string }>;
   descripcion: string;
   destacado?: boolean;
+  requiereAdmin?: boolean;
 }
 
 interface GrupoNav {
@@ -50,6 +52,13 @@ interface GrupoNav {
   icono: React.ComponentType<{ className?: string }>;
   enlaces: EnlaceNav[];
 }
+
+const ENLACE_TORNEO_FAPPE: EnlaceNav = {
+  href: "/app/leaderboards",
+  etiqueta: "Torneo Fappe",
+  icono: Trophy,
+  descripcion: "Clasificación oficial del torneo",
+};
 
 const GRUPOS_NAVEGACION: GrupoNav[] = [
   {
@@ -116,22 +125,15 @@ const GRUPOS_NAVEGACION: GrupoNav[] = [
         descripcion: "Apex Rating y trofeos",
       },
       {
-        href: "/app/leaderboards",
-        etiqueta: "Tabla de Récords",
-        icono: Trophy,
-        descripcion: "Clasificación y deltas",
-      },
-      {
         href: "/app/ajustes",
         etiqueta: "Ajustes de Boxes",
         icono: Settings,
         descripcion: "Configuración y red",
+        requiereAdmin: true,
       },
     ],
   },
 ];
-
-const TODOS_LOS_ENLACES = GRUPOS_NAVEGACION.flatMap((g) => g.enlaces);
 
 export default function LayoutAppBoxes({
   children,
@@ -250,8 +252,20 @@ export default function LayoutAppBoxes({
     router.replace("/login");
   };
 
-  const enlaceActivo = TODOS_LOS_ENLACES.find((e) => e.href === pathname);
-  const grupoActivo = GRUPOS_NAVEGACION.find((g) =>
+  const esAdmin = esUsuarioAdmin(usuario);
+
+  const gruposNavegacion = GRUPOS_NAVEGACION.map((grupo) => ({
+    ...grupo,
+    enlaces: grupo.enlaces.filter((enlace) => !enlace.requiereAdmin || esAdmin),
+  }));
+
+  const todosLosEnlaces = [
+    ENLACE_TORNEO_FAPPE,
+    ...gruposNavegacion.flatMap((g) => g.enlaces),
+  ];
+
+  const enlaceActivo = todosLosEnlaces.find((e) => e.href === pathname);
+  const grupoActivo = gruposNavegacion.find((g) =>
     g.enlaces.some((e) => e.href === pathname)
   );
 
@@ -302,7 +316,7 @@ export default function LayoutAppBoxes({
           {/* Breadcrumb de Orientación */}
           {enlaceActivo && (
             <div className="hidden lg:flex items-center gap-2 pl-4 border-l border-[#262626] text-xs font-mono text-[#8a8a8a]">
-              <span>{grupoActivo?.titulo ?? "Boxes"}</span>
+              <span>{grupoActivo?.titulo ?? (pathname === "/app/leaderboards" ? "Competición" : "Boxes")}</span>
               <ChevronRight className="w-3.5 h-3.5 text-[#525252]" />
               <span className="text-white font-bold">{enlaceActivo.etiqueta}</span>
             </div>
@@ -347,7 +361,27 @@ export default function LayoutAppBoxes({
             }`}
           >
             <div className="p-3 space-y-3">
-              {GRUPOS_NAVEGACION.map((grupo, indiceGrupo) => {
+              {/* Botón Destacado Torneo Fappe arriba de Telemetría & Live */}
+              <div>
+                <Link
+                  href={ENLACE_TORNEO_FAPPE.href}
+                  aria-current={pathname === ENLACE_TORNEO_FAPPE.href ? "page" : undefined}
+                  onClick={() => setSidebarAbierto(false)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-mono font-bold uppercase tracking-wider transition-all cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-white ${
+                    pathname === ENLACE_TORNEO_FAPPE.href
+                      ? "bg-[#e22718] text-white shadow-md shadow-[#e22718]/40 ring-1 ring-white/30"
+                      : "bg-[#e22718] text-white hover:bg-[#c41e12] shadow-xs shadow-[#e22718]/20"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Trophy className="w-4 h-4 shrink-0 text-white" />
+                    <span className="truncate">{ENLACE_TORNEO_FAPPE.etiqueta}</span>
+                  </div>
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0" />
+                </Link>
+              </div>
+
+              {gruposNavegacion.map((grupo, indiceGrupo) => {
                 const IconoGrupo = grupo.icono;
                 const estaAbierto = gruposAbiertos[grupo.id] ?? true;
                 const tieneEnlaceActivo = grupo.enlaces.some((e) => e.href === pathname);
@@ -449,7 +483,22 @@ export default function LayoutAppBoxes({
           {sidebarColapsado && (
             <div className="hidden md:flex flex-1 flex-col justify-between overflow-y-auto overflow-x-hidden py-3 px-2 min-h-0">
               <div className="flex flex-col items-center space-y-3">
-                {GRUPOS_NAVEGACION.map((grupo, indiceGrupo) => {
+                {/* Botón Icono Torneo Fappe en color rojo */}
+                <Link
+                  href={ENLACE_TORNEO_FAPPE.href}
+                  title={`${ENLACE_TORNEO_FAPPE.etiqueta} — ${ENLACE_TORNEO_FAPPE.descripcion}`}
+                  aria-label={ENLACE_TORNEO_FAPPE.etiqueta}
+                  aria-current={pathname === ENLACE_TORNEO_FAPPE.href ? "page" : undefined}
+                  className={`relative w-10 h-10 rounded-lg flex items-center justify-center transition-all bg-[#e22718] text-white hover:bg-[#c41e12] shadow-xs shadow-[#e22718]/20 outline-none focus-visible:ring-1 focus-visible:ring-white ${
+                    pathname === ENLACE_TORNEO_FAPPE.href ? "ring-2 ring-white/40" : ""
+                  }`}
+                >
+                  <Trophy className="w-4 h-4 shrink-0 text-white" />
+                </Link>
+
+                <div className="w-6 border-b border-[#222226]" />
+
+                {gruposNavegacion.map((grupo, indiceGrupo) => {
                   return (
                     <div
                       key={grupo.id}
