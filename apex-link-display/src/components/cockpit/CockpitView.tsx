@@ -6,7 +6,6 @@ import { ZoneDTiming } from '../zones/ZoneDTiming';
 import { ZoneEChassisControls } from '../zones/ZoneEChassisControls';
 import { SectorsBar } from '../zones/SectorsBar';
 import { FullscreenOverlayHost } from '../overlays/FullscreenOverlayHost';
-import { QuickControlsBar } from '../modals/QuickControlsBar';
 
 interface Props {
   isFullscreen: boolean;
@@ -45,13 +44,6 @@ export const CockpitView: React.FC<Props> = ({
 
       {/* 5. 100% Fullscreen Overlays (Pit Limiter, Chassis Change, Fastest Lap) */}
       <FullscreenOverlayHost />
-
-      {/* 6. Quick Scenario & Control Bar */}
-      <QuickControlsBar
-        onOpenDiagnostics={onOpenDiagnostics}
-        isFullscreen={isFullscreen}
-        onToggleFullscreen={onToggleFullscreen}
-      />
     </div>
   );
 };

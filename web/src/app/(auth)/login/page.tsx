@@ -267,18 +267,6 @@ export default function PaginaLogin() {
           <ArrowLeft className="w-4 h-4" />
           Volver al Inicio
         </Link>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center px-2.5 py-1 bg-[#141414] border border-[#3c3c3c] rounded">
-            <Image
-              src="/logos/logo.webp"
-              alt="ApexLink"
-              width={90}
-              height={18}
-              className="h-4 w-auto object-contain"
-            />
-          </div>
-        </div>
       </header>
 
       {/* Contenedor Central: Dos Cards (Logo ApexLink a la izquierda, Login a la derecha) */}
@@ -351,7 +339,7 @@ export default function PaginaLogin() {
           </div>
 
           {/* Card Derecha: Formulario de Login / Registro */}
-          <div className="w-full bg-[#0d0d0d] border border-[#3c3c3c] shadow-2xl overflow-hidden rounded-xl flex flex-col justify-between">
+          <div className="w-full bg-[#0d0d0d] border border-[#3c3c3c] shadow-2xl overflow-hidden rounded-xl flex flex-col justify-evenly">
             {/* Header de la Tarjeta */}
             <div className="p-6 border-b border-[#262626] bg-[#141414]/60">
               <div className="flex items-center gap-3.5">
@@ -588,7 +576,7 @@ export default function PaginaLogin() {
                         size="lg"
                         fullWidth
                         isLoading={estaCargando}
-                        loadingText="Cifrando con BCrypt y registrando..."
+                        loadingText="Registrando usuario..."
                         leftIcon={<UserPlus className="w-4 h-4 text-white" />}
                         className="bg-[#e22718] hover:bg-[#c91f12] text-white border-[#e22718] hover:border-[#c91f12] shadow-md shadow-[#e22718]/25"
                       >
@@ -597,18 +585,6 @@ export default function PaginaLogin() {
                     </div>
                   </form>
                 )}
-
-                <div className="pt-1 flex items-center justify-center gap-4 text-[11px] text-[#7e7e7e] font-mono">
-                  <span className="inline-flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#0fa336]" />
-                    PostgreSQL + BCrypt
-                  </span>
-                  <span>•</span>
-                  <span className="inline-flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#0066b1]" />
-                    Auto Check-In Cabina
-                  </span>
-                </div>
               </div>
             ) : (
               /* Vista de Recuperación de Contraseña por Correo (Gmail SMTP + Código 6 Dígitos + BCrypt) */
