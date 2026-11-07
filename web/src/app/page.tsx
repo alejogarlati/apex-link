@@ -539,7 +539,7 @@ export default function PaginaInicio() {
               </Link>
 
               <Link
-                href="/hub"
+                href="/login"
                 className="hero-cta-btn w-full sm:w-auto h-[48px] px-8 rounded-none bg-[#141414]/90 backdrop-blur-md hover:bg-[#1f1f1f] active:scale-[0.99] text-white font-bold text-xs tracking-[0.15em] uppercase flex items-center justify-center gap-3 transition-all border border-[#3c3c3c] hover:border-[#e22718] cursor-pointer"
               >
                 <Gauge className="w-4 h-4 text-[#bbbbbb]" />
