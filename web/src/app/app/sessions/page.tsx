@@ -107,6 +107,11 @@ export default function PaginaSesiones() {
 
   useEffect(() => {
     cargarSesiones(pagina);
+    const alActualizar = () => cargarSesiones(pagina);
+    window.addEventListener("apexlink_sesiones_actualizadas", alActualizar);
+    return () => {
+      window.removeEventListener("apexlink_sesiones_actualizadas", alActualizar);
+    };
   }, [pagina, cargarSesiones]);
 
   const formatearTiempoMs = (ms: number) => {
@@ -247,19 +252,50 @@ export default function PaginaSesiones() {
               key={sesion.id}
               className="relative border-t border-[#222225] pt-6 pb-4 flex flex-col justify-between group hover:bg-white/[0.015] transition-colors rounded-b-lg"
             >
-              {/* Botón flotante para eliminar tanda */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setSesionAEliminar(sesion);
-                }}
-                title="Eliminar esta tanda de prueba"
-                className="absolute top-4 right-3 z-10 p-1.5 rounded-md text-[#7e7e7e] hover:text-[#ff4444] hover:bg-[#ff4444]/10 transition-colors opacity-60 group-hover:opacity-100 cursor-pointer"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              {/* Botones flotantes de gestión de tanda */}
+              <div className="absolute top-4 right-3 z-10 flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                {(sesion.bestLapTimeMs || sesion.mejorTiempoMs || 0) > 0 && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const detalle = {
+                        sesionId: sesion.id,
+                        circuito: circuitoNombre,
+                        modeloVehiculo: autoNombre,
+                        totalVueltas: totalV,
+                        vueltasValidas: totalV,
+                        mejorTiempoMs: sesion.bestLapTimeMs || sesion.mejorTiempoMs || 0,
+                        mejorTiempoTexto: mejorVueltaStr,
+                        fechaFin: sesion.endTime || sesion.fechaFin || new Date().toISOString(),
+                      };
+                      window.dispatchEvent(
+                        new CustomEvent("apexlink_abrir_modal_torneo", {
+                          detail: detalle,
+                        })
+                      );
+                    }}
+                    title="Atribuir esta sesión a un participante del Torneo Fappe"
+                    className="p-1.5 rounded-md text-[#f4b400] hover:text-white hover:bg-[#e22718] transition-colors cursor-pointer"
+                  >
+                    <Trophy className="w-4 h-4" />
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSesionAEliminar(sesion);
+                  }}
+                  title="Eliminar esta tanda de prueba"
+                  className="p-1.5 rounded-md text-[#7e7e7e] hover:text-[#ff4444] hover:bg-[#ff4444]/10 transition-colors cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
 
               <Link
                 href={`/app/analysis?sesionId=${sesion.id}`}

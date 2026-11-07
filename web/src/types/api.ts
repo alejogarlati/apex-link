@@ -143,6 +143,18 @@ export interface LeaderboardItemDto {
   esRecord: boolean;
 }
 
+/** Resumen de tanda recién finalizada pendiente de atribución al Torneo FAPPE */
+export interface SesionFinalizadaTorneoDto {
+  sesionId: string;
+  circuito: string;
+  modeloVehiculo: string;
+  totalVueltas: number;
+  vueltasValidas: number;
+  mejorTiempoMs: number;
+  mejorTiempoTexto: string;
+  fechaFin: string;
+}
+
 /** Evaluación completa del rendimiento del piloto generada por el motor analítico */
 export interface EvaluacionRendimientoApiDto {
   id: string;

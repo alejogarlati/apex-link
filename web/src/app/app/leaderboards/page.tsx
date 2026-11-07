@@ -35,6 +35,11 @@ function ContenidoLeaderboards() {
 
   useEffect(() => {
     cargarLeaderboard();
+    const recargar = () => cargarLeaderboard();
+    window.addEventListener("apexlink_leaderboard_actualizado", recargar);
+    return () => {
+      window.removeEventListener("apexlink_leaderboard_actualizado", recargar);
+    };
   }, [cargarLeaderboard]);
 
   const mejorVueltaStand = ranking[0]?.tiempo || "--:--.---";

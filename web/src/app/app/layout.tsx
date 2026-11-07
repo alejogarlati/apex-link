@@ -36,6 +36,7 @@ import { UserNavDropdown } from "@/components/layout/UserNavDropdown";
 import { useToast } from "@/context/ToastContext";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { SidebarProvider } from "@/context/SidebarContext";
+import { ModalParticipanteTorneoFappe } from "@/components/torneo/ModalParticipanteTorneoFappe";
 
 interface EnlaceNav {
   href: string;
@@ -591,6 +592,9 @@ export default function LayoutAppBoxes({
           {children}
         </main>
       </div>
+
+      {/* Modal global automático al finalizar una sesión para atribuir a participante del Torneo Fappe */}
+      <ModalParticipanteTorneoFappe />
     </div>
   </SidebarProvider>
 );

@@ -9,6 +9,7 @@ import type {
   CircuitoDto,
   CircuitoDetalleDto,
   LeaderboardItemDto,
+  SesionFinalizadaTorneoDto,
   EvaluacionRendimientoApiDto,
   PerfilPilotoDetalleApiDto,
   GenerarEvaluacionApiRequest,
@@ -192,6 +193,39 @@ export async function obtenerLeaderboard(
   return solicitarGet<LeaderboardItemDto[]>(
     `/api/leaderboard?circuito=${encodeURIComponent(circuito)}&limite=${limite}`
   );
+}
+
+/** Consulta si existe una sesión recién finalizada pendiente de confirmación para el Torneo FAPPE */
+export async function obtenerSesionRecienteFinalizada(): Promise<
+  RespuestaApi<SesionFinalizadaTorneoDto | null>
+> {
+  return solicitarGet<SesionFinalizadaTorneoDto | null>(
+    "/api/sesiones/reciente-finalizada"
+  );
+}
+
+/** Fuerza el cierre de la tanda activa actual en el simulador y devuelve su resumen */
+export async function cerrarSesionActivaSimulador(): Promise<
+  RespuestaApi<SesionFinalizadaTorneoDto | null>
+> {
+  return solicitarPost<SesionFinalizadaTorneoDto | null>(
+    "/api/sesiones/cerrar-activa"
+  );
+}
+
+/** Atribuye una tanda recién finalizada a un participante temporal del Torneo FAPPE o la conserva en el perfil activo */
+export async function atribuirSesionParticipanteTorneo(
+  sesionId: string,
+  esParticipanteTorneo: boolean,
+  nombreParticipante?: string
+): Promise<RespuestaApi<boolean>> {
+  return solicitarPost<
+    boolean,
+    { esParticipanteTorneo: boolean; nombreParticipante?: string }
+  >(`/api/sesiones/${sesionId}/participante-torneo`, {
+    esParticipanteTorneo,
+    nombreParticipante,
+  });
 }
 
 // ---------------------------------------------------------------------------
