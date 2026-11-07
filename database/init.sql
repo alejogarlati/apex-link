@@ -306,6 +306,17 @@ CREATE TABLE IF NOT EXISTS usuarios_logros (
     PRIMARY KEY (usuario_id, logro_id)
 );
 
+-- 5. Tabla de Tokens para Recuperación de Contraseña (flujo de 2 pasos por correo)
+CREATE TABLE IF NOT EXISTS tokens_recuperacion_password (
+    id UUID PRIMARY KEY,
+    usuario_id UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    email VARCHAR(200) NOT NULL,
+    codigo_hash VARCHAR(255) NOT NULL,
+    expira_en TIMESTAMP WITH TIME ZONE NOT NULL,
+    usado BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 -- Índices de consulta rápida
 CREATE INDEX IF NOT EXISTS idx_perfiles_piloto_rating ON perfiles_piloto (pace_rating DESC);
 CREATE INDEX IF NOT EXISTS idx_evaluaciones_usuario ON evaluaciones_rendimiento (usuario_id);
