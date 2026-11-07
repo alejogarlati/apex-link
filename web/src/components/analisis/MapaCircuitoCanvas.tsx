@@ -261,6 +261,47 @@ export function MapaCircuitoCanvas({
     return tiemposAcumuladosPista;
   }, [tiemposAcumuladosPista, duracionObjetivoMs]);
 
+  // Perfil temporal acumulado de Vuelta B (comparativa)
+  const tiemposAcumuladosPistaB = useMemo(() => {
+    const track = trackRealB;
+    if (!track || track.length === 0) return [];
+    const times: number[] = [0];
+    let acumSec = 0;
+    for (let i = 1; i < track.length; i++) {
+      const prev = track[i - 1];
+      const curr = track[i];
+      if (!prev || !curr) continue;
+      const dDist = Math.max(0.1, curr.dist - prev.dist);
+      const avgSpeedMs = Math.max(10, ((prev.speed + curr.speed) / 2) / 3.6);
+      acumSec += dDist / avgSpeedMs;
+      times.push(acumSec * 1000);
+    }
+    return times;
+  }, [trackRealB]);
+
+  const duracionObjetivoMsB = useMemo(() => {
+    if (!vueltaBInfo?.tiempoVueltaStr) return null;
+    const partes = vueltaBInfo.tiempoVueltaStr.split(/[:.]/);
+    if (partes.length >= 2) {
+      const min = parseInt(partes[0] ?? "0", 10) || 0;
+      const sec = parseInt(partes[1] ?? "0", 10) || 0;
+      const ms = partes[2] ? parseInt(partes[2].padEnd(3, "0").slice(0, 3), 10) || 0 : 0;
+      const total = (min * 60 + sec) * 1000 + ms;
+      return total > 10000 ? total : null;
+    }
+    return null;
+  }, [vueltaBInfo?.tiempoVueltaStr]);
+
+  const tiemposEscaladosB = useMemo(() => {
+    if (tiemposAcumuladosPistaB.length === 0) return [];
+    const ultimoTiempo = tiemposAcumuladosPistaB[tiemposAcumuladosPistaB.length - 1];
+    if (duracionObjetivoMsB && ultimoTiempo && ultimoTiempo > 0) {
+      const factor = duracionObjetivoMsB / ultimoTiempo;
+      return tiemposAcumuladosPistaB.map((t) => t * factor);
+    }
+    return tiemposAcumuladosPistaB;
+  }, [tiemposAcumuladosPistaB, duracionObjetivoMsB]);
+
   // Variables de cámara y animación (persisten sin re-renderizar)
   const estadoCamara = useRef({
     azimuth: Math.PI / 4,
@@ -349,17 +390,58 @@ export function MapaCircuitoCanvas({
       }
       estadoCamara.current.carProgressA = targetPointA;
 
-      if (trackRealB && trackRealB.length > 0) {
-        let targetPointB = 0;
-        for (let i = 0; i < trackRealB.length; i++) {
+      if (trackRealB && trackRealB.length > 0 && tiemposEscaladosB.length > 0) {
+        const totalPtsB = trackRealB.length;
+        const tA = tiemposEscalados[targetPointA] ?? 0;
+
+        // Punto de igual distancia en B para conocer quién viene adelante temporalmente
+        let idxMismaDistB = 0;
+        for (let i = 0; i < totalPtsB; i++) {
           if (trackRealB[i]!.dist >= distClamped) {
-            targetPointB = i;
+            idxMismaDistB = i;
             break;
           }
         }
+        const tBMismaDist = tiemposEscaladosB[idxMismaDistB] ?? tA;
+
+        // Ubicar el Ghost B en la posición espacial que tenía exactamente en el instante tA
+        let targetPointB = 0;
+        if (tA <= 0) {
+          const bMasLentoGlobal = (duracionObjetivoMsB ?? 1) >= (duracionObjetivoMs ?? 0);
+          const offsetInicial = bMasLentoGlobal ? -12 : 12;
+          targetPointB = ((targetPointA + offsetInicial) % totalPtsB + totalPtsB) % totalPtsB;
+        } else {
+          let idxTiempoB = tiemposEscaladosB.length - 1;
+          for (let i = 0; i < tiemposEscaladosB.length; i++) {
+            if (tiemposEscaladosB[i]! >= tA) {
+              idxTiempoB = i;
+              break;
+            }
+          }
+          if (idxTiempoB > 0) {
+            const tPrev = tiemposEscaladosB[idxTiempoB - 1] ?? 0;
+            const tCurr = tiemposEscaladosB[idxTiempoB] ?? tPrev;
+            const frac = tCurr > tPrev ? (tA - tPrev) / (tCurr - tPrev) : 0;
+            targetPointB = idxTiempoB - 1 + Math.max(0, Math.min(1, frac));
+          } else {
+            targetPointB = 0;
+          }
+
+          // Garantizar separación mínima visual (12 puntos) para que el Puck A jamás tape al Puck B
+          const ratioIndexA = (targetPointA / Math.max(1, trackRealA.length)) * totalPtsB;
+          const diffPts = targetPointB - ratioIndexA;
+          if (Math.abs(diffPts) < 12) {
+            const bEsMasLento =
+              tBMismaDist - tA >= -5 && (duracionObjetivoMsB ?? 1) >= (duracionObjetivoMs ?? 0);
+            const dir = diffPts < -0.05 ? -1 : diffPts > 0.05 ? 1 : bEsMasLento ? -1 : 1;
+            targetPointB = ((ratioIndexA + dir * 12) % totalPtsB + totalPtsB) % totalPtsB;
+          }
+        }
+
         estadoCamara.current.carProgressB = targetPointB;
       } else {
-        estadoCamara.current.carProgressB = Math.max(0, targetPointA - 12);
+        const totalPtsA = Math.max(1, trackRealA.length);
+        estadoCamara.current.carProgressB = ((targetPointA - 12) % totalPtsA + totalPtsA) % totalPtsA;
       }
 
       if (timestampRef.current && tiemposEscalados.length > 0) {
@@ -372,7 +454,16 @@ export function MapaCircuitoCanvas({
         timestampRef.current.textContent = formatearTimestamp(ms);
       }
     }
-  }, [distanciaSeleccionada, trackRealA, trackRealB, circuitoActual, tiemposEscalados]);
+  }, [
+    distanciaSeleccionada,
+    trackRealA,
+    trackRealB,
+    circuitoActual,
+    tiemposEscalados,
+    tiemposEscaladosB,
+    duracionObjetivoMs,
+    duracionObjetivoMsB,
+  ]);
 
   // 1. Manejo nativo de rueda de ratón con { passive: false } para EVITAR scroll de página
   useEffect(() => {
@@ -511,13 +602,37 @@ export function MapaCircuitoCanvas({
       const carBSpeed = Math.round(trackB ? pB0.speed + (pB1.speed - pB0.speed) * fracB : (pB0.speed + (pB1.speed - pB0.speed) * fracB) * 0.935);
       const carBDist = Math.round(pB0.dist + (pB1.dist - pB0.dist) * fracB);
 
-      // Calcular delta métrico entre ambos monoplazas con protección contra velocidad cero
-      let deltaMetros = carADist - carBDist;
+      // Calcular delta métrico y temporal real entre ambos monoplazas
       const longitudCircuito = circuitoActual.lengthMeters || 5793;
+      const velocidadMs = Math.max(1, carASpeed / 3.6);
+      let deltaMetros = carADist - carBDist;
       if (deltaMetros < -longitudCircuito / 2) deltaMetros += longitudCircuito;
       if (deltaMetros > longitudCircuito / 2) deltaMetros -= longitudCircuito;
-      const velocidadMs = Math.max(1, carASpeed / 3.6);
-      const deltaSegundos = (deltaMetros / velocidadMs).toFixed(3);
+
+      let deltaSegundosNum = deltaMetros / velocidadMs;
+      if (tiemposEscalados.length > 0 && tiemposEscaladosB.length > 0) {
+        const tA0 = tiemposEscalados[idxA0] ?? 0;
+        const tA1 = tiemposEscalados[idxA1] ?? tA0;
+        const tActualA = tA0 + (tA1 - tA0) * fracA;
+
+        const ratioA = safeProgressA / Math.max(1, totalPoints);
+        const posEquivB = ratioA * Math.max(1, tiemposEscaladosB.length - 1);
+        const idxEqB0 = Math.min(tiemposEscaladosB.length - 1, Math.floor(posEquivB));
+        const idxEqB1 = Math.min(tiemposEscaladosB.length - 1, idxEqB0 + 1);
+        const fracEqB = posEquivB - idxEqB0;
+        const tB0 = tiemposEscaladosB[idxEqB0] ?? 0;
+        const tB1 = tiemposEscaladosB[idxEqB1] ?? tB0;
+        const tActualBMismaDist = tB0 + (tB1 - tB0) * fracEqB;
+
+        if (tActualA > 50) {
+          deltaSegundosNum = (tActualBMismaDist - tActualA) / 1000;
+          deltaMetros = Math.round(deltaSegundosNum * velocidadMs);
+        } else if (duracionObjetivoMs && duracionObjetivoMsB) {
+          deltaSegundosNum = (duracionObjetivoMsB - duracionObjetivoMs) / 1000;
+          deltaMetros = Math.round(deltaSegundosNum * velocidadMs);
+        }
+      }
+      const deltaSegundos = deltaSegundosNum.toFixed(3);
 
       // Determinar cuál es el monoplaza enfocado en el HUD (Ranura A o B)
       const focoEsB = ranuraActiva === "B";
@@ -663,15 +778,17 @@ export function MapaCircuitoCanvas({
           ctx.restore();
         }
 
-        // 3. Trazada de Telemetría Real de Vuelta A con Heatmap
+        // 3. Trazada de Telemetría Real (Vuelta enfocada en el selector A/B) con Heatmap
+        const trackHeatmap = ranuraActiva === "B" && trackB && trackB.length > 1 ? trackB : track;
+        const totalPointsHeatmap = trackHeatmap.length;
         ctx.lineWidth = 3.5;
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
 
-        const cotaPuntosA = muestras && muestras.length > 5 ? totalPoints - 1 : totalPoints;
+        const cotaPuntosA = muestras && muestras.length > 5 ? totalPointsHeatmap - 1 : totalPointsHeatmap;
         for (let i = 0; i < cotaPuntosA; i++) {
-          const ptA = track[i];
-          const ptB = track[(i + 1) % totalPoints] ?? ptA;
+          const ptA = trackHeatmap[i];
+          const ptB = trackHeatmap[(i + 1) % totalPointsHeatmap] ?? ptA;
           if (!ptA || !ptB) continue;
           const pScreenA = projectMap(ptA.x, ptA.z);
           const pScreenB = projectMap(ptB.x, ptB.z);
@@ -684,12 +801,28 @@ export function MapaCircuitoCanvas({
         }
 
         const posA = projectMap(carAX, carAZ);
-        const posB = projectMap(carBX, carBZ);
+        const posBRaw = projectMap(carBX, carBZ);
 
-        // 3. Si hay comparativa, dibujar línea conectora del delta entre ambos coches
+        // Vector tangente de avance del circuito en la posición de A
+        const nextLookIdx = (idxA0 + 8) % totalPoints;
+        const nextLookP = track[nextLookIdx] ?? pA0;
+        const nextLookPos = projectMap(nextLookP.x, nextLookP.z);
+        const angulo = Math.atan2(nextLookPos.y - posA.y, nextLookPos.x - posA.x);
+
+        // Garantizar separación mínima en píxeles en pantalla (22 px) para que el Puck B jamás quede oculto bajo A
+        let posB = posBRaw;
         if (tieneComparativa) {
+          const distPxRaw = Math.hypot(posBRaw.x - posA.x, posBRaw.y - posA.y);
+          if (distPxRaw < 22) {
+            const signoSeparacion = deltaSegundosNum >= 0 ? -1 : 1;
+            posB = {
+              x: posA.x + Math.cos(angulo) * 22 * signoSeparacion,
+              y: posA.y + Math.sin(angulo) * 22 * signoSeparacion,
+            };
+          }
+
           const distPx = Math.hypot(posB.x - posA.x, posB.y - posA.y);
-          if (distPx > 14) {
+          if (distPx > 12) {
             ctx.save();
             ctx.beginPath();
             ctx.moveTo(posA.x, posA.y);
@@ -701,19 +834,21 @@ export function MapaCircuitoCanvas({
             ctx.restore();
           }
 
-          // DIBUJAR COCHE B (Ghost Car · Secundario · Azul Claro)
-          dibujarPuck(ctx, posB, "B", true);
+          if (ranuraActiva !== "B") {
+            // Si el foco es A, dibujar B debajo y A encima
+            dibujarPuck(ctx, posB, "B", true);
+          }
         }
 
         // DIBUJAR COCHE A (Principal · Blanco y Azul M)
         dibujarPuck(ctx, posA, "A", false);
 
-        // Flecha de Dirección del monoplaza activo
-        const nextLookIdx = (idxA0 + 8) % totalPoints;
-        const nextLookP = track[nextLookIdx] ?? pA0;
-        const nextLookPos = projectMap(nextLookP.x, nextLookP.z);
-        const angulo = Math.atan2(nextLookPos.y - posA.y, nextLookPos.x - posA.x);
+        if (tieneComparativa && ranuraActiva === "B") {
+          // Si el usuario seleccionó la pestaña B, dibujar B por encima para máximo destaque
+          dibujarPuck(ctx, posB, "B", true);
+        }
 
+        // Flecha de Dirección del monoplaza activo
         ctx.save();
         ctx.translate(posA.x, posA.y);
         ctx.rotate(angulo);
@@ -831,7 +966,20 @@ export function MapaCircuitoCanvas({
 
         // Coche B en 3D
         if (tieneComparativa) {
-          const posB = projectIso(carBX, carBY, carBZ);
+          const posBRaw = projectIso(carBX, carBY, carBZ);
+          const nextLookIdx3D = (idxA0 + 8) % totalPoints;
+          const nextLookP3D = track[nextLookIdx3D] ?? pA0;
+          const nextLookPos3D = projectIso(nextLookP3D.x, nextLookP3D.y, nextLookP3D.z);
+          const angulo3D = Math.atan2(nextLookPos3D.y - posA.y, nextLookPos3D.x - posA.x);
+          const distPx3D = Math.hypot(posBRaw.x - posA.x, posBRaw.y - posA.y);
+          const signoSep3D = deltaSegundosNum >= 0 ? -1 : 1;
+          const posB =
+            distPx3D < 22
+              ? {
+                  x: posA.x + Math.cos(angulo3D) * 22 * signoSep3D,
+                  y: posA.y + Math.sin(angulo3D) * 22 * signoSep3D,
+                }
+              : posBRaw;
           const floorB = projectIso(carBX, floorY, carBZ);
 
           ctx.beginPath();
@@ -855,7 +1003,21 @@ export function MapaCircuitoCanvas({
 
     animId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animId);
-  }, [circuitoActual, trackRealA, trackRealB, muestras, modoRender, modoHeatmap, tieneComparativa, ranuraActiva, onSeleccionarDistancia, tiemposEscalados]);
+  }, [
+    circuitoActual,
+    trackRealA,
+    trackRealB,
+    muestras,
+    modoRender,
+    modoHeatmap,
+    tieneComparativa,
+    ranuraActiva,
+    onSeleccionarDistancia,
+    tiemposEscalados,
+    tiemposEscaladosB,
+    duracionObjetivoMs,
+    duracionObjetivoMsB,
+  ]);
 
   // Función auxiliar de pintado de Laser Puck
   function dibujarPuck(

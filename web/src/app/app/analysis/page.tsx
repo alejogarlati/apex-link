@@ -280,7 +280,6 @@ function ContenidoAnalisis() {
   const vueltaB = vueltas.find((v) => v.id === vueltaBId);
 
   const ranuraEfectiva = vueltaB ? ranuraMapa : "A";
-  const muestrasMapa = ranuraEfectiva === "B" && muestrasVueltaB ? muestrasVueltaB : muestrasVueltaA;
 
   const circuitoIdNormalizado = sesionActiva?.circuit.toLowerCase().includes("imola")
     ? ("imola" as const)
@@ -434,7 +433,7 @@ function ContenidoAnalisis() {
                 </div>
               )}
               <MapaCircuitoCanvas
-                muestras={muestrasMapa}
+                muestras={muestrasVueltaA}
                 muestrasComparativas={muestrasVueltaB}
                 distanciaSeleccionada={distanciaActiva}
                 onSeleccionarDistancia={setDistanciaActiva}
