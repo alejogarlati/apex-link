@@ -182,26 +182,43 @@ export const useTelemetryStore = create<DDUState>((set, get) => ({
     }
 
     set((state) => {
-      // 1. Gestión del Mejor Tiempo de la Sesión Activa
-      const sessionReset = frame.timing.currentLap < state.telemetry.timing.currentLap;
+      // 1. Detección robusta de reinicio o cambio de contexto de sesión
+      const prevTrack = (state.telemetry.session.track || '').trim().toLowerCase();
+      const nextTrack = (frame.session.track || '').trim().toLowerCase();
+      const trackChanged = Boolean(prevTrack && nextTrack && prevTrack !== nextTrack);
 
-      let currentBestMs = sessionReset ? 0 : (frame.timing.bestTimeMs ?? 0);
-      let currentBestStr = sessionReset
-        ? '--:--.---'
-        : (frame.timing.bestTimeStr && frame.timing.bestTimeStr !== '-:--:---')
-        ? frame.timing.bestTimeStr
-        : '--:--.---';
+      const prevCar = (state.telemetry.session.carModel || '').trim().toLowerCase();
+      const nextCar = (frame.session.carModel || '').trim().toLowerCase();
+      const carChanged = Boolean(prevCar && nextCar && prevCar !== nextCar);
 
-      // Si el frame no trae mejor tiempo aún pero en esta misma sesión se registró una vuelta completada
-      if (!sessionReset && currentBestMs === 0 && state.bestLapTimeMs > 0 && frame.timing.currentLap >= state.telemetry.timing.currentLap) {
-        currentBestMs = state.bestLapTimeMs;
-        currentBestStr = state.bestLapTimeStr;
+      const lapDecreased = frame.timing.currentLap < state.telemetry.timing.currentLap;
+      const sessionReset = trackChanged || carChanged || lapDecreased;
+
+      // Vuelta inicial en curso sin récord previo oficial de esta sesión
+      const onInitialLapWithoutBest =
+        frame.timing.currentLap <= 1 &&
+        (!frame.timing.bestTimeMs || frame.timing.bestTimeMs <= 0);
+
+      let currentBestMs = 0;
+      let currentBestStr = '--:--.---';
+
+      if (!sessionReset) {
+        if (frame.timing.bestTimeMs && frame.timing.bestTimeMs > 0) {
+          currentBestMs = frame.timing.bestTimeMs;
+          currentBestStr =
+            frame.timing.bestTimeStr && frame.timing.bestTimeStr !== '-:--:---'
+              ? frame.timing.bestTimeStr
+              : '--:--.---';
+        } else if (!onInitialLapWithoutBest && state.bestLapTimeMs > 0) {
+          currentBestMs = state.bestLapTimeMs;
+          currentBestStr = state.bestLapTimeStr;
+        }
       }
 
       // Normalizar la representación de cadenas de tiempo para evitar "-:--:---"
       const bestDisplayStr = (currentBestMs > 0 && currentBestStr !== '--:--.---' && currentBestStr !== '-:--:---')
         ? currentBestStr
-        : (frame.timing.bestTimeStr && frame.timing.bestTimeStr !== '-:--:---')
+        : (frame.timing.bestTimeStr && frame.timing.bestTimeStr !== '-:--:---' && frame.timing.bestTimeStr !== '--:--.---')
         ? frame.timing.bestTimeStr
         : '--:--.---';
 
@@ -406,6 +423,7 @@ export const useTelemetryStore = create<DDUState>((set, get) => ({
         tyreCompound: nextCompound,
         microsectors: nextMicrosectors,
         macroSectors: nextMacroSectors,
+        lastCompletedLap: sessionReset ? null : state.lastCompletedLap,
         bestLapTimeMs: currentBestMs,
         bestLapTimeStr: currentBestStr,
       };
@@ -566,7 +584,12 @@ export const useTelemetryStore = create<DDUState>((set, get) => ({
   },
 
   setMockActive: (active: boolean) => {
-    set({ isMockActive: active });
+    set({
+      isMockActive: active,
+      bestLapTimeMs: active ? get().bestLapTimeMs : 0,
+      bestLapTimeStr: active ? get().bestLapTimeStr : '--:--.---',
+      lastCompletedLap: active ? get().lastCompletedLap : null,
+    });
     if (active) {
       get().startCalibration();
     } else {

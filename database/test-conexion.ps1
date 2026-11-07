@@ -19,12 +19,12 @@ if ($LASTEXITCODE -eq 0) {
 }
 
 # 2. Comprobar socket TCP
-Write-Host "`n[2/4] Verificando conectividad de red TCP (localhost:5432)..." -ForegroundColor Yellow
-$tcp = Test-NetConnection -Port 5432 -ComputerName localhost -WarningAction SilentlyContinue
+Write-Host "`n[2/4] Verificando conectividad de red TCP (127.0.0.1:5432)..." -ForegroundColor Yellow
+$tcp = Test-NetConnection -Port 5432 -ComputerName 127.0.0.1 -WarningAction SilentlyContinue
 if ($tcp.TcpTestSucceeded) {
     Write-Host "  [OK] Puerto 5432 abierto y aceptando sockets TCP." -ForegroundColor Green
 } else {
-    Write-Host "  [ERROR] No se pudo abrir conexion TCP en localhost:5432." -ForegroundColor Red
+    Write-Host "  [ERROR] No se pudo abrir conexion TCP en 127.0.0.1:5432." -ForegroundColor Red
     exit 1
 }
 
