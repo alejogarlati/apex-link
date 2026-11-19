@@ -4,6 +4,15 @@ import { useState, useEffect } from "react";
 import { Wifi, Monitor, Check, Save } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 
+function isAllowedScheme(rawUrl: string, protocols: string[]): boolean {
+  try {
+    const parsed = new URL(rawUrl.trim());
+    return protocols.includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+}
+
 export default function PaginaAjustes() {
   const toast = useToast();
   const [servidorUrl, setServidorUrl] = useState("http://localhost:8080");
@@ -18,8 +27,12 @@ export default function PaginaAjustes() {
       const config = localStorage.getItem("apexlink_ajustes_boxes");
       if (config) {
         const parsed = JSON.parse(config);
-        if (parsed.servidorUrl) setServidorUrl(parsed.servidorUrl);
-        if (parsed.wsUrl) setWsUrl(parsed.wsUrl);
+        if (parsed.servidorUrl && isAllowedScheme(parsed.servidorUrl, ["http:", "https:"])) {
+          setServidorUrl(parsed.servidorUrl);
+        }
+        if (parsed.wsUrl && isAllowedScheme(parsed.wsUrl, ["ws:", "wss:"])) {
+          setWsUrl(parsed.wsUrl);
+        }
         if (typeof parsed.aceleracionGpu === "boolean") setAceleracionGpu(parsed.aceleracionGpu);
         if (typeof parsed.numerosTabulares === "boolean") setNumerosTabulares(parsed.numerosTabulares);
         if (typeof parsed.descarteOptimista === "boolean") setDescarteOptimista(parsed.descarteOptimista);
@@ -31,12 +44,24 @@ export default function PaginaAjustes() {
 
   const manejarGuardar = (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanServidor = servidorUrl.trim();
+    const cleanWs = wsUrl.trim();
+    if (
+      !isAllowedScheme(cleanServidor, ["http:", "https:"]) ||
+      !isAllowedScheme(cleanWs, ["ws:", "wss:"])
+    ) {
+      toast.error(
+        "URL inválida",
+        "El endpoint REST debe usar http:// o https:// y el WebSocket debe usar ws:// o wss://."
+      );
+      return;
+    }
     try {
       localStorage.setItem(
         "apexlink_ajustes_boxes",
         JSON.stringify({
-          servidorUrl,
-          wsUrl,
+          servidorUrl: cleanServidor,
+          wsUrl: cleanWs,
           aceleracionGpu,
           numerosTabulares,
           descarteOptimista,

@@ -265,6 +265,7 @@ export const USUARIO_ADMIN: PerfilUsuario = {
   nombre: "Administrador Maestro",
   alias: "ADMIN",
   email: "admin@apexlink.io",
+  rol: "admin",
   esInvitadoFappe: false,
   licencia: "Licencia de Control Maestro Apex",
   nacionalidad: "Argentina",
@@ -362,11 +363,12 @@ export const USUARIOS_PRUEBA = [USUARIO_ALEJO_GARLATI, USUARIO_ALEJO_SALAS, USUA
  */
 export function esUsuarioAdmin(usuario?: PerfilUsuario | null): boolean {
   if (!usuario) return false;
+  const sesion = obtenerSesionLocal();
+  if (!sesion?.token) return false;
   return (
-    usuario.alias === "ADMIN" ||
-    usuario.email.toLowerCase() === "admin" ||
-    usuario.email.toLowerCase() === "admin@apexlink.io" ||
-    usuario.id === USUARIO_ADMIN.id
+    sesion.usuario.id === USUARIO_ADMIN.id &&
+    usuario.id === USUARIO_ADMIN.id &&
+    usuario.rol === "admin"
   );
 }
 
@@ -382,7 +384,16 @@ export function obtenerSesionLocal(): SesionAuth | null {
   try {
     const raw = localStorage.getItem(CLAVE_ALMACENAMIENTO_AUTH);
     if (!raw) return null;
-    return JSON.parse(raw) as SesionAuth;
+    const sesion = JSON.parse(raw) as SesionAuth;
+    if (!sesion?.token || !sesion?.usuario?.id) return null;
+    if (sesion.expiraEn) {
+      const expiraMs = Date.parse(sesion.expiraEn);
+      if (Number.isNaN(expiraMs) || expiraMs <= Date.now()) {
+        localStorage.removeItem(CLAVE_ALMACENAMIENTO_AUTH);
+        return null;
+      }
+    }
+    return sesion;
   } catch {
     return null;
   }
@@ -435,6 +446,10 @@ export async function iniciarSesionConServidor(
         nombre: dto.nombre || baseUsuario.nombre,
         alias: dto.alias || baseUsuario.alias,
         email: dto.email || baseUsuario.email,
+        rol:
+          (dto.email || baseUsuario.email).toLowerCase() === "admin@apexlink.io"
+            ? "admin"
+            : "pilot",
         licencia: dto.licencia || baseUsuario.licencia,
         nacionalidad: dto.nacionalidad || baseUsuario.nacionalidad,
         codigoPais: dto.codigoPais || baseUsuario.codigoPais,

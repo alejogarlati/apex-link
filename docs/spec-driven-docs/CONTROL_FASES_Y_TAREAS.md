@@ -2,8 +2,8 @@
 
 > **Componente:** Backend de Telemetría SimRacing (Core Relay 60 Hz, Adquisición Win32 MMF, WebSocket, SQLite WAL, API REST Analítica, RBAC y Sincronización PostgreSQL)  
 > **Arquitectura:** C# .NET 8 Clean Architecture Multicapa (`src/` y `tests/`)  
-> **Documento Fuente de Verdad:** [DOCUMENTACION_TECNICA.md](file:///C:/Users/Pablo%20Bejas/Desktop/Pablo/WEB%20DEVELOP/Proyectos/UTN/FAPPE/backend/DOCUMENTACION_TECNICA.md)  
-> **Seguimiento de Avance en Vivo:** [PROGRESO_IMPLEMENTACION.md](file:///C:/Users/Pablo%20Bejas/Desktop/Pablo/WEB%20DEVELOP/Proyectos/UTN/FAPPE/backend/PROGRESO_IMPLEMENTACION.md)
+> **Documento Fuente de Verdad:** [DOCUMENTACION_TECNICA.md](./DOCUMENTACION_TECNICA.md)  
+> **Control Global:** [CONTROL_FASES_Y_TAREAS_INTEGRAL.md](./CONTROL_FASES_Y_TAREAS_INTEGRAL.md)
 
 ---
 

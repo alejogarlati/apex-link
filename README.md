@@ -4,7 +4,7 @@
 > **Metodología de Desarrollo:** Spec-Driven Development (SDD Intensivo)  
 > **Plazo de Ejecución:** Sprint de 3 Semanas (15 Días Hábiles)  
 > **Equipo:** 3 Desarrolladores en Paralelo (Dev 1: Backend/API · Dev 2: DDU Móvil · Dev 3: Plataforma Web)  
-> **Estado:** Prototipos y pruebas PoC archivados en [`/old`](file:///C:/Users/Alejo%20Garlati/Documents/Facultad/apex-link/old/). Especificaciones Sagradas de las 3 Capas 100% Definidas.
+> **Estado:** Prototipos y pruebas PoC archivados en [`/old`](./old/). Especificaciones de las 3 Capas definidas.
 
 ---
 
@@ -25,14 +25,14 @@ Bajo la metodología de **Spec-Driven Development Intensivo**, las especificacio
 
 | Documento Rector | Alcance / Capa | Descripción Técnica |
 | :--- | :---: | :--- |
-| 📋 **[BRIEF_INTEGRAL_SISTEMA_3_CAPAS.md](file:///C:/Users/Alejo%20Garlati/Documents/Facultad/apex-link/docs/spec-driven-docs/BRIEF_INTEGRAL_SISTEMA_3_CAPAS.md)** | **Ecosistema Global** | Brief maestro del software en sus 3 capas (API / DDU / WEBAPP), los 3 momentos operativos del usuario, acuerdos de SLA y arquitectura de integración. |
-| 📡 **[CONTRATOS_TELEMETRIA_Y_API.md](file:///C:/Users/Alejo%20Garlati/Documents/Facultad/apex-link/docs/spec-driven-docs/CONTRATOS_TELEMETRIA_Y_API.md)** | **Contratos de Red** | Catálogo exhaustivo de mensajes WebSocket (`FRAME` @ 60 Hz, `LAP_COMPLETED`), DTOs camelCase, diccionarios de tipos/unidades y endpoints REST analíticos. |
-| 📚 **[DOCUMENTACION_TECNICA.md](file:///C:/Users/Alejo%20Garlati/Documents/Facultad/apex-link/docs/spec-driven-docs/DOCUMENTACION_TECNICA.md)** | **Capa 1: Backend / API** | Documentación técnica oficial del Backend (.NET 8 Clean Architecture, Win32 MMF `unsafe fixed Pack=4`, *SeqLock*, SQLite WAL, PostgreSQL Sync y WebSocket). |
-| 📱 **[DOCUMENTACION_TECNICA_MODULO2_DASHBOARD.pdf](file:///C:/Users/Alejo%20Garlati/Documents/Facultad/apex-link/docs/spec-driven-docs/DOCUMENTACION_TECNICA_MODULO2_DASHBOARD.pdf)** | **Capa 2: DDU Volante** | Especificación técnica integral del DDU (`apex-link-display`: Vite + React 19 + Zustand 5 atómico, 6 zonas ergonómicas, Shift Lights, Screen WakeLock y ADB reverse). |
-| 💻 **[DOCUMENTACION_TECNICA_MODULO3_WEBAPP.md](file:///C:/Users/Alejo%20Garlati/Documents/Facultad/apex-link/docs/spec-driven-docs/DOCUMENTACION_TECNICA_MODULO3_WEBAPP.md)** | **Capa 3: WebApp SaaS** | Especificación técnica integral de la plataforma web SaaS (`apex-link-web`: Next.js 15 App Router, Landing Page, Auth Local / Modo Invitado, Hub Multi-Juegos, Perfil con Ratings/Logros, Live Pitwall 60 Hz, Track Geometry 2D y gráficas uPlot metro a metro). |
-| 📊 **[CONTROL_FASES_Y_TAREAS_INTEGRAL.md](file:///C:/Users/Alejo%20Garlati/Documents/Facultad/apex-link/docs/spec-driven-docs/CONTROL_FASES_Y_TAREAS_INTEGRAL.md)** | **Gestión Global** | Control integral de fases, tareas atómicas (145 tareas), Gantt multi-carril, hitos de desbloqueo y matriz de riesgos para los 3 desarrolladores. |
-| 📋 **[CONTROL_FASES_Y_TAREAS.md](file:///C:/Users/Alejo%20Garlati/Documents/Facultad/apex-link/docs/spec-driven-docs/CONTROL_FASES_Y_TAREAS.md)** | **Gestión Capa 1** | Control atómico detallado de las 95 tareas del backend C# .NET. |
-| 📖 **[MANUAL_SPEC_DRIVEN_DEVELOPMENT.md](file:///C:/Users/Alejo%20Garlati/Documents/Facultad/apex-link/docs/spec-driven-docs/MANUAL_SPEC_DRIVEN_DEVELOPMENT.md)** | **Gobernanza SDD** | Manual de gobernanza para los 3 desarrolladores: jerarquía de verdad, ciclo Contract-First, política de cero divergencia y criterios DoD. |
+| 📋 **[BRIEF_INTEGRAL_SISTEMA_3_CAPAS.md](./docs/spec-driven-docs/BRIEF_INTEGRAL_SISTEMA_3_CAPAS.md)** | **Ecosistema Global** | Brief maestro del software en sus 3 capas (API / DDU / WEBAPP), los 3 momentos operativos del usuario, acuerdos de SLA y arquitectura de integración. |
+| 📡 **[CONTRATOS_TELEMETRIA_Y_API.md](./docs/spec-driven-docs/CONTRATOS_TELEMETRIA_Y_API.md)** | **Contratos de Red** | Catálogo exhaustivo de mensajes WebSocket (`FRAME` @ 60 Hz, `LAP_COMPLETED`), DTOs camelCase, diccionarios de tipos/unidades y endpoints REST analíticos. |
+| 📚 **[DOCUMENTACION_TECNICA.md](./docs/spec-driven-docs/DOCUMENTACION_TECNICA.md)** | **Capa 1: Backend / API** | Documentación técnica oficial del Backend (.NET 8 Clean Architecture, Win32 MMF `unsafe fixed Pack=4`, *SeqLock*, SQLite WAL, PostgreSQL Sync y WebSocket). |
+| 📱 **[DOCUMENTACION_TECNICA_MODULO2_DASHBOARD.pdf](./docs/spec-driven-docs/DOCUMENTACION_TECNICA_MODULO2_DASHBOARD.pdf)** | **Capa 2: DDU Volante** | Especificación técnica integral del DDU (`apex-link-display`: Vite + React 19 + Zustand 5 atómico, 6 zonas ergonómicas, Shift Lights, Screen WakeLock y ADB reverse). |
+| 💻 **[DOCUMENTACION_TECNICA_MODULO3_WEBAPP.md](./docs/spec-driven-docs/DOCUMENTACION_TECNICA_MODULO3_WEBAPP.md)** | **Capa 3: WebApp SaaS** | Especificación técnica integral de la plataforma web SaaS (`apex-link-web`: Next.js 15 App Router, Landing Page, Auth Local / Modo Invitado, Hub Multi-Juegos, Perfil con Ratings/Logros, Live Pitwall 60 Hz, Track Geometry 2D y gráficas uPlot metro a metro). |
+| 📊 **[CONTROL_FASES_Y_TAREAS_INTEGRAL.md](./docs/spec-driven-docs/CONTROL_FASES_Y_TAREAS_INTEGRAL.md)** | **Gestión Global** | Control integral de fases, tareas atómicas (145 tareas), Gantt multi-carril, hitos de desbloqueo y matriz de riesgos para los 3 desarrolladores. |
+| 📋 **[CONTROL_FASES_Y_TAREAS.md](./docs/spec-driven-docs/CONTROL_FASES_Y_TAREAS.md)** | **Gestión Capa 1** | Control atómico detallado de las 95 tareas del backend C# .NET. |
+| 📖 **[MANUAL_SPEC_DRIVEN_DEVELOPMENT.md](./docs/spec-driven-docs/MANUAL_SPEC_DRIVEN_DEVELOPMENT.md)** | **Gobernanza SDD** | Manual de gobernanza para los 3 desarrolladores: jerarquía de verdad, ciclo Contract-First, política de cero divergencia y criterios DoD. |
 
 ---
 
@@ -78,7 +78,8 @@ Bajo la metodología de **Spec-Driven Development Intensivo**, las especificacio
 
 ## 📁 Estructura del Repositorio
 
-* [`/docs`](file:///C:/Users/Alejo%20Garlati/Documents/Facultad/apex-link/docs): Documentación general de arquitectura, hardware y roles.
-* [`/docs/spec-driven-docs`](file:///C:/Users/Alejo%20Garlati/Documents/Facultad/apex-link/docs/spec-driven-docs): **Suite Sagrada de Especificaciones y Contratos (SDD)**.
-* [`/old`](file:///C:/Users/Alejo%20Garlati/Documents/Facultad/apex-link/old): Código y prototipos exploratorios previos archivados (`dash-mobile`, `server`, `web`).
-* [`/sdk`](file:///C:/Users/Alejo%20Garlati/Documents/Facultad/apex-link/sdk): SDK y archivos de cabecera de Assetto Corsa.
+* [`/docs`](./docs): Documentación general de arquitectura, hardware y roles.
+* [`/docs/spec-driven-docs`](./docs/spec-driven-docs): **Suite de Especificaciones y Contratos (SDD)**.
+* [`/old`](./old): Código y prototipos exploratorios previos archivados (`dash-mobile`, `server`, `web`).
+* [`/web`](./web): Plataforma web SaaS en Next.js.
+* [`/apex-link-display`](./apex-link-display): Display DDU de volante en Vite + React 19.

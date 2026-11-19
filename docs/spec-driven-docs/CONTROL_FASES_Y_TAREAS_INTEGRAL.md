@@ -102,7 +102,7 @@ gantt
 
 ## 4. Carril Dev 1: Core Relay, Adquisición Win32 MMF, SQLite WAL y API REST
 
-*Detalle exhaustivo de las 95 tareas atómicas disponible en [CONTROL_FASES_Y_TAREAS.md](file:///C:/Users/Alejo%20Garlati/Documents/Facultad/apex-link/docs/spec-driven-docs/CONTROL_FASES_Y_TAREAS.md).*
+*Detalle exhaustivo de las 95 tareas atómicas disponible en [CONTROL_FASES_Y_TAREAS.md](./CONTROL_FASES_Y_TAREAS.md).*
 
 ### Resumen de Fases Dev 1:
 * **Fase 0 (Completada - 12h):** Análisis y corrección de especificaciones Win32 MMF, WebSockets, SQLite WAL y protocolo ADB USB.
@@ -118,7 +118,7 @@ gantt
 
 ## 5. Carril Dev 2: DDU — Instrumental Digital Móvil para Volante (apex-link-display)
 
-*Detalle exhaustivo de arquitectura disponible en [DOCUMENTACION_TECNICA_MODULO2_DASHBOARD.pdf](file:///C:/Users/Alejo%20Garlati/Documents/Facultad/apex-link/docs/spec-driven-docs/DOCUMENTACION_TECNICA_MODULO2_DASHBOARD.pdf).*
+*Detalle exhaustivo de arquitectura disponible en [DOCUMENTACION_TECNICA_MODULO2_DASHBOARD.pdf](./DOCUMENTACION_TECNICA_MODULO2_DASHBOARD.pdf).*
 
 ### Desglose Atómico de Tareas de Dev 2 (25 Tareas / 98.0 hs):
 
@@ -161,7 +161,7 @@ gantt
 
 ## 6. Carril Dev 3: WebApp SaaS — Hub, Pitwall, Perfil y Laboratorio (apex-link-web)
 
-*Detalle exhaustivo de arquitectura disponible en [DOCUMENTACION_TECNICA_MODULO3_WEBAPP.md](file:///C:/Users/Alejo%20Garlati/Documents/Facultad/apex-link/docs/spec-driven-docs/DOCUMENTACION_TECNICA_MODULO3_WEBAPP.md).*
+*Detalle exhaustivo de arquitectura disponible en [DOCUMENTACION_TECNICA_MODULO3_WEBAPP.md](./DOCUMENTACION_TECNICA_MODULO3_WEBAPP.md).*
 
 ### Desglose Atómico de Tareas de Dev 3 (25 Tareas / 102.0 hs):
 

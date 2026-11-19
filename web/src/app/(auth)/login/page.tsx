@@ -13,7 +13,6 @@ import {
   KeyRound,
   AlertCircle,
   CheckCircle2,
-  HelpCircle,
 } from "lucide-react";
 import { iniciarSesionConServidor, estaAutenticado } from "@/lib/auth";
 import { solicitarGet } from "@/lib/apiClient";
@@ -274,36 +273,6 @@ export default function PaginaLogin() {
                   </Button>
                 </div>
               </form>
-
-              {/* Guía de Cuentas Registradas en PostgreSQL para Evaluación */}
-              <div className="pt-4 border-t border-[#262626] space-y-2">
-                <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#8a8a8a]">
-                  <HelpCircle className="w-3.5 h-3.5 text-[#0066b1] shrink-0" />
-                  <span>Credenciales oficiales de boxes (`usuarios`):</span>
-                </div>
-                <div className="p-3 rounded-lg bg-black/70 border border-[#262626] text-[11px] font-mono space-y-1.5 text-[#bbbbbb]">
-                  <div className="flex items-center justify-between pb-1 border-b border-[#262626]">
-                    <span className="text-[#0066b1] font-bold">Admin (Modo Mock):</span>
-                    <div className="flex items-center gap-2">
-                      <code className="text-white">admin</code>
-                      <span className="text-[#666666]">/</span>
-                      <code className="text-[#00E676]">admin</code>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between pt-0.5">
-                    <span className="text-[#8a8a8a]">Piloto 1 (F1):</span>
-                    <code className="text-white">agarlati@apexlink.io</code>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#8a8a8a]">Piloto 2 (GT3):</span>
-                    <code className="text-white">asalas@apexlink.io</code>
-                  </div>
-                  <div className="flex items-center justify-between border-t border-[#262626] pt-1">
-                    <span className="text-[#8a8a8a]">Clave pilotos:</span>
-                    <code className="text-[#00E676]">Password123!</code>
-                  </div>
-                </div>
-              </div>
 
               <div className="pt-1 flex items-center justify-center gap-4 text-[11px] text-[#7e7e7e] font-mono">
                 <span className="inline-flex items-center gap-1">

@@ -5393,7 +5393,7 @@ Es el ejecutable principal que inicia el servidor Kestrel de ASP.NET Core, expon
     "Puerto": 8080
   },
   "Seguridad": {
-    "PermitirAccesoLocalEdgeSinToken": true
+    "PermitirAccesoLocalEdgeSinToken": false
   },
   "Telemetria": {
     "ModoMock": false,
@@ -5510,7 +5510,7 @@ public sealed class ManejadorAutorizacionPermiso : AuthorizationHandler<Requisit
     public ManejadorAutorizacionPermiso(IConfiguration configuracion)
     {
         _permitirAccesoLocalEdgeSinToken = configuracion.GetValue<bool>(
-            "Seguridad:PermitirAccesoLocalEdgeSinToken", true);
+            "Seguridad:PermitirAccesoLocalEdgeSinToken", false);
     }
 
     protected override Task HandleRequirementAsync(
@@ -6142,7 +6142,7 @@ Implementa el contrato `IServicioAnalisisTelemetria` garantizando desacoplamient
    - Resuelve dinámicamente cualquier política que inicie con `"Permiso:"`, instanciando el requisito correspondiente sin requerir registrar manualmente decenas de políticas estáticas en el arranque.
 4. **`ManejadorAutorizacionPermiso.cs` (`AuthorizationHandler<RequisitoPermiso>`):**
    - Evalúa si el usuario autenticado posee el claim de tipo `"permiso"` con el valor requerido.
-   - **Bypass Parametrizable Edge:** Si la estación opera de forma local e independiente en boxes sin servidor central de identidad, evalúa la directiva `Seguridad:PermitirAccesoLocalEdgeSinToken` (por defecto `true`), otorgando acceso exitoso y permitiendo operar la estación sin conexión a internet.
+   - **Bypass Parametrizable Edge:** Si la estación opera de forma local e independiente en boxes sin servidor central de identidad, evalúa la directiva `Seguridad:PermitirAccesoLocalEdgeSinToken` (por defecto `false`, debe habilitarse explícitamente solo en red local aislada).
 
 #### F. Controladores REST (`src/Telemetria.Api/Controladores/`)
 1. **`TelemetriaController.cs`:**
