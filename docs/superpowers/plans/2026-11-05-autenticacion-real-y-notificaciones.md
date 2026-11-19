@@ -15,8 +15,8 @@
 - Preservar avances y reglas de trabajo frescas en disco (`GEMINI.md`).
 - Cero tolerancia a alternadores o selectores artificiales de usuario en vistas de producción (`/app`, `/app/perfil`, `/app/sessions`, `/login`).
 - Soporte para credenciales de los 2 pilotos oficiales:
-  - **Alejo Garlati**: `agarlati@apexlink.io` / `Password123!` (o contraseña de boxes).
-  - **Alejo Salas**: `asalas@apexlink.io` / `Password123!` (o contraseña de boxes).
+  - **Alejo Garlati**: `agarlati@apexlink.io` / `<DEMO_PASSWORD>` (o contraseña de boxes).
+  - **Alejo Salas**: `asalas@apexlink.io` / `<DEMO_PASSWORD>` (o contraseña de boxes).
 - Resiliencia Edge: Si PostgreSQL no está disponible momentáneamente, el backend mantiene fallback seguro para no detener la operación en cabina física de simulador.
 - Compilación limpia con 0 errores TypeScript (`next build`) y suite de pruebas .NET 10 pasando al 100%.
 
